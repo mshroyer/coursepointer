@@ -1,0 +1,23 @@
+version = 1
+revision = 1
+requires-python = ">=3.13"
+
+[[package]]
+name = "coursepointer"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "garmin-fit-sdk" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "garmin-fit-sdk", specifier = ">=21.158.0" }]
+
+[[package]]
+name = "garmin-fit-sdk"
+version = "21.158.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/5b/c067e505e95bfeaae98a8999f94d9631c3488805152d5543f5283d8df45a/garmin-fit-sdk-21.158.0.tar.gz", hash = "sha256:6352ad9ccb5b90336b88fc8000d3a04ff9ae5b0fa622586eba7dd2c76bc7a7d9", size = 228177 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/52/d0d4cb3f91325406ae7b45b4bed185088d419cfd210c75b034e309db110b/garmin_fit_sdk-21.158.0-py2.py3-none-any.whl", hash = "sha256:9d225b18cba45f61de965dd4d9bd4835271baa16357099ca1a18644cf2420c33", size = 235951 },
+]
