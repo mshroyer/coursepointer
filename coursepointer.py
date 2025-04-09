@@ -23,10 +23,10 @@ class GpxTrackContentHandler(xml.sax.ContentHandler):
         super().__init__()
         self.track_points : List[Coordinate] = []
         self.waypoints : List[Waypoint] = []
-        self.next_wpt_lat : float = 0
-        self.next_wpt_lon : float = 0
-        self.in_wpt : bool = False
-        self.in_wpt_name : bool = False
+        self._next_wpt_lat : float = 0
+        self._next_wpt_lon : float = 0
+        self._in_wpt : bool = False
+        self._in_wpt_name : bool = False
 
     def startElement(self, name, attrs):
         if name == "trkpt":
@@ -34,20 +34,20 @@ class GpxTrackContentHandler(xml.sax.ContentHandler):
             lon = float(attrs["lon"])
             self.track_points.append(Coordinate(lat, lon))
         elif name == "wpt":
-            self.next_wpt_lat = float(attrs["lat"])
-            self.next_wpt_lon = float(attrs["lon"])
-            self.in_wpt = True
-        elif name == "name" and self.in_wpt:
-            self.in_wpt_name = True
+            self._next_wpt_lat = float(attrs["lat"])
+            self._next_wpt_lon = float(attrs["lon"])
+            self._in_wpt = True
+        elif name == "name" and self._in_wpt:
+            self._in_wpt_name = True
 
     def characters(self, content):
-        if self.in_wpt_name:
-            self.waypoints.append(Waypoint(name=content, coord=Coordinate(self.next_wpt_lat, self.next_wpt_lon)))
-            self.in_wpt_name = False
+        if self._in_wpt_name:
+            self.waypoints.append(Waypoint(name=content, coord=Coordinate(self._next_wpt_lat, self._next_wpt_lon)))
+            self._in_wpt_name = False
 
     def endElement(self, name):
         if name == "wpt":
-            self.in_wpt = False
+            self._in_wpt = False
 
 
 class GpxTrackFile:
