@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "garmin-fit-sdk>=21.158.0",
+    "geographiclib>=2.0",
+    "pyproj>=3.7.1",
 ]
