@@ -1,5 +1,5 @@
 import argparse
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 import xml.sax
 
 
@@ -23,9 +23,8 @@ class GpxTrackContentHandler(xml.sax.ContentHandler):
         super().__init__()
         self.track_points : List[Coordinate] = []
         self.waypoints : List[Waypoint] = []
-        self._next_wpt_lat : float = 0
-        self._next_wpt_lon : float = 0
-        self._in_wpt : bool = False
+        self._next_wpt_coord : Optional[Coordinate] = None
+        self._next_wpt_name : str = ""
         self._in_wpt_name : bool = False
 
     def startElement(self, name, attrs):
@@ -34,28 +33,27 @@ class GpxTrackContentHandler(xml.sax.ContentHandler):
             lon = float(attrs["lon"])
             self.track_points.append(Coordinate(lat, lon))
         elif name == "wpt":
-            self._next_wpt_lat = float(attrs["lat"])
-            self._next_wpt_lon = float(attrs["lon"])
-            self._in_wpt = True
-        elif name == "name" and self._in_wpt:
+            self._next_wpt_coord = Coordinate(float(attrs["lat"]), float(attrs["lon"]))
+        elif name == "name" and self._next_wpt_coord is not None:
             self._in_wpt_name = True
 
     def characters(self, content):
         if self._in_wpt_name:
-            self.waypoints.append(Waypoint(name=content, coord=Coordinate(self._next_wpt_lat, self._next_wpt_lon)))
+            self._next_wpt_name = content
 
     def endElement(self, name):
         if name == "wpt":
-            self._in_wpt = False
+            self.waypoints.append(Waypoint(name=self._next_wpt_name, coord=self._next_wpt_coord))
+            self._next_wpt_coord = None
         elif name == "name" and self._in_wpt_name:
             self._in_wpt_name = False
 
 
 class GpxTrackFile:
     def __init__(self, path: str):
-        self.path = path
+        self.path : str = path
         self._content_handler = GpxTrackContentHandler()
-        self._parsed = False
+        self._parsed : bool = False
 
     def track_points(self) -> List[Coordinate]:
         self._parse()
