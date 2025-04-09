@@ -43,11 +43,12 @@ class GpxTrackContentHandler(xml.sax.ContentHandler):
     def characters(self, content):
         if self._in_wpt_name:
             self.waypoints.append(Waypoint(name=content, coord=Coordinate(self._next_wpt_lat, self._next_wpt_lon)))
-            self._in_wpt_name = False
 
     def endElement(self, name):
         if name == "wpt":
             self._in_wpt = False
+        elif name == "name" and self._in_wpt_name:
+            self._in_wpt_name = False
 
 
 class GpxTrackFile:
