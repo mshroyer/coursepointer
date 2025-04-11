@@ -121,9 +121,8 @@ class Course:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[1],
-                                     usage="\n".join(__doc__.splitlines()[2:]),
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("path", help="Path to the GPX track file")
     args = parser.parse_args()
 
