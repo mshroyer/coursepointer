@@ -1,6 +1,9 @@
 import argparse
+import itertools
 from typing import List, NamedTuple, Optional
 import xml.sax
+
+from geographiclib.geodesic import Geodesic
 
 
 class Coordinate(NamedTuple):
@@ -18,6 +21,8 @@ class Waypoint(NamedTuple):
     coord: Coordinate
 
 
+# TODO: Validate document type
+# TODO: Implement error callback
 class GpxTrackContentHandler(xml.sax.ContentHandler):
     def __init__(self):
         super().__init__()
@@ -27,13 +32,15 @@ class GpxTrackContentHandler(xml.sax.ContentHandler):
         self._next_wpt_name : str = ""
         self._in_wpt_name : bool = False
 
+    @staticmethod
+    def _make_coord(attrs) -> Coordinate:
+        return Coordinate(float(attrs['lat']), float(attrs['lon']))
+
     def startElement(self, name, attrs):
         if name == "trkpt":
-            lat = float(attrs["lat"])
-            lon = float(attrs["lon"])
-            self.track_points.append(Coordinate(lat, lon))
+            self.track_points.append(self._make_coord(attrs))
         elif name == "wpt":
-            self._next_wpt_coord = Coordinate(float(attrs["lat"]), float(attrs["lon"]))
+            self._next_wpt_coord = self._make_coord(attrs)
         elif name == "name" and self._next_wpt_coord is not None:
             self._in_wpt_name = True
 
@@ -71,6 +78,38 @@ class GpxTrackFile:
             self._parsed = True
 
 
+class CourseRecord(NamedTuple):
+    """A course record as in a FIT file.
+
+    Represents a point along a course, along with its cumulative distance from the start of the course along the WGS84
+    ellipsoid.
+    """
+    coord: Coordinate
+    dist_m: float
+
+
+class Course:
+    records: List[CourseRecord]
+
+    def __init__(self, coords: List[Coordinate]):
+        self.records = self.compute_records(coords)
+
+    @staticmethod
+    def compute_records(coords: List[Coordinate]) -> List[CourseRecord]:
+        distance = 0.0
+        records = []
+
+        if len(coords) > 0:
+            records.append(CourseRecord(coords[0], distance))
+
+        for start, end in itertools.pairwise(coords):
+            g = Geodesic.WGS84.Inverse(start.lat, start.lon, end.lat, end.lon)
+            distance += g['s12']
+            records.append(CourseRecord(end, distance))
+
+        return records
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract track points from a GPX file")
     parser.add_argument("path", help="Path to the GPX track file")
@@ -79,8 +118,10 @@ def main() -> None:
     track_file = GpxTrackFile(args.path)
     for trkpt in track_file.track_points():
         print(f"Track Point: ({trkpt.lat}, {trkpt.lon})")
-    for wpt in track_file.waypoints():
-        print(f"Waypoint: {wpt.name} at ({wpt.coord.lat}, {wpt.coord.lon})")
+
+    course = Course(track_file.track_points())
+    for record in course.records:
+        print(f"Course Record: {record}")
 
 
 if __name__ == "__main__":
