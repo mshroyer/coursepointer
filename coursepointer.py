@@ -1,3 +1,13 @@
+"""
+Export RideWithGPS POIs as Course Points for Garmin devices
+
+  1. Export a GPX track from RideWithGPS, including POIs as waypoints.
+  2. Run: coursepointer make-fit --gpx <gpx_file> --out <fit_file>
+  3. Import the FIT file to your Garmin device.
+
+For more info see https://github.com/mshroyer/coursepointer
+"""
+
 import argparse
 import itertools
 from typing import List, NamedTuple, Optional
@@ -111,7 +121,9 @@ class Course:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Extract track points from a GPX file")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[1],
+                                     usage="\n".join(__doc__.splitlines()[2:]),
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("path", help="Path to the GPX track file")
     args = parser.parse_args()
 
