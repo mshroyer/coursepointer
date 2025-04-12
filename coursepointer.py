@@ -9,11 +9,23 @@ For more info see https://github.com/mshroyer/coursepointer
 """
 
 import argparse
+from datetime import datetime, timedelta
 import itertools
 from typing import List, NamedTuple, Optional
 import xml.sax
 
-from geographiclib.geodesic import Geodesic
+from fit_tool.fit_file_builder import FitFileBuilder
+from fit_tool.profile.messages.course_message import CourseMessage
+from fit_tool.profile.messages.event_message import EventMessage
+from fit_tool.profile.messages.file_id_message import FileIdMessage
+from fit_tool.profile.messages.lap_message import LapMessage
+from fit_tool.profile.messages.record_message import RecordMessage
+from fit_tool.profile.profile_type import FileType, Manufacturer, Sport, Event, EventType
+import geographiclib.geodesic
+
+
+# Distance calculations in FIT and GPX files are based on WGS84.
+GEODESIC = geographiclib.geodesic.Geodesic.WGS84
 
 
 class Coordinate(NamedTuple):
@@ -99,9 +111,12 @@ class CourseRecord(NamedTuple):
 
 
 class Course:
+    name: str
     records: List[CourseRecord]
 
     def __init__(self, coords: List[Coordinate]):
+        # TODO: Initialize with actual course name
+        self.name = "Foo Course"
         self.records = self.compute_records(coords)
 
     @staticmethod
@@ -113,26 +128,105 @@ class Course:
             records.append(CourseRecord(coords[0], distance))
 
         for start, end in itertools.pairwise(coords):
-            g = Geodesic.WGS84.Inverse(start.lat, start.lon, end.lat, end.lon)
-            distance += g['s12']
+            g = GEODESIC.Inverse(start.lat, start.lon, end.lat, end.lon)
+            distance += g["s12"]
             records.append(CourseRecord(end, distance))
 
         return records
+
+    def export_fit(self, out_path: str) -> None:
+        SPEED_KMPH = 10.0
+        time = start_time = datetime.now()
+
+        builder = FitFileBuilder(auto_define=True, min_string_size=50)
+
+        message = FileIdMessage()
+        message.type = FileType.COURSE
+        message.manufacturer = Manufacturer.DEVELOPMENT.value
+        message.product = 0
+        message.timeCreated = time.timestamp()
+        message.serialNumber = 0x12345678
+        builder.add(message)
+
+        # Every FIT course file MUST contain a Course message
+        message = CourseMessage()
+        message.courseName = self.name
+        message.sport = Sport.CYCLING
+        builder.add(message)
+
+        # Timer Events are REQUIRED for FIT course files
+        message = EventMessage()
+        message.event = Event.TIMER
+        message.event_type = EventType.START
+        message.timestamp = 1000 * time.timestamp()
+        builder.add(message)
+
+        course_records = []  # track points
+        for record in self.records:
+            message = RecordMessage()
+            message.position_lat = record.coord.lat
+            message.position_long = record.coord.lon
+            message.distance = record.dist_m
+            time += timedelta(hours=(record.dist_m / (SPEED_KMPH * 1000)))
+            message.timestamp = 1000 * time.timestamp()
+            course_records.append(message)
+
+        builder.add_all(course_records)
+
+        # stop event
+        message = EventMessage()
+        message.event = Event.TIMER
+        message.eventType = EventType.STOP_ALL
+        message.timestamp = 1000 * time.timestamp()
+        builder.add(message)
+
+        # Every FIT course file MUST contain a Lap message
+        elapsed_time = time - start_time
+        message = LapMessage()
+        message.timestamp = 1000 * time.timestamp()
+        message.start_time = 1000 * start_time.timestamp()
+        message.total_elapsed_time = elapsed_time.total_seconds()
+        message.total_timer_time = elapsed_time.total_seconds()
+        message.start_position_lat = course_records[0].position_lat
+        message.start_position_long = course_records[0].position_long
+        message.end_position_lat = course_records[-1].position_lat
+        message.endPositionLong = course_records[-1].position_long
+        message.total_distance = course_records[-1].distance
+
+        # Finally build the FIT file object and write it to a file
+        fit_file = builder.build()
+        fit_file.to_file(out_path)
+
+
+def make_fit(gpx_path: str, fit_path: str) -> None:
+    """Converts a GPX track file to a FIT file"""
+
+    track_file = GpxTrackFile(gpx_path)
+    course = Course(track_file.track_points())
+    course.export_fit(fit_path)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("path", help="Path to the GPX track file")
+    subparsers = parser.add_subparsers(help="Subcommands")
+
+    parser_make_fit = subparsers.add_parser("make-fit", help="Make a FIT file from a GPX track")
+    parser_make_fit.add_argument("--gpx-track", required=True, help="Path to the GPX track file")
+    parser_make_fit.add_argument("--out", required=True, help="Output path for the FIT file")
+
     args = parser.parse_args()
 
-    track_file = GpxTrackFile(args.path)
-    for trkpt in track_file.track_points():
-        print(f"Track Point: ({trkpt.lat}, {trkpt.lon})")
+    make_fit(args.gpx_track, args.out)
 
-    course = Course(track_file.track_points())
-    for record in course.records:
-        print(f"Course Record: {record}")
+    # track_file = GpxTrackFile(args.gpx_track)
+    #
+    # for trkpt in track_file.track_points():
+    #     print(f"Track Point: ({trkpt.lat}, {trkpt.lon})")
+    #
+    # course = Course(track_file.track_points())
+    # for record in course.records:
+    #     print(f"Course Record: {record}")
 
 
 if __name__ == "__main__":
