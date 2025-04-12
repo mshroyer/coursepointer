@@ -50,32 +50,36 @@ class GpxTrackContentHandler(xml.sax.ContentHandler):
         super().__init__()
         self.track_points : List[Coordinate] = []
         self.waypoints : List[Waypoint] = []
+        self.course_name : str = ""
         self._next_wpt_coord : Optional[Coordinate] = None
         self._next_wpt_name : str = ""
         self._in_wpt_name : bool = False
+        self._element_stack : List[str] = []
 
     @staticmethod
     def _make_coord(attrs) -> Coordinate:
         return Coordinate(float(attrs['lat']), float(attrs['lon']))
 
     def startElement(self, name, attrs):
+        self._element_stack.append(name)
+
         if name == "trkpt":
             self.track_points.append(self._make_coord(attrs))
         elif name == "wpt":
             self._next_wpt_coord = self._make_coord(attrs)
-        elif name == "name" and self._next_wpt_coord is not None:
-            self._in_wpt_name = True
 
     def characters(self, content):
-        if self._in_wpt_name:
+        if self._element_stack[-2:] == ["wpt", "name"]:
             self._next_wpt_name = content
+        elif self._element_stack[-2:] == ["metadata", "name"]:
+            self.course_name = content
 
     def endElement(self, name):
         if name == "wpt":
             self.waypoints.append(Waypoint(name=self._next_wpt_name, coord=self._next_wpt_coord))
             self._next_wpt_coord = None
-        elif name == "name" and self._in_wpt_name:
-            self._in_wpt_name = False
+
+        self._element_stack.pop()
 
 
 class GpxTrackFile:
@@ -83,6 +87,10 @@ class GpxTrackFile:
         self.path : str = path
         self._content_handler = GpxTrackContentHandler()
         self._parsed : bool = False
+
+    def course_name(self) -> str:
+        self._parse()
+        return self._content_handler.course_name
 
     def track_points(self) -> List[Coordinate]:
         self._parse()
@@ -114,9 +122,9 @@ class Course:
     name: str
     records: List[CourseRecord]
 
-    def __init__(self, coords: List[Coordinate]):
+    def __init__(self, name: str, coords: List[Coordinate]):
         # TODO: Initialize with actual course name
-        self.name = "Foo Course"
+        self.name = name
         self.records = self.compute_records(coords)
 
     @staticmethod
@@ -209,24 +217,33 @@ def make_fit(gpx_path: str, fit_path: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    subparsers = parser.add_subparsers(help="Subcommands")
+    subparsers = parser.add_subparsers(dest="subparser_name", help="Subcommands")
 
     parser_make_fit = subparsers.add_parser("make-fit", help="Make a FIT file from a GPX track")
     parser_make_fit.add_argument("--gpx-track", required=True, help="Path to the GPX track file")
     parser_make_fit.add_argument("--out", required=True, help="Output path for the FIT file")
 
+    parser_debug = subparsers.add_parser("info", help="Show GPX track info")
+    parser_debug.add_argument("--gpx-track", required=True, help="Path to the GPX track file")
+
     args = parser.parse_args()
 
-    make_fit(args.gpx_track, args.out)
+    if args.subparser_name == "make-fit":
+        make_fit(args.gpx_track, args.out)
+        return
+    elif args.subparser_name == "info":
+        track_file = GpxTrackFile(args.gpx_track)
+        course = Course(track_file.course_name(), track_file.track_points())
 
-    # track_file = GpxTrackFile(args.gpx_track)
-    #
-    # for trkpt in track_file.track_points():
-    #     print(f"Track Point: ({trkpt.lat}, {trkpt.lon})")
-    #
-    # course = Course(track_file.track_points())
-    # for record in course.records:
-    #     print(f"Course Record: {record}")
+        total_length_m = course.records[-1].dist_m if course.records else 0
+        print(f"Course name: {course.name}")
+        print(f"Loaded {len(course.records)} track points with a total length of {int(total_length_m)}m")
+        print(f"Found {len(track_file.waypoints())} waypoints")
+
+        # for trkpt in track_file.track_points():
+        #     print(f"Track Point: ({trkpt.lat}, {trkpt.lon})")
+        # for record in course.records:
+        #     print(f"Course Record: {record}")
 
 
 if __name__ == "__main__":
