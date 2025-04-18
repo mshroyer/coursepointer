@@ -210,7 +210,7 @@ def make_fit(gpx_path: str, fit_path: str) -> None:
     """Converts a GPX track file to a FIT file"""
 
     track_file = GpxTrackFile(gpx_path)
-    course = Course(track_file.track_points())
+    course = Course(track_file.course_name(), track_file.track_points())
     course.export_fit(fit_path)
 
 
