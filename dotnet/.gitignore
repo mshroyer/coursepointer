@@ -1,3 +1,6 @@
-src/App/bin/*
-src/App/obj/*
+src/*/bin/*
+src/*/obj/*
+tests/*/bin/*
+tests/*/obj/*
 
+.fake

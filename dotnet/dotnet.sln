@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "App", "src\App\App.fsproj", "{83F6805F-84CB-4283-A806-03CBFD752400}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "CoursePointer.Tests", "tests\CoursePointer.Tests\CoursePointer.Tests.fsproj", "{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,11 +33,24 @@ Global
 		{83F6805F-84CB-4283-A806-03CBFD752400}.Release|x64.Build.0 = Release|Any CPU
 		{83F6805F-84CB-4283-A806-03CBFD752400}.Release|x86.ActiveCfg = Release|Any CPU
 		{83F6805F-84CB-4283-A806-03CBFD752400}.Release|x86.Build.0 = Release|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Debug|x64.Build.0 = Debug|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Debug|x86.Build.0 = Debug|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Release|x64.ActiveCfg = Release|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Release|x64.Build.0 = Release|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Release|x86.ActiveCfg = Release|Any CPU
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{83F6805F-84CB-4283-A806-03CBFD752400} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{C6E9457A-2EF5-4CEA-B9E1-1D67C076963C} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
