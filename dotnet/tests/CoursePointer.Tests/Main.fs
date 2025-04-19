@@ -1,5 +1,6 @@
 ﻿open Expecto
 
+[<Tests>]
 let tests =
     test "An example test" {
         let subject = "Hello world"
