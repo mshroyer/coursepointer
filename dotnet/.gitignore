@@ -4,3 +4,4 @@ tests/*/bin/*
 tests/*/obj/*
 
 .fake
+dotnet.sln.DotSettings.user
