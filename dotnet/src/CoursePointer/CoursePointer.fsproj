@@ -7,6 +7,12 @@
 
   <ItemGroup>
     <Compile Include="Library.fs" />
+    <Compile Include="Geodesy.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Garmin.FIT.Sdk" />
+    <PackageReference Include="GeographicLib.NET" />
   </ItemGroup>
 
 </Project>
