@@ -1,0 +1,3 @@
+[submodule "rust/geo/vendor/geographiclib"]
+	path = rust/geo/vendor/geographiclib
+	url = https://github.com/geographiclib/geographiclib.git
