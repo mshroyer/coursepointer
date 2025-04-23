@@ -21,4 +21,8 @@
     <PackageReference Include="YoloDev.Expecto.TestSdk" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CoursePointer\CoursePointer.fsproj" />
+  </ItemGroup>
+
 </Project>
