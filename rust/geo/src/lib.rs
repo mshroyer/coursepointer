@@ -1,9 +1,12 @@
-#[cxx::bridge]
+#[cxx::bridge(namespace = "GeographicLib")]
 mod ffi {
     unsafe extern "C++" {
-        include!("vendor/geographiclib/include/GeographicLib/Geodesic.hpp");
+        include!("geo/vendor/geographiclib/include/GeographicLib/Geodesic.hpp");
 
-        fn Indirect(
+        type Geodesic;
+
+        fn Inverse(
+            &self,
             lat1: f64,
             lon1: f64,
             lat2: f64,
