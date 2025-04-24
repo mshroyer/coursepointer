@@ -64,15 +64,17 @@ pub fn inverse(point1: &SurfacePoint, point2: &SurfacePoint) -> Result<InverseSo
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
+    
     use super::SurfacePoint;
     use super::inverse;
 
     #[test]
     fn test_inverse() {
-        let point1 = SurfacePoint::new(52.0, 13.0);
-        let point2 = SurfacePoint::new(48.0, 2.0);
+        let point1 = SurfacePoint::new(0.0, 0.0);
+        let point2 = SurfacePoint::new(5.0, 5.0);
 
         let result = inverse(&point1, &point2).unwrap();
-        assert!(result.meters > 0.0);
+        assert_relative_eq!(result.meters, 784029.0, max_relative = 1.0);
     }
 }
