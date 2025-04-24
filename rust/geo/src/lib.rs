@@ -1,14 +1,16 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+#[cxx::bridge]
+mod ffi {
+    unsafe extern "C++" {
+        include!("vendor/geographiclib/include/GeographicLib/Geodesic.hpp");
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        fn Indirect(
+            lat1: f64,
+            lon1: f64,
+            lat2: f64,
+            lon2: f64,
+            s12: &mut f64,
+            azi1: &mut f64,
+            azi2: &mut f64,
+        ) -> f64;
     }
 }
