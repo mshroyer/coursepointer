@@ -42,20 +42,3 @@ pub fn next_chunk(buf: &mut MultiBuf) -> &[u8] {
     buf.pos += 1;
     next.map_or(&[], Vec::as_slice)
 }
-
-fn main() {
-    let client = ffi::new_blobstore_client();
-
-    // Upload a blob.
-    let chunks = vec![b"fearless".to_vec(), b"concurrency".to_vec()];
-    let mut buf = MultiBuf { chunks, pos: 0 };
-    let blobid = client.put(&mut buf);
-    println!("blobid = {}", blobid);
-
-    // Add a tag.
-    client.tag(blobid, "rust");
-
-    // Read back the tags.
-    let metadata = client.metadata(blobid);
-    println!("tags = {:?}", metadata.tags);
-}
