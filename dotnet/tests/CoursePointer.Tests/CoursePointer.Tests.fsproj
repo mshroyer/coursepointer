@@ -11,11 +11,6 @@
   <ItemGroup>
     <Compile Include="Main.fs" />
   </ItemGroup>
-  <!--  <ItemGroup>-->
-  <!--    <PackageReference Include="Expecto" />-->
-  <!--    <PackageReference Include="Microsoft.NET.Test.Sdk" />-->
-  <!--    <PackageReference Include="YoloDev.Expecto.TestSdk" />-->
-  <!--  </ItemGroup>-->
   <ItemGroup>
     <ProjectReference Include="..\..\src\CoursePointer\CoursePointer.fsproj" />
   </ItemGroup>
