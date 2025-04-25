@@ -1,0 +1,12 @@
+source https://api.nuget.org/v3/index.json
+
+storage: none
+
+nuget FSharp.Core >= 9
+
+nuget Garmin.FIT.Sdk
+nuget GeographicLib.NET
+
+nuget Expecto
+nuget Microsoft.NET.Test.Sdk
+nuget Yolodev.Expecto.TestSdk
