@@ -16,7 +16,7 @@ fn cpp_file_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, String> {
         })?;
         let file_type = entry
             .file_type()
-            .map_err(|_| format!("unable to extract file type from {:?}", file_name))?;
+            .map_err(|_| format!("unable to extract file type from {}", file_name))?;
         let path = entry.path();
         if file_type.is_file() && path.extension().and_then(|s| s.to_str()) == Some("cpp") {
             files.push(path)
