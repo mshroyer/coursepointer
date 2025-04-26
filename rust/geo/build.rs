@@ -1,9 +1,10 @@
-const GEOGRAPHICLIB_SRC: &str = "vendor/geographiclib/src";
+use std::path::Path;
+use std::path::PathBuf;
 
-fn geographiclib_cpp_files() -> Result<Vec<String>, String> {
-    let mut files: Vec<String> = Vec::new();
+fn cpp_file_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, String> {
+    let mut files: Vec<PathBuf> = Vec::new();
 
-    for entry in std::fs::read_dir(GEOGRAPHICLIB_SRC)
+    for entry in std::fs::read_dir(dir)
         .map_err(|_| "unable to read GeographicLib source directory".to_owned())?
     {
         let entry = entry.map_err(|_| "could not read directory entry")?;
@@ -16,8 +17,9 @@ fn geographiclib_cpp_files() -> Result<Vec<String>, String> {
         let file_type = entry
             .file_type()
             .map_err(|_| format!("unable to extract file type from {:?}", file_name))?;
-        if file_type.is_file() && entry.path().extension().and_then(|s| s.to_str()) == Some("cpp") {
-            files.push(GEOGRAPHICLIB_SRC.to_owned() + "/" + &file_name);
+        let path = entry.path();
+        if file_type.is_file() && path.extension().and_then(|s| s.to_str()) == Some("cpp") {
+            files.push(path)
         }
     }
     Ok(files)
@@ -32,7 +34,7 @@ fn main() {
     // strip out what we don't need anyway.
     cxx_build::bridge("src/lib.rs")
         .file("src/shim.cc")
-        .files(geographiclib_cpp_files().unwrap())
+        .files(cpp_file_list("vendor/geographiclib/src").unwrap())
         .flag("-I../geo/include")
         .flag("-I../geo/vendor/geographiclib/include")
         .compile("geocxx");
