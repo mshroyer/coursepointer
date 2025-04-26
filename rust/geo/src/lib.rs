@@ -10,6 +10,7 @@ mod ffi {
 
         type Geodesic;
 
+        // TODO: Exception safety and return value handling
         fn Inverse(
             &self,
             lat1: f64,
