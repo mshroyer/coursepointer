@@ -11,3 +11,4 @@ wheels/
 
 # IDEs
 .idea/
+dotnet/.vs/
