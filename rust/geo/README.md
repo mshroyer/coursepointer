@@ -16,7 +16,7 @@ It also requires the cmake-generated `BUILD/include/Config.h` file. To generated
 ```bash
 mkdir vendor/geographiclib/BUILD
 cd vendor/geographiclib/BUILD
-cmake ..
+cmake .. -DBUILD_SHARED_LIBS=OFF
 ```
 
 You should then be able to build the crate with `cargo build`.
