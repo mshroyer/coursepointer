@@ -45,8 +45,8 @@ fn main() {
             "vendor/geographiclib/src/Utility.cpp",
             "vendor/geographiclib/src/UTMUPS.cpp",
         ])
+        .flag("-I../geo/include")
         .flag("-I../geo/vendor/geographiclib/include")
-        .flag("-I../geo/vendor/geographiclib/BUILD/include")
         .compile("geocxx");
 
     // println!("cargo:rerun-if-changed=src/main.rs");

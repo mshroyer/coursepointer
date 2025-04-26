@@ -11,12 +11,15 @@ git submodule init
 git submodule update
 ```
 
-It also requires the cmake-generated `BUILD/include/Config.h` file. To generated it run:
+You should then be able to build the crate with `cargo build`.
+
+## Updating GeographicLib
+
+The build requires the cmake-generated `BUILD/include/Config.h` file to be coped into the include/geographiclib
+directory. After upgrading the library, regenerated this header file by running:
 
 ```bash
 mkdir vendor/geographiclib/BUILD
 cd vendor/geographiclib/BUILD
 cmake .. -DBUILD_SHARED_LIBS=OFF
 ```
-
-You should then be able to build the crate with `cargo build`.
