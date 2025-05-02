@@ -1,8 +1,8 @@
 version = 1
 revision = 2
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 
 [[package]]
-name = "integ"
+name = "integration"
 version = "0.1.0"
 source = { virtual = "." }
