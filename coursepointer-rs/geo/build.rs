@@ -4,9 +4,9 @@ use std::path::PathBuf;
 fn cpp_file_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, String> {
     let mut files: Vec<PathBuf> = Vec::new();
 
-    for entry in std::fs::read_dir(dir)
-        .map_err(|_| "unable to read GeographicLib source directory".to_owned())?
-    {
+    for entry in std::fs::read_dir(dir).map_err(|_| {
+        "unable to read GeographicLib source directory; try git submodule init/update?".to_owned()
+    })? {
         let entry = entry.map_err(|_| "could not read directory entry")?;
         let file_name = entry.file_name().into_string().map_err(|os_string| {
             format!(
@@ -34,8 +34,8 @@ fn main() {
     // strip out what we don't need anyway.
     cxx_build::bridge("src/lib.rs")
         .file("src/shim.cc")
-        .files(cpp_file_list("vendor/geographiclib/src").unwrap())
+        .files(cpp_file_list("geographiclib/src").unwrap())
         .flag("-I../geo/include")
-        .flag("-I../geo/vendor/geographiclib/include")
+        .flag("-I../geo/geographiclib/include")
         .compile("geocxx");
 }

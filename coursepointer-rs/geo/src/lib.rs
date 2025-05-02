@@ -3,7 +3,7 @@
 #[cxx::bridge(namespace = "GeographicLib")]
 mod ffi {
     unsafe extern "C++" {
-        include!("geo/vendor/geographiclib/include/GeographicLib/Geodesic.hpp");
+        include!("geo/geographiclib/include/GeographicLib/Geodesic.hpp");
         include!("geo/include/shim.h");
 
         fn GetWGS84() -> &'static Geodesic;
