@@ -5,3 +5,5 @@ tests/*/obj/*
 
 .fake
 *.sln.DotSettings.user
+
+paket-files/
