@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::path::PathBuf;
 
-fn cpp_file_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, String> {
+fn list_cpp_files<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, String> {
     let mut files: Vec<PathBuf> = Vec::new();
 
     for entry in std::fs::read_dir(dir).map_err(|_| {
@@ -16,7 +16,7 @@ fn cpp_file_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, String> {
         })?;
         let file_type = entry
             .file_type()
-            .map_err(|_| format!("unable to extract file type from {}", file_name))?;
+            .map_err(|_| format!("unable to determine entry type from {}", file_name))?;
         let path = entry.path();
         if file_type.is_file() && path.extension().and_then(|s| s.to_str()) == Some("cpp") {
             files.push(path)
@@ -34,7 +34,7 @@ fn main() {
     // strip out what we don't need anyway.
     cxx_build::bridge("src/lib.rs")
         .file("src/shim.cc")
-        .files(cpp_file_list("geographiclib/src").unwrap())
+        .files(list_cpp_files("geographiclib/src").unwrap())
         .flag("-I../geo/include")
         .flag("-I../geo/geographiclib/include")
         .compile("geocxx");
