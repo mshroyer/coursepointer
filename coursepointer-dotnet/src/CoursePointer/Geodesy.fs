@@ -7,13 +7,20 @@ open GeographicLib
 [<Measure>]
 type deg
 
-[<Struct>]
-type SurfacePoint = { Lat: double<deg>; Lon: double<deg> }
+[<Measure>]
+type semicircle
 
 [<Struct>]
-type InverseResult = { Length: double<m>; Azimuth1: double<deg>; Azimuth2: double<deg> }
+type SurfacePoint = { Lat: float<deg>; Lon: float<deg> }
 
-let getDistance a b : double<m> =
+[<Struct>]
+type InverseResult = { Length: float<m>; Azimuth1: float<deg>; Azimuth2: float<deg> }
+
+let semicircles (degrees: float<deg>): int<semicircle> =
+    let rawDegrees = float degrees
+    int (System.Math.Round(rawDegrees * 2.0**31 / 180.0)) * 1<semicircle>
+
+let getDistance a b : float<m> =
     let result =
         Geodesic.WGS84.Inverse(
             double a.Lat,
