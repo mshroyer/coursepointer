@@ -5,16 +5,6 @@ open Expecto
 open CoursePointer.Geodesy
 
 [<Tests>]
-let tests =
-    test "An example test" {
-        let subject = "Hello world"
-        Expect.equal "Hello world" subject "The strings should be equal"
-        
-        let sum = CoursePointer.Say.addSome 2 3
-        Expect.equal sum 5 "2+3 should equal 5"
-    }
-    
-[<Tests>]
 let geodesyTests =
     test "Test distance calculation" {
         let p1 = { SurfacePoint.Lat = 0.0<deg>; Lon = 0.0<deg> }
@@ -25,4 +15,4 @@ let geodesyTests =
 
 [<EntryPoint>]
 let main args =
-    runTestsWithCLIArgs [] args tests
+    runTestsWithCLIArgs [] args geodesyTests
