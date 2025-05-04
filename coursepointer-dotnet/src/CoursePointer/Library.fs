@@ -5,7 +5,9 @@ open System
 open System.IO
 
 open Dynastream
+
 open Geodesy
+open Measures
 
 type CourseWriter(path: string, name: string, startTime: DateTime, speed: float<km/hr>) =
     let speed = speed * mPerKm / sPerHr

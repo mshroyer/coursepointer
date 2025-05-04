@@ -2,6 +2,7 @@
 
 open CoursePointer
 open CoursePointer.Geodesy
+open CoursePointer.Measures
 
 [<EntryPoint>]
 let main _ =

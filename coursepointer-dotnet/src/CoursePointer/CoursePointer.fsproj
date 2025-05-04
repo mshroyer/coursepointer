@@ -5,6 +5,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Measures.fs" />
     <Compile Include="Geodesy.fs" />
     <Compile Include="Library.fs" />
     <Content Include="paket.references" />
