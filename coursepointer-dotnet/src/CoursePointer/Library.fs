@@ -7,7 +7,7 @@ open System.IO
 open Dynastream
 open Geodesy
 
-type CourseWriter(path: string, startTime: DateTime, speed: float<km/hr>) =
+type CourseWriter(path: string, name: string, startTime: DateTime, speed: float<km/hr>) =
     let speed = speed * mPerKm / sPerHr
     
     let stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.Read)
@@ -28,7 +28,7 @@ type CourseWriter(path: string, startTime: DateTime, speed: float<km/hr>) =
     let writeCourseMesg() =
         let course = new Fit.CourseMesg()
         course.SetSport(Fit.Sport.Cycling)
-        course.SetName("Test Course")
+        course.SetName(name)
         encoder.Write(course)
         
     let writeTimerEvent(eventType: Fit.EventType) =
