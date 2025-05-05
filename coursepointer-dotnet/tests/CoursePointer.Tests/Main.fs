@@ -3,6 +3,7 @@
 open Expecto
 
 open CoursePointer.Geodesy
+open CoursePointer.Measures
 
 [<Tests>]
 let geodesyTests =
