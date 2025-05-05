@@ -1,3 +1,5 @@
+.DS_Store
+
 # IDEs
 .idea/
 coursepointer-dotnet/.vs/
