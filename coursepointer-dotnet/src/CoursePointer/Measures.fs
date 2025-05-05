@@ -12,7 +12,7 @@ type ms
 
 /// Hour
 [<Measure>]
-type hr
+type h
 
 /// Degree
 [<Measure>]
@@ -24,4 +24,4 @@ type semicircle
 
 // Unit conversions
 let mPerKm = 1000.0<m/km>
-let sPerHr = 3600.0<s/hr>
+let sPerH = 3600.0<s/h>

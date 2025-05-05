@@ -9,8 +9,10 @@ open Dynastream
 open Geodesy
 open Measures
 
-type CourseWriter(path: string, name: string, startTime: DateTime, speed: float<km/hr>) =
-    let speed = speed * mPerKm / sPerHr
+exception CourseWriterException of string
+
+type CourseWriter(path: string, name: string, startTime: DateTime, speed: float<km/h>) =
+    let speed = speed * mPerKm / sPerH
     
     let stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.Read)
     let encoder = new Fit.Encode(Fit.ProtocolVersion.V10)
@@ -19,51 +21,51 @@ type CourseWriter(path: string, name: string, startTime: DateTime, speed: float<
     let mutable prevPoint = None
     let mutable totalDistance = 0.0<m>
     
-    let writeFileId() =
-        let fileId = new Fit.FileIdMesg()
-        fileId.SetType(Fit.File.Course)
-        fileId.SetManufacturer(Fit.Manufacturer.Development)
-        fileId.SetProduct(0x0001us)
-        fileId.SetSerialNumber(0x0001u)
-        encoder.Write(fileId)
+    let writeFileIdMesg() =
+        let mesg = new Fit.FileIdMesg()
+        mesg.SetType(Fit.File.Course)
+        mesg.SetManufacturer(Fit.Manufacturer.Development)
+        mesg.SetProduct(0x0001us)
+        mesg.SetSerialNumber(0x0001u)
+        encoder.Write(mesg)
         
     let writeCourseMesg() =
-        let course = new Fit.CourseMesg()
-        course.SetSport(Fit.Sport.Cycling)
-        course.SetName(name)
-        encoder.Write(course)
+        let mesg = new Fit.CourseMesg()
+        mesg.SetSport(Fit.Sport.Cycling)
+        mesg.SetName(name)
+        encoder.Write(mesg)
         
-    let writeTimerEvent(eventType: Fit.EventType) =
-        let event = new Fit.EventMesg()
-        event.SetEvent(Fit.Event.Timer)
-        event.SetEventType(eventType)
+    let writeTimerEventMesg(eventType: Fit.EventType) =
+        let mesg = new Fit.EventMesg()
+        mesg.SetEvent(Fit.Event.Timer)
+        mesg.SetEventType(eventType)
         let timestamp = startTime.AddSeconds(float (totalDistance / speed))
-        event.SetTimestamp(new Fit.DateTime(timestamp))
-        encoder.Write(event)
+        mesg.SetTimestamp(new Fit.DateTime(timestamp))
+        encoder.Write(mesg)
         
     let writeLapMesg() =
-        let lap = new Fit.LapMesg()
-        lap.SetStartTime(new Fit.DateTime(startTime))
-        lap.SetTotalElapsedTime(float32 (totalDistance / speed))
-        lap.SetTotalTimerTime(float32 (totalDistance / speed))
-        lap.SetTotalDistance(float32 totalDistance)
+        let mesg = new Fit.LapMesg()
+        mesg.SetStartTime(new Fit.DateTime(startTime))
+        mesg.SetTotalElapsedTime(float32 (totalDistance / speed))
+        mesg.SetTotalTimerTime(float32 (totalDistance / speed))
+        mesg.SetTotalDistance(float32 totalDistance)
         match firstPoint with
         | Some point ->
-            lap.SetStartPositionLat(int (semicircles point.Lat))
-            lap.SetStartPositionLong(int (semicircles point.Lon))
+            mesg.SetStartPositionLat(int (semicircles point.Lat))
+            mesg.SetStartPositionLong(int (semicircles point.Lon))
         | None -> ()
         match prevPoint with
         | Some point ->
-            lap.SetEndPositionLat(int (semicircles point.Lat))
-            lap.SetEndPositionLong(int (semicircles point.Lon))
+            mesg.SetEndPositionLat(int (semicircles point.Lat))
+            mesg.SetEndPositionLong(int (semicircles point.Lon))
         | None -> ()
-        encoder.Write(lap)
+        encoder.Write(mesg)
     
     do (
         encoder.Open(stream)
-        writeFileId()
+        writeFileIdMesg()
         writeCourseMesg()
-        writeTimerEvent(Fit.EventType.Start)
+        writeTimerEventMesg(Fit.EventType.Start)
         )
     
     member self.AddRecord(point: SurfacePoint) =
@@ -75,16 +77,16 @@ type CourseWriter(path: string, name: string, startTime: DateTime, speed: float<
         prevPoint <- Some point
         let timestamp = startTime.AddSeconds(float (totalDistance / speed))
         
-        let record = new Fit.RecordMesg()
-        record.SetPositionLat(int (semicircles point.Lat))
-        record.SetPositionLong(int (semicircles point.Lon))
-        record.SetTimestamp(new Fit.DateTime(timestamp))
-        record.SetDistance(float32 totalDistance)
-        encoder.Write(record)
+        let mesg = new Fit.RecordMesg()
+        mesg.SetPositionLat(int (semicircles point.Lat))
+        mesg.SetPositionLong(int (semicircles point.Lon))
+        mesg.SetTimestamp(new Fit.DateTime(timestamp))
+        mesg.SetDistance(float32 totalDistance)
+        encoder.Write(mesg)
     
     interface IDisposable with
         member this.Dispose() =
-            writeTimerEvent(Fit.EventType.Stop)
+            writeTimerEventMesg(Fit.EventType.Stop)
             writeLapMesg()
             
             encoder.Close()
