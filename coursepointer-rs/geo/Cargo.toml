@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-approx = "0.5.1"
 cxx = "1.0.157"
 
 [build-dependencies]
 cxx-build = "1.0.157"
+
+[dev-dependencies]
+approx = "0.5.1"
