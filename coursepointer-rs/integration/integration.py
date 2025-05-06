@@ -32,7 +32,16 @@ class FitCourse:
         if not decoder.check_integrity():
             raise ValueError("Not a valid FIT file")
 
-        messages, errors = decoder.read(expand_sub_fields=False, expand_components=False, merge_heart_rates=False, mesg_listener=mesg_listener)
+        stream = fit.Stream.from_file(path)
+        decoder = fit.Decoder(stream)
+        # record_fields = set()
+        # def mesg_listener(mesg_num, message):
+        #     if mesg_num == Profile['mesg_num']['RECORD']:
+        #         for field in message:
+        #             record_fields.add(field)
+        #
+        # import pdb; pdb.set_trace()
+        messages, errors = decoder.read()
         if errors:
             raise ValueError(f"Errors reading FIT file: {errors}")
 
@@ -52,7 +61,7 @@ def main():
     parser.add_argument("path")
     args = parser.parse_args()
 
-    fit_course = FitCourse.from_fit(args.path)
+    fit_course = FitCourse.from_fit_garmin(args.path)
     print(fit_course.to_json())
 
 
