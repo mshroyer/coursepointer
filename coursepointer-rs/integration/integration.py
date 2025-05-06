@@ -32,8 +32,8 @@ class FitCourse:
         if not decoder.check_integrity():
             raise ValueError("Not a valid FIT file")
 
-        stream = fit.Stream.from_file(path)
-        decoder = fit.Decoder(stream)
+        stream.reset()
+
         # record_fields = set()
         # def mesg_listener(mesg_num, message):
         #     if mesg_num == Profile['mesg_num']['RECORD']:
