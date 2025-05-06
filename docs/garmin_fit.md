@@ -18,7 +18,9 @@ Strings are specified UTF-8 and null-terminated.  This is a bit awkward because 
 
 ### Semicircles
 
-A signed (2's complement) 32-bit integer representing a latitude or longitude.
+A signed (2's complement) 32-bit integer representing a latitude or longitude.  The same formula is used for both latitude and longitude:
+
+semicircles = 2^31 * degrees / 180
 
 ### Timestamps
 
@@ -68,6 +70,38 @@ The longitude value likewise matches this formula for converting degrees into se
 The timestamp field appears to represent a number of seconds since Garmin's epoch of 1989-12-31 00:00:00 UTC.  Interesting choice.
 
 The file CRC is simply presented as two bytes following the final data message in the file, with no additional header.
+
+### Garmin Connect
+
+The file sample-file/cptr002.fit was created by the Garmin Connect web-based course planner and exported on 2025-05-06.  The file cptr002.gpx is a GPX export of the same course.  It was drawn "freehand" (not following roads) with three navigation points including start and end, and two course points.
+
+Unlike the file created above by the .NET SDK, this is big endian.
+
+The overall message sequence is similar to what's recommended in the "Encoding Course Files" document:
+
+1. File ID
+2. Course message
+3. Lap message
+4. Start event
+5. Records and course points
+6. Stop event
+7. File creator message
+
+However, here course points are interspersed with record messages by order of their overall distance along the course.  This file also contains a file creator message, containing the string "course-service" along with what's presumably Garmin Connect version information.
+
+Unlike the GPX export, the FIT file extrapolates the course into 666 record messages!
+
+In contrast with the file created by the .NET SDK, the Garmin Connect uses incrementing local message numbers for each new message defined, up until reaching the file creator message, at which point it reuses local number zero.
+
+Garmin Connect would only allow me to add course points with names up to 15 characters in length.  Correspondingly, the length of the course point's name field is defined as 16 bytes long.  In data frames with shorter names, the leftover space is zero-padded.
+
+### Ride With GPS
+
+FIT files exported directly from Ride With GPS are formatted similarly to those created by Garmin Connect, although all course point messages are serialized before all the record messages, and the closing file creator message is missing.
+
+Also big endian.
+
+Setting the "notify before turn" option when exporting makes the cues being exported as course points appear earlier on the course: The distance field is reduced by the specified amount, and the course point's latitude and longitude are also adjusted.
 
 ## Device experiments
 
