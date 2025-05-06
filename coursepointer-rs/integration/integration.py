@@ -11,6 +11,14 @@ class FitCourse:
 
     @classmethod
     def from_fit(klass, path: str) -> "FitCourse":
+        with fitdecode.FitReader(path) as reader:
+            for frame in reader:
+                print(frame)
+
+        return klass({})
+
+    @classmethod
+    def from_fit_garmin(klass, path: str) -> "FitCourse":
         stream = fit.Stream.from_file(path)
         decoder = fit.Decoder(stream)
         if not decoder.check_integrity():
