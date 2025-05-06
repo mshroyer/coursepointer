@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
+    "fitdecode>=0.10.0",
     "garmin-fit-sdk>=21.158.0",
 ]
 

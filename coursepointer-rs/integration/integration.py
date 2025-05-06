@@ -13,7 +13,15 @@ class FitCourse:
     def from_fit(klass, path: str) -> "FitCourse":
         with fitdecode.FitReader(path) as reader:
             for frame in reader:
-                print(frame)
+                if frame.frame_type == fitdecode.FIT_FRAME_DATA:
+                    print(f"Data message: {frame.name}")
+                elif frame.frame_type == fitdecode.FIT_FRAME_DEFINITION:
+                    print("=== Definition frame ===")
+                    for field_def in frame.field_defs:
+                        print(f"- Field def: {field_def.name} = {field_def.type.name}")
+                    print("=== End definition frame ===")
+                else:
+                    print(frame)
 
         return klass({})
 
