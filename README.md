@@ -2,6 +2,10 @@
 
 This is a small tool that converts waypoints in a GPX track file into "course points" for use on Garmin devices.  I made this so that when using a cycling course authored in [Ride With GPS](https://ridewithgps.com/), its points of interest (POIs) will appear as course points on my Garmin Edge computer.
 
+# Geographic calculations
+
+
+
 # FAQ
 
 ## Why is this tool even needed?
