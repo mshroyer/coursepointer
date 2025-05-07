@@ -35,7 +35,7 @@ def show_frames(path: str) -> None:
             elif frame.frame_type == fitdecode.FIT_FRAME_DEFINITION:
                 print(f"=== Definition frame: {frame.name} local num: {frame.local_mesg_num} endianness: {frame.endian} offset: 0x{frame.chunk.offset:08x} ===")
                 for field_def in frame.field_defs:
-                    print(f"- Field def: {field_def.name} = {field_def.type.name}")
+                    print(f"- Field def: {field_def.name} = {field_def.type.name} size {field_def.size}")
                 print("=== End definition frame ===")
             else:
                 print(frame)
