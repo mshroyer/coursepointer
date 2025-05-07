@@ -13,10 +13,8 @@ pub enum FitEncodeError {
 
 type Result<T> = std::result::Result<T, FitEncodeError>;
 
-trait Encode {
+pub trait Encode {
     fn encode<W: Write>(&self, w: &mut W) -> Result<()>;
-
-    fn size(&self) -> usize;
 }
 
 /// Implements the Garmin FIT CRC algorithm.
@@ -62,10 +60,6 @@ impl Encode for Crc {
         w.write_u16::<LittleEndian>(self.sum)?;
         Ok(())
     }
-
-    fn size(&self) -> usize {
-        2
-    }
 }
 
 struct CheckSummingWriter<'a, W: Write> {
@@ -103,24 +97,31 @@ enum ProtocolVersion {
     V10,
 }
 
-struct FileHeader {
+trait Message {
+    fn encode(&self, w: &mut dyn Write) -> Result<()>;
+    fn size(&self) -> usize;
+}
+
+pub struct FitFile {
     protocol_version: ProtocolVersion,
     profile_version: u16,
     data_size: u32,
+    messages: Vec<Box<dyn Message>>,
 }
 
-impl FileHeader {
+impl FitFile {
     pub fn new(profile_version: u16, data_size: usize) -> Result<Self> {
         let data_size_u32 = u32::try_from(data_size)?;
         Ok(Self {
             protocol_version: ProtocolVersion::V10,
             profile_version,
             data_size: data_size_u32,
+            messages: Vec::new(),
         })
     }
 }
 
-impl Encode for FileHeader {
+impl Encode for FitFile {
     fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
         w.write_u8(14)?;
         w.write_u8(match self.protocol_version {
@@ -131,15 +132,11 @@ impl Encode for FileHeader {
         write!(w, ".FIT")?;
         Ok(())
     }
-
-    fn size(&self) -> usize {
-        14
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{CheckSummingWriter, Crc, Encode, FileHeader, Result};
+    use super::{CheckSummingWriter, Crc, Encode, FitFile, Result};
 
     #[test]
     fn test_header_crc() {
@@ -156,7 +153,7 @@ mod tests {
     fn test_header_encode() -> Result<()> {
         let mut buf : Vec<u8> = vec![];
         let mut writer = CheckSummingWriter::new(&mut buf);
-        let header = FileHeader::new(21170u16, 17032usize)?;
+        let header = FitFile::new(21170u16, 17032usize)?;
         header.encode(&mut writer)?;
         writer.finish()?;
 
