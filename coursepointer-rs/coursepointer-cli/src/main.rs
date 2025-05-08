@@ -1,5 +1,4 @@
 use std::fs::File;
-use std::io::prelude::*;
 
 use anyhow::Result;
 use clap::Parser;

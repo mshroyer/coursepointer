@@ -123,20 +123,22 @@ impl FitFile {
 
 impl Encode for FitFile {
     fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
-        w.write_u8(14)?;
-        w.write_u8(match self.protocol_version {
+        let mut xw = CheckSummingWriter::new(w);
+        xw.write_u8(14)?;
+        xw.write_u8(match self.protocol_version {
             ProtocolVersion::V10 => 0x10u8,
         })?;
-        w.write_u16::<LittleEndian>(self.profile_version)?;
-        w.write_u32::<LittleEndian>(self.data_size)?;
-        write!(w, ".FIT")?;
+        xw.write_u16::<LittleEndian>(self.profile_version)?;
+        xw.write_u32::<LittleEndian>(self.data_size)?;
+        write!(xw, ".FIT")?;
+        xw.finish()?;
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{CheckSummingWriter, Crc, Encode, FitFile, Result};
+    use super::{Crc, Encode, FitFile, Result};
 
     #[test]
     fn test_header_crc() {
@@ -152,10 +154,8 @@ mod tests {
     #[test]
     fn test_header_encode() -> Result<()> {
         let mut buf : Vec<u8> = vec![];
-        let mut writer = CheckSummingWriter::new(&mut buf);
         let header = FitFile::new(21170u16, 17032usize)?;
-        header.encode(&mut writer)?;
-        writer.finish()?;
+        header.encode(&mut buf)?;
 
         assert_eq!(buf, &[
             0x0e, 0x10, 0xb2, 0x52, 0x88, 0x42, 0x00, 0x00, 0x2e, 0x46, 0x49, 0x54, 0x4b, 0xf9
