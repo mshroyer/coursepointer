@@ -4,9 +4,7 @@ use std::io::prelude::*;
 use anyhow::Result;
 use clap::Parser;
 
-mod fit;
-use fit::Encode;
-use fit::FitFile;
+use coursepointer::{Encode, FitFile};
 
 #[derive(Parser)]
 struct Args {

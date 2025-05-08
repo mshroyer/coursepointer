@@ -1,3 +1,3 @@
 [workspace]
 resolver = "2"
-members = ["coursepointer","geo", "teststub"]
+members = ["coursepointer", "coursepointer-cli","geographic","integration-stub"]

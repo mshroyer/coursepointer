@@ -149,10 +149,17 @@ checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 name = "coursepointer"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "byteorder",
- "clap",
  "thiserror",
+]
+
+[[package]]
+name = "coursepointer-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "coursepointer",
 ]
 
 [[package]]
@@ -221,7 +228,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
-name = "geo"
+name = "geographic"
 version = "0.1.0"
 dependencies = [
  "approx",
