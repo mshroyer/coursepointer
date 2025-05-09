@@ -3,7 +3,7 @@ use std::fs::File;
 use anyhow::Result;
 use clap::Parser;
 
-use coursepointer::{Encode, FitFile};
+use coursepointer::FitFile;
 
 #[derive(Parser)]
 struct Args {

@@ -1,6 +1,6 @@
 pub mod fit;
 
-pub use fit::{Encode, FitFile};
+pub use fit::FitFile;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

@@ -13,10 +13,6 @@ pub enum FitEncodeError {
 
 type Result<T> = std::result::Result<T, FitEncodeError>;
 
-pub trait Encode {
-    fn encode<W: Write>(&self, w: &mut W) -> Result<()>;
-}
-
 /// Implements the Garmin FIT CRC algorithm.
 ///
 /// A direct transcription of Garmin's reference implementation at
@@ -31,12 +27,12 @@ static CRC_TABLE: &'static [u16] = &[
 ];
 
 impl Crc {
-    pub fn new() -> Self {
+    fn new() -> Self {
         // Garmin's docs don't say so explicitly, but the starting value is zero.
         Self { sum: 0 }
     }
 
-    pub fn add_byte(&mut self, byte: u8) {
+    fn add_byte(&mut self, byte: u8) {
         // Checksum lower four bits
         let mut tmp = CRC_TABLE[(self.sum & 0x0F) as usize];
         self.sum = (self.sum >> 4) & 0x0FFF;
@@ -48,17 +44,10 @@ impl Crc {
         self.sum = self.sum ^ tmp ^ CRC_TABLE[(byte >> 4) as usize];
     }
 
-    pub fn add_bytes(&mut self, byte: &[u8]) {
+    fn add_bytes(&mut self, byte: &[u8]) {
         for byte in byte {
             self.add_byte(*byte);
         }
-    }
-}
-
-impl Encode for Crc {
-    fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
-        w.write_u16::<LittleEndian>(self.sum)?;
-        Ok(())
     }
 }
 
@@ -119,10 +108,8 @@ impl FitFile {
             messages: Vec::new(),
         })
     }
-}
 
-impl Encode for FitFile {
-    fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
+    pub fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
         let mut xw = CheckSummingWriter::new(w);
         xw.write_u8(14)?;
         xw.write_u8(match self.protocol_version {
@@ -138,7 +125,7 @@ impl Encode for FitFile {
 
 #[cfg(test)]
 mod tests {
-    use super::{Crc, Encode, FitFile, Result};
+    use super::{Crc, FitFile, Result};
 
     #[test]
     fn test_header_crc() {
