@@ -53,7 +53,9 @@ impl TryFrom<DateTime<Utc>> for FitDateTime {
         if ts < (GARMIN_DATE_TIME_MIN as i64) {
             return Err(FitEncodeError::DateTimeEncoding);
         }
-        Ok(Self { value: u32::try_from(ts)? })
+        Ok(Self {
+            value: u32::try_from(ts)?,
+        })
     }
 }
 
@@ -208,6 +210,7 @@ impl FieldDefinition {
 enum GlobalMessage {
     FileId = 0u16,
     Lap = 19u16,
+    Event = 21u16,
     Course = 31u16,
 }
 
@@ -389,6 +392,52 @@ impl LapMessage {
     }
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+enum Event {
+    Timer = 0u8,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+enum EventType {
+    Start = 0u8,
+    Stop = 1u8,
+    StopAll = 4u8,
+}
+
+struct EventMessage {
+    event: Event,
+    event_type: EventType,
+    timestamp: FitDateTime,
+}
+
+impl EventMessage {
+    fn new(event: Event, event_type: EventType, timestamp: FitDateTime) -> Self {
+        Self {
+            event,
+            event_type,
+            timestamp,
+        }
+    }
+
+    fn field_definitions() -> Vec<FieldDefinition> {
+        vec![
+            FieldDefinition::new(0, 1, 0),     // event
+            FieldDefinition::new(1, 1, 0),     // event_type
+            FieldDefinition::new(253, 4, 134), // timestamp
+        ]
+    }
+
+    fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
+        w.write_u8(local_message_id & 0x0F)?;
+        w.write_u8(self.event as u8)?;
+        w.write_u8(self.event_type as u8)?;
+        w.write_u32::<BigEndian>(self.timestamp.value)?;
+        Ok(())
+    }
+}
+
 pub struct CourseFile {
     profile_version: u16,
     name: String,
@@ -454,6 +503,21 @@ impl CourseFile {
         )
         .encode(2u8, &mut dw)?;
 
+        DefinitionFrame::new(GlobalMessage::Event, 3u8, EventMessage::field_definitions())
+            .encode(&mut dw)?;
+        EventMessage::new(
+            Event::Timer,
+            EventType::Start,
+            FitDateTime::try_from(self.start_time)?,
+        )
+        .encode(3u8, &mut dw)?;
+
+        EventMessage::new(
+            Event::Timer,
+            EventType::Stop,
+            FitDateTime::try_from(self.start_time.add(TimeDelta::seconds(total_time_s as i64)))?,
+        )
+        .encode(3u8, &mut dw)?;
         dw.finish()?;
 
         Ok(())
@@ -472,6 +536,9 @@ impl CourseFile {
 
         sz += CourseFile::get_definition_message_size(LapMessage::field_definitions().len());
         sz += CourseFile::get_data_message_size(LapMessage::field_definitions());
+
+        sz += CourseFile::get_definition_message_size(EventMessage::field_definitions().len());
+        sz += 2 * CourseFile::get_data_message_size(EventMessage::field_definitions());
 
         // sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
         // sz += self.records.len()
