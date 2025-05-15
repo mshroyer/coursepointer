@@ -1,6 +1,6 @@
 pub mod fit;
 
-pub use fit::FitFile;
+pub use fit::CourseFile;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

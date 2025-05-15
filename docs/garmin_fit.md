@@ -91,9 +91,11 @@ However, here course points are interspersed with record messages by order of th
 
 Unlike the GPX export, the FIT file extrapolates the course into 666 record messages!
 
-In contrast with the file created by the .NET SDK, the Garmin Connect uses incrementing local message numbers for each new message defined, up until reaching the file creator message, at which point it reuses local number zero.
+In contrast with the file created by the .NET SDK, Garmin Connect uses incrementing local message numbers for each new message defined, up until reaching the file creator message, at which point it reuses local number zero.
 
 Garmin Connect would only allow me to add course points with names up to 15 characters in length.  Correspondingly, the length of the course point's name field is defined as 16 bytes long.  In data frames with shorter names, the leftover space is zero-padded.
+
+When creating courses with really long names, Connect would only export the first 128 characters, making the field size 129 bytes including the null terminator.
 
 ### Ride With GPS
 

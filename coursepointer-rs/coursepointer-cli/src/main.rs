@@ -3,7 +3,7 @@ use std::fs::File;
 use anyhow::Result;
 use clap::Parser;
 
-use coursepointer::FitFile;
+use coursepointer::CourseFile;
 
 #[derive(Parser)]
 struct Args {
@@ -16,8 +16,8 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let mut file = File::create(&args.output)?;
-    let header = FitFile::new(21170u16, 17032usize)?;
-    header.encode(&mut file)?;
+    let course_file = CourseFile::new(21178u16);
+    course_file.encode(&mut file)?;
 
     Ok(())
 }
