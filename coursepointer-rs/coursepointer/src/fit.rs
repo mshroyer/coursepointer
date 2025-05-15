@@ -1,7 +1,10 @@
 use std::io::Write;
+use std::sync::LazyLock;
 
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
+use chrono::{DateTime, Utc};
 use thiserror::Error;
+use uom::si::f64::Velocity;
 
 #[derive(Error, Debug)]
 pub enum FitEncodeError {
@@ -23,6 +26,29 @@ fn write_string_field<W: Write>(s: &str, field_size: usize, w: &mut W) -> Result
     for _ in 0..(field_size - s.len()) {
         w.write_u8(0)?;
     }
+    Ok(())
+}
+
+static GARMIN_EPOCH: LazyLock<DateTime<Utc>> =
+    LazyLock::new(|| "1981-12-31T00:00:00Z".parse::<DateTime<Utc>>().unwrap());
+
+/// A point on the surface of the ellipsoid, as represented in a FIT file.
+#[derive(Debug, Clone, Copy)]
+struct FitSurfacePoint {
+    /// Latitutde in semicircles
+    lat_semis: i32,
+
+    /// Longitude in semicircles
+    lon_semis: i32,
+}
+
+fn write_garmin_timestamp_field<W: Write, B: ByteOrder>(
+    timestamp: DateTime<Utc>,
+    w: &mut W,
+) -> Result<()> {
+    let garmin_timestamp =
+        u32::try_from(timestamp.signed_duration_since(*GARMIN_EPOCH).num_seconds())?;
+    w.write_u32::<B>(garmin_timestamp)?;
     Ok(())
 }
 
@@ -155,6 +181,7 @@ impl FieldDefinition {
 #[derive(Clone, Copy, Debug)]
 enum GlobalMessage {
     FileId = 0u16,
+    Lap = 19u16,
     Course = 31u16,
 }
 
@@ -192,9 +219,8 @@ impl DefinitionFrame {
 }
 
 struct RecordMessage {
-    lat: i32,
-    lon: i32,
-    dist_m: i32,
+    position: FitSurfacePoint,
+    dist_m: u32,
     time_s: u32,
 }
 
@@ -207,16 +233,16 @@ impl RecordMessage {
         vec![
             FieldDefinition::new(0, 4, 133),   // lat
             FieldDefinition::new(1, 4, 133),   // lon
-            FieldDefinition::new(5, 4, 133),   // distance
+            FieldDefinition::new(5, 4, 134),   // distance
             FieldDefinition::new(253, 4, 134), // timestamp
         ]
     }
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        w.write_i32::<BigEndian>(self.lat)?;
-        w.write_i32::<BigEndian>(self.lon)?;
-        w.write_i32::<BigEndian>(self.dist_m)?;
+        w.write_i32::<BigEndian>(self.position.lat_semis)?;
+        w.write_i32::<BigEndian>(self.position.lat_semis)?;
+        w.write_u32::<BigEndian>(self.dist_m)?;
         w.write_u32::<BigEndian>(self.time_s)?;
         Ok(())
     }
@@ -280,20 +306,83 @@ impl FileIdMessage {
 }
 
 struct LapMessage {
-    
+    start_time: DateTime<Utc>,
+    time_s: u32,
+    dist_m: u32,
+    start_pos: Option<FitSurfacePoint>,
+    end_pos: Option<FitSurfacePoint>,
+}
+
+impl LapMessage {
+    fn new(
+        start_time: DateTime<Utc>,
+        time_s: u32,
+        dist_m: u32,
+        start_pos: Option<FitSurfacePoint>,
+        end_pos: Option<FitSurfacePoint>,
+    ) -> Self {
+        Self {
+            start_time,
+            time_s,
+            dist_m,
+            start_pos,
+            end_pos,
+        }
+    }
+
+    fn field_definitions() -> Vec<FieldDefinition> {
+        vec![
+            FieldDefinition::new(2, 4, 134), // start_time
+            FieldDefinition::new(7, 4, 134), // total_elapsed_time
+            FieldDefinition::new(8, 4, 134), // total_timer_time
+            FieldDefinition::new(9, 4, 134), // total_distance
+            FieldDefinition::new(3, 4, 133), // start_position_lat
+            FieldDefinition::new(4, 4, 133), // start_position_long
+            FieldDefinition::new(5, 4, 133), // end_position_lat
+            FieldDefinition::new(6, 4, 133), // end_position_long
+        ]
+    }
+
+    fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
+        w.write_u8(local_message_id & 0x0F)?;
+        write_garmin_timestamp_field::<W, BigEndian>(self.start_time, w)?;
+        w.write_u32::<BigEndian>(self.time_s)?;
+        w.write_u32::<BigEndian>(self.time_s)?;
+        w.write_u32::<BigEndian>(self.dist_m)?;
+        let null_pos = FitSurfacePoint {
+            lat_semis: 0i32,
+            lon_semis: 0i32,
+        };
+        let start_pos = self.start_pos.unwrap_or(null_pos);
+        let end_pos = self.end_pos.unwrap_or(null_pos);
+        w.write_i32::<BigEndian>(start_pos.lat_semis)?;
+        w.write_i32::<BigEndian>(start_pos.lon_semis)?;
+        w.write_i32::<BigEndian>(end_pos.lat_semis)?;
+        w.write_i32::<BigEndian>(end_pos.lon_semis)?;
+        Ok(())
+    }
 }
 
 pub struct CourseFile {
     profile_version: u16,
     name: String,
+    start_time: DateTime<Utc>,
+    speed: Velocity,
     records: Vec<RecordMessage>,
 }
 
 impl CourseFile {
-    pub fn new(profile_version: u16, name: String) -> Self {
+    pub fn new(
+        profile_version: u16,
+        name: String,
+        start_time: DateTime<Utc>,
+        speed: Velocity,
+    ) -> Self {
         Self {
             profile_version,
             name,
+            start_time,
+            speed,
             records: vec![],
         }
     }
@@ -324,6 +413,21 @@ impl CourseFile {
         .encode(&mut dw)?;
         CourseMessage::new(self.name.clone(), Sport::Cycling).encode(1u8, &mut dw)?;
 
+        let total_time_s: u32 = self.records.iter().map(|r| r.time_s).sum();
+        let total_dist_m: u32 = self.records.iter().map(|r| r.dist_m).sum();
+        let start_pos = self.records.iter().map(|r| r.position).next();
+        let end_pos = self.records.iter().map(|r| r.position).last();
+        DefinitionFrame::new(GlobalMessage::Lap, 2u8, LapMessage::field_definitions())
+            .encode(&mut dw)?;
+        LapMessage::new(
+            self.start_time,
+            total_time_s,
+            total_dist_m,
+            start_pos,
+            end_pos,
+        )
+        .encode(2u8, &mut dw)?;
+
         dw.finish()?;
 
         Ok(())
@@ -340,8 +444,8 @@ impl CourseFile {
         sz += CourseFile::get_definition_message_size(CourseMessage::field_definitions().len());
         sz += CourseFile::get_data_message_size(CourseMessage::field_definitions());
 
-        // sz += CourseFile::get_definition_message_size(LapMessage::field_definitions().len());
-        // sz += CourseFile::get_data_message_size(LapMessage::field_definitions());
+        sz += CourseFile::get_definition_message_size(LapMessage::field_definitions().len());
+        sz += CourseFile::get_data_message_size(LapMessage::field_definitions());
 
         // sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
         // sz += self.records.len()
