@@ -155,6 +155,7 @@ impl FieldDefinition {
 #[derive(Clone, Copy, Debug)]
 enum GlobalMessage {
     FileId = 0u16,
+    Course = 31u16,
 }
 
 pub struct DefinitionFrame {
@@ -175,7 +176,7 @@ impl DefinitionFrame {
             field_definitions,
         }
     }
-    
+
     fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
         w.write_u8(0b01000000 | (self.local_message_type & 0b00001111))?;
         w.write_u8(0x00)?; // reserved
@@ -224,7 +225,7 @@ impl RecordMessage {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
 enum Sport {
-    Cycling = 2,
+    Cycling = 2u8,
 }
 
 struct CourseMessage {
@@ -233,16 +234,20 @@ struct CourseMessage {
 }
 
 impl CourseMessage {
+    fn new(name: String, sport: Sport) -> Self {
+        Self { name, sport }
+    }
+
     fn field_definitions() -> Vec<FieldDefinition> {
         vec![
-            FieldDefinition::new(5, 16, 7), // name
+            FieldDefinition::new(5, 32, 7), // name
             FieldDefinition::new(4, 1, 0),  // sport
         ]
     }
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        write_string_field(self.name.as_str(), 16, w)?;
+        write_string_field(self.name.as_str(), 32, w)?;
         w.write_u8(self.sport as u8)?;
         Ok(())
     }
@@ -278,13 +283,15 @@ struct LapMessage {}
 
 pub struct CourseFile {
     profile_version: u16,
+    name: String,
     records: Vec<RecordMessage>,
 }
 
 impl CourseFile {
-    pub fn new(profile_version: u16) -> Self {
+    pub fn new(profile_version: u16, name: String) -> Self {
         Self {
             profile_version,
+            name,
             records: vec![],
         }
     }
@@ -298,8 +305,23 @@ impl CourseFile {
 
         // File data
         let mut dw = CheckSummingWrite::new(w);
-        DefinitionFrame::new(GlobalMessage::FileId, 0u8, FileIdMessage::field_definitions()).encode(&mut dw)?;
+
+        DefinitionFrame::new(
+            GlobalMessage::FileId,
+            0u8,
+            FileIdMessage::field_definitions(),
+        )
+        .encode(&mut dw)?;
         FileIdMessage::new(FileType::Course).encode(0u8, &mut dw)?;
+
+        DefinitionFrame::new(
+            GlobalMessage::Course,
+            1u8,
+            CourseMessage::field_definitions(),
+        )
+        .encode(&mut dw)?;
+        CourseMessage::new(self.name.clone(), Sport::Cycling).encode(1u8, &mut dw)?;
+
         dw.finish()?;
 
         Ok(())
@@ -313,8 +335,8 @@ impl CourseFile {
         sz += CourseFile::get_definition_message_size(FileIdMessage::field_definitions().len());
         sz += CourseFile::get_data_message_size(FileIdMessage::field_definitions());
 
-        // sz += CourseFile::get_definition_message_size(CourseMessage::field_definitions().len());
-        // sz += CourseFile::get_data_message_size(CourseMessage::field_definitions());
+        sz += CourseFile::get_definition_message_size(CourseMessage::field_definitions().len());
+        sz += CourseFile::get_data_message_size(CourseMessage::field_definitions());
 
         // sz += CourseFile::get_definition_message_size(LapMessage::field_definitions().len());
         // sz += CourseFile::get_data_message_size(LapMessage::field_definitions());
@@ -335,7 +357,7 @@ impl CourseFile {
     /// Computes the size of a single instance of a data message, given its field definitions.
     fn get_data_message_size<I>(defs: I) -> usize
     where
-        I: IntoIterator<Item=FieldDefinition>,
+        I: IntoIterator<Item = FieldDefinition>,
     {
         1usize + defs.into_iter().map(|def| def.size as usize).sum::<usize>()
     }

@@ -16,7 +16,7 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let mut file = File::create(&args.output)?;
-    let course_file = CourseFile::new(21178u16);
+    let course_file = CourseFile::new(21178u16, "Test course".to_string());
     course_file.encode(&mut file)?;
 
     Ok(())
