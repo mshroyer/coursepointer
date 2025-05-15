@@ -279,7 +279,9 @@ impl FileIdMessage {
     }
 }
 
-struct LapMessage {}
+struct LapMessage {
+    
+}
 
 pub struct CourseFile {
     profile_version: u16,
