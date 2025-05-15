@@ -1,8 +1,9 @@
 use std::io::Write;
+use std::ops::Add;
 use std::sync::LazyLock;
 
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeDelta, Utc};
 use thiserror::Error;
 use uom::si::f64::Velocity;
 
@@ -14,6 +15,8 @@ pub enum FitEncodeError {
     IntegerEncoding(#[from] std::num::TryFromIntError),
     #[error("encoding string")]
     StringEncoding,
+    #[error("encoding date_time")]
+    DateTimeEncoding,
 }
 
 type Result<T> = std::result::Result<T, FitEncodeError>;
@@ -32,6 +35,39 @@ fn write_string_field<W: Write>(s: &str, field_size: usize, w: &mut W) -> Result
 static GARMIN_EPOCH: LazyLock<DateTime<Utc>> =
     LazyLock::new(|| "1981-12-31T00:00:00Z".parse::<DateTime<Utc>>().unwrap());
 
+const GARMIN_DATE_TIME_MIN: u32 = 0x10000000;
+
+/// A date_time value as represented in a FIT file.
+#[derive(Debug, Clone, Copy)]
+struct FitDateTime {
+    /// A timestamp as measured from the Garmin epoch of 1981-12-31T00:00:00Z, or a relative time
+    /// in seconds if below 0x10000000.
+    value: u32,
+}
+
+impl TryFrom<DateTime<Utc>> for FitDateTime {
+    type Error = FitEncodeError;
+
+    fn try_from(value: DateTime<Utc>) -> std::result::Result<Self, Self::Error> {
+        let ts = value.signed_duration_since(*GARMIN_EPOCH).num_seconds();
+        if ts < (GARMIN_DATE_TIME_MIN as i64) {
+            return Err(FitEncodeError::DateTimeEncoding);
+        }
+        Ok(Self { value: u32::try_from(ts)? })
+    }
+}
+
+impl TryFrom<FitDateTime> for DateTime<Utc> {
+    type Error = FitEncodeError;
+
+    fn try_from(value: FitDateTime) -> std::result::Result<Self, Self::Error> {
+        if value.value < GARMIN_DATE_TIME_MIN {
+            return Err(FitEncodeError::DateTimeEncoding);
+        }
+        Ok(GARMIN_EPOCH.add(TimeDelta::seconds(value.value as i64)))
+    }
+}
+
 /// A point on the surface of the ellipsoid, as represented in a FIT file.
 #[derive(Debug, Clone, Copy)]
 struct FitSurfacePoint {
@@ -40,16 +76,6 @@ struct FitSurfacePoint {
 
     /// Longitude in semicircles
     lon_semis: i32,
-}
-
-fn write_garmin_timestamp_field<W: Write, B: ByteOrder>(
-    timestamp: DateTime<Utc>,
-    w: &mut W,
-) -> Result<()> {
-    let garmin_timestamp =
-        u32::try_from(timestamp.signed_duration_since(*GARMIN_EPOCH).num_seconds())?;
-    w.write_u32::<B>(garmin_timestamp)?;
-    Ok(())
 }
 
 /// Implements the Garmin FIT CRC algorithm.
@@ -306,7 +332,7 @@ impl FileIdMessage {
 }
 
 struct LapMessage {
-    start_time: DateTime<Utc>,
+    start_time: FitDateTime,
     time_s: u32,
     dist_m: u32,
     start_pos: Option<FitSurfacePoint>,
@@ -315,7 +341,7 @@ struct LapMessage {
 
 impl LapMessage {
     fn new(
-        start_time: DateTime<Utc>,
+        start_time: FitDateTime,
         time_s: u32,
         dist_m: u32,
         start_pos: Option<FitSurfacePoint>,
@@ -345,7 +371,7 @@ impl LapMessage {
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        write_garmin_timestamp_field::<W, BigEndian>(self.start_time, w)?;
+        w.write_u32::<BigEndian>(self.start_time.value)?;
         w.write_u32::<BigEndian>(self.time_s)?;
         w.write_u32::<BigEndian>(self.time_s)?;
         w.write_u32::<BigEndian>(self.dist_m)?;
@@ -420,7 +446,7 @@ impl CourseFile {
         DefinitionFrame::new(GlobalMessage::Lap, 2u8, LapMessage::field_definitions())
             .encode(&mut dw)?;
         LapMessage::new(
-            self.start_time,
+            FitDateTime::try_from(self.start_time)?,
             total_time_s,
             total_dist_m,
             start_pos,
