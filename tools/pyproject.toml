@@ -1,0 +1,12 @@
+[project]
+name = "tools"
+version = "0.1.0"
+description = "Integration tests for coursepointer"
+dependencies = [
+    "fitdecode>=0.10.0",
+    "garmin-fit-sdk>=21.158.0",
+    "geographiclib>=2.0",
+]
+
+[project.scripts]
+readfit = "readfit:main"

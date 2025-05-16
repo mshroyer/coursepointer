@@ -1,0 +1,18 @@
+[project]
+name = "integration"
+version = "0.1.0"
+description = "Integration tests for coursepointer"
+dependencies = [
+    "fitdecode>=0.10.0",
+    "garmin-fit-sdk>=21.158.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+]
+
+# So our tests can resolve the integration package
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
