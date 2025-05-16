@@ -269,6 +269,7 @@ impl FieldDefinition {
 enum GlobalMessage {
     FileId = 0u16,
     Lap = 19u16,
+    Record = 20u16,
     Event = 21u16,
     Course = 31u16,
 }
@@ -600,6 +601,12 @@ impl CourseFile {
         )
         .encode(3u8, &mut dw)?;
 
+        DefinitionFrame::new(GlobalMessage::Record, 4u8, RecordMessage::field_definitions())
+            .encode(&mut dw)?;
+        for record in &self.records {
+            record.encode(4u8, &mut dw)?;
+        }
+
         EventMessage::new(
             Event::Timer,
             EventType::Stop,
@@ -635,9 +642,9 @@ impl CourseFile {
         sz += CourseFile::get_definition_message_size(EventMessage::field_definitions().len());
         sz += 2 * CourseFile::get_data_message_size(EventMessage::field_definitions());
 
-        // sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
-        // sz += self.records.len()
-        //     * CourseFile::get_data_message_size(RecordMessage::field_definitions());
+        sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
+        sz += self.records.len()
+            * CourseFile::get_data_message_size(RecordMessage::field_definitions());
 
         sz
     }
