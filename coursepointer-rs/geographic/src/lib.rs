@@ -24,10 +24,10 @@ mod ffi {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct SurfacePoint {
-    lat: f64,
-    lon: f64,
+    pub lat: f64,
+    pub lon: f64,
 }
 
 impl SurfacePoint {
@@ -37,9 +37,9 @@ impl SurfacePoint {
 }
 
 pub struct InverseSolution {
-    meters: f64,
-    azimuth1: f64,
-    azimuth2: f64,
+    pub meters: f64,
+    pub azimuth1: f64,
+    pub azimuth2: f64,
 }
 
 /// Calculate a solution to the inverse geodesic problem.

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns:gpxdata="http://www.cluetrust.com/XML/GPXDATA/1/0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="http://ridewithgps.com/" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.cluetrust.com/XML/GPXDATA/1/0 http://www.cluetrust.com/Schemas/gpxdata10.xsd">
+  <metadata>
+    <name>cptr002</name>
+    <link href="https://ridewithgps.com/routes/50778374">
+      <text>cptr002</text>
+    </link>
+    <time>2025-05-15T14:54:31Z</time>
+  </metadata>
+  <trk>
+    <name>cptr002</name>
+    <trkseg>
+      <trkpt lat="37.435476" lon="-122.095238">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.435476" lon="-122.095238">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.435428" lon="-122.094073">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.43538" lon="-122.092908">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.435332" lon="-122.091742">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.435284" lon="-122.090577">
+        <ele>1.1</ele>
+      </trkpt>
+      <trkpt lat="37.435235" lon="-122.089412">
+        <ele>1.1</ele>
+      </trkpt>
+      <trkpt lat="37.435187" lon="-122.088247">
+        <ele>1.1</ele>
+      </trkpt>
+      <trkpt lat="37.435139" lon="-122.087081">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.435091" lon="-122.085916">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.435091" lon="-122.085916">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.435091" lon="-122.085916">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.434087" lon="-122.086414">
+        <ele>0.0</ele>
+      </trkpt>
+      <trkpt lat="37.433084" lon="-122.086912">
+        <ele>1.1</ele>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

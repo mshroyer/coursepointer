@@ -50,8 +50,9 @@ def show_messages(path: str) -> None:
     print(f"Messages: {list(messages.keys())}")
     for event_mesg in messages["event_mesgs"]:
         print(event_mesg)
-    for course_point_mesg in messages["course_point_mesgs"]:
-        print(course_point_mesg)
+    if "course_point_mesgs" in messages:
+        for course_point_mesg in messages["course_point_mesgs"]:
+            print(course_point_mesg)
     for record_mesg in messages["record_mesgs"]:
         print(record_mesg)
 

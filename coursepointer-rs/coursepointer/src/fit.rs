@@ -1,11 +1,21 @@
+use std::convert::Infallible;
 use std::io::Write;
 use std::ops::Add;
 use std::sync::LazyLock;
 
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
+use num_traits::Pow;
+use num_traits::bounds::Bounded;
+use num_traits::cast::NumCast;
+use num_traits::float::Float;
+use num_traits::int::PrimInt;
 use thiserror::Error;
-use uom::si::f64::Velocity;
+use uom::si::f64::{Length, Velocity};
+use uom::si::length::{centimeter, meter};
+use uom::si::time::second;
+
+use geographic::SurfacePoint;
 
 #[derive(Error, Debug)]
 pub enum FitEncodeError {
@@ -13,10 +23,16 @@ pub enum FitEncodeError {
     Write(#[from] std::io::Error),
     #[error("encoding integer")]
     IntegerEncoding(#[from] std::num::TryFromIntError),
+    #[error("float conversion")]
+    FloatConversion,
     #[error("encoding string")]
     StringEncoding,
     #[error("encoding date_time")]
     DateTimeEncoding,
+    #[error("geographiclib error: {0}")]
+    GeographicLibError(String),
+    #[error("infallible")]
+    Infallible(#[from] Infallible),
 }
 
 type Result<T> = std::result::Result<T, FitEncodeError>;
@@ -35,6 +51,8 @@ fn write_string_field<W: Write>(s: &str, field_size: usize, w: &mut W) -> Result
 static GARMIN_EPOCH: LazyLock<DateTime<Utc>> =
     LazyLock::new(|| "1981-12-31T00:00:00Z".parse::<DateTime<Utc>>().unwrap());
 
+// The minimum value of a date_time as per the FIT global profile.  Values lower than this are to
+// be interpreted as relative offsets rather than absolute times since the Garmin epoch.
 const GARMIN_DATE_TIME_MIN: u32 = 0x10000000;
 
 /// A date_time value as represented in a FIT file.
@@ -78,6 +96,47 @@ struct FitSurfacePoint {
 
     /// Longitude in semicircles
     lon_semis: i32,
+}
+
+/// Lossily converts a float to an integer type
+///
+/// Accepts lossy conversion, but still returns an error if the value to be converted lies outside
+/// the expressible range of the target integer type.
+fn truncate_float<F, I>(f: F) -> Result<I>
+where
+    F: Float + NumCast,
+    I: PrimInt + NumCast + Bounded,
+{
+    let min = NumCast::from(I::min_value()).unwrap();
+    let max = NumCast::from(I::max_value()).unwrap();
+    if f >= min && f <= max {
+        Ok(NumCast::from(f.round()).unwrap())
+    } else {
+        Err(FitEncodeError::FloatConversion)
+    }
+}
+
+impl TryFrom<SurfacePoint> for FitSurfacePoint {
+    type Error = FitEncodeError;
+
+    fn try_from(value: SurfacePoint) -> std::result::Result<Self, Self::Error> {
+        let lat_semis = truncate_float((2f64.pow(31) / 180.0) * value.lat)?;
+        let lon_semis = truncate_float((2f64.pow(31) / 180.0) * value.lon)?;
+        Ok(Self {
+            lat_semis,
+            lon_semis,
+        })
+    }
+}
+
+impl TryFrom<FitSurfacePoint> for SurfacePoint {
+    type Error = FitEncodeError;
+
+    fn try_from(value: FitSurfacePoint) -> std::result::Result<Self, Self::Error> {
+        let lat = <f64 as From<i32>>::from(value.lat_semis) * 180.0 / 2f64.pow(31);
+        let lon = <f64 as From<i32>>::from(value.lon_semis) * 180.0 / 2f64.pow(31);
+        Ok(Self { lat, lon })
+    }
 }
 
 /// Implements the Garmin FIT CRC algorithm.
@@ -247,36 +306,6 @@ impl DefinitionFrame {
     }
 }
 
-struct RecordMessage {
-    position: FitSurfacePoint,
-    dist_m: u32,
-    time_s: u32,
-}
-
-impl RecordMessage {
-    fn message_id() -> u16 {
-        20
-    }
-
-    fn field_definitions() -> Vec<FieldDefinition> {
-        vec![
-            FieldDefinition::new(0, 4, 133),   // lat
-            FieldDefinition::new(1, 4, 133),   // lon
-            FieldDefinition::new(5, 4, 134),   // distance
-            FieldDefinition::new(253, 4, 134), // timestamp
-        ]
-    }
-
-    fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
-        w.write_u8(local_message_id & 0x0F)?;
-        w.write_i32::<BigEndian>(self.position.lat_semis)?;
-        w.write_i32::<BigEndian>(self.position.lat_semis)?;
-        w.write_u32::<BigEndian>(self.dist_m)?;
-        w.write_u32::<BigEndian>(self.time_s)?;
-        Ok(())
-    }
-}
-
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
 enum Sport {
@@ -336,8 +365,8 @@ impl FileIdMessage {
 
 struct LapMessage {
     start_time: FitDateTime,
-    time_s: u32,
-    dist_m: u32,
+    duration_ms: u32,
+    dist_cm: u32,
     start_pos: Option<FitSurfacePoint>,
     end_pos: Option<FitSurfacePoint>,
 }
@@ -345,15 +374,15 @@ struct LapMessage {
 impl LapMessage {
     fn new(
         start_time: FitDateTime,
-        time_s: u32,
-        dist_m: u32,
+        duration_ms: u32,
+        dist_cm: u32,
         start_pos: Option<FitSurfacePoint>,
         end_pos: Option<FitSurfacePoint>,
     ) -> Self {
         Self {
             start_time,
-            time_s,
-            dist_m,
+            duration_ms,
+            dist_cm,
             start_pos,
             end_pos,
         }
@@ -375,9 +404,9 @@ impl LapMessage {
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
         w.write_u32::<BigEndian>(self.start_time.value)?;
-        w.write_u32::<BigEndian>(self.time_s)?;
-        w.write_u32::<BigEndian>(self.time_s)?;
-        w.write_u32::<BigEndian>(self.dist_m)?;
+        w.write_u32::<BigEndian>(self.duration_ms)?;
+        w.write_u32::<BigEndian>(self.duration_ms)?;
+        w.write_u32::<BigEndian>(self.dist_cm)?;
         let null_pos = FitSurfacePoint {
             lat_semis: 0i32,
             lon_semis: 0i32,
@@ -438,12 +467,53 @@ impl EventMessage {
     }
 }
 
+struct RecordMessage {
+    /// The record's position on the surface of the ellipsoid.
+    position: FitSurfacePoint,
+
+    /// The distance in cm from the previous record.
+    dist_cm: u32,
+
+    /// The absolute time of the record.
+    timestamp: FitDateTime,
+}
+
+impl RecordMessage {
+    fn new(position: FitSurfacePoint, dist_cm: u32, timestamp: FitDateTime) -> Self {
+        Self {
+            position,
+            dist_cm,
+            timestamp,
+        }
+    }
+
+    fn field_definitions() -> Vec<FieldDefinition> {
+        vec![
+            FieldDefinition::new(0, 4, 133),   // lat
+            FieldDefinition::new(1, 4, 133),   // lon
+            FieldDefinition::new(5, 4, 134),   // distance
+            FieldDefinition::new(253, 4, 134), // timestamp
+        ]
+    }
+
+    fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
+        w.write_u8(local_message_id & 0x0F)?;
+        w.write_i32::<BigEndian>(self.position.lat_semis)?;
+        w.write_i32::<BigEndian>(self.position.lat_semis)?;
+        w.write_u32::<BigEndian>(self.dist_cm)?;
+        w.write_u32::<BigEndian>(self.timestamp.value)?;
+        Ok(())
+    }
+}
+
 pub struct CourseFile {
     profile_version: u16,
     name: String,
     start_time: DateTime<Utc>,
     speed: Velocity,
     records: Vec<RecordMessage>,
+    total_distance: Length,
+    last_record_added: Option<SurfacePoint>,
 }
 
 impl CourseFile {
@@ -459,7 +529,27 @@ impl CourseFile {
             start_time,
             speed,
             records: vec![],
+            total_distance: Length::new::<meter>(0.0),
+            last_record_added: None,
         }
+    }
+
+    pub fn add_record(&mut self, point: SurfacePoint) -> Result<()> {
+        let incremental_distance = match self.last_record_added {
+            None => Length::new::<meter>(0.0),
+            Some(prev_point) => {
+                let sln = geographic::inverse(&prev_point, &point)
+                    .or_else(|s| Err(FitEncodeError::GeographicLibError(s)))?;
+                Length::new::<meter>(sln.meters)
+            }
+        };
+        self.total_distance += incremental_distance;
+        self.records.push(RecordMessage::new(
+            FitSurfacePoint::try_from(point)?,
+            truncate_float(self.total_distance.get::<centimeter>())?,
+            FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
+        ));
+        Ok(())
     }
 
     pub fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
@@ -488,16 +578,14 @@ impl CourseFile {
         .encode(&mut dw)?;
         CourseMessage::new(self.name.clone(), Sport::Cycling).encode(1u8, &mut dw)?;
 
-        let total_time_s: u32 = self.records.iter().map(|r| r.time_s).sum();
-        let total_dist_m: u32 = self.records.iter().map(|r| r.dist_m).sum();
         let start_pos = self.records.iter().map(|r| r.position).next();
         let end_pos = self.records.iter().map(|r| r.position).last();
         DefinitionFrame::new(GlobalMessage::Lap, 2u8, LapMessage::field_definitions())
             .encode(&mut dw)?;
         LapMessage::new(
             FitDateTime::try_from(self.start_time)?,
-            total_time_s,
-            total_dist_m,
+            u32::try_from(self.total_duration()?.num_milliseconds())?,
+            truncate_float(self.total_distance.get::<centimeter>())?,
             start_pos,
             end_pos,
         )
@@ -515,12 +603,19 @@ impl CourseFile {
         EventMessage::new(
             Event::Timer,
             EventType::Stop,
-            FitDateTime::try_from(self.start_time.add(TimeDelta::seconds(total_time_s as i64)))?,
+            FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
         )
         .encode(3u8, &mut dw)?;
         dw.finish()?;
 
         Ok(())
+    }
+
+    /// Returns the timestamp corresponding to the course's speed and total distance.
+    fn total_duration(&self) -> Result<TimeDelta> {
+        let total_duration_quantity = self.total_distance / self.speed;
+        let total_duration_seconds: i64 = truncate_float(total_duration_quantity.get::<second>())?;
+        Ok(TimeDelta::seconds(total_duration_seconds))
     }
 
     /// Computes the total size of the data segment of this file, including definition messages

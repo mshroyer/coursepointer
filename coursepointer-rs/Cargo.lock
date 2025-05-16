@@ -198,6 +198,8 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "chrono",
+ "geographic",
+ "num-traits",
  "thiserror",
  "uom",
 ]
