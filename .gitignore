@@ -2,3 +2,6 @@
 
 # IDEs
 .idea/
+
+target/
+__pycache__/
