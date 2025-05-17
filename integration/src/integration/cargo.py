@@ -56,6 +56,12 @@ class Profile(NamedEnum):
     RELEASE = auto()
     BENCH = auto()
 
+    def target_subdir(self) -> str:
+        if self in (self.DEV, self.TEST):
+            return "debug"
+        else:
+            return "release"
+
 
 class Cargo:
     """The cargo build tool"""
@@ -89,4 +95,8 @@ class Cargo:
         subprocess.check_call(
             [self.cargo_bin, "build", "--package", package, "--bin", binary, "--profile", str(profile)])
         binary_filename = binary + ".exe" if is_windows() else binary
-        return self.workspace / "target" / str(profile) / binary_filename
+
+        # This assumes the target directory is in the root of the project
+        # directory.  Might want to update this to take into account
+        # .cargo/config.toml and CARGO_TARGET_DIR.
+        return self.workspace / "target" / profile.target_subdir() / binary_filename
