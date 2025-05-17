@@ -63,6 +63,25 @@ class Profile(NamedEnum):
             return "release"
 
 
+class RustBinFunc:
+    """A function interface to a rust binary
+
+    The binary is invoked with the supplied arguments, and the function returns
+    the binary's standard output.  Nonzero exit codes are represented by a thrown
+    CalledProcessError.
+    """
+
+    bin: Path
+
+    def __init__(self, bin: Path):
+        self.bin = bin
+
+    def __call__(self, *args: str) -> str:
+        print("Calling subprocess: {}".format(self.bin))
+        return str(
+            subprocess.check_output([str(self.bin)] + list(args), universal_newlines=True))
+
+
 class Cargo:
     """The cargo build tool"""
 
@@ -81,7 +100,7 @@ class Cargo:
 
         return Cargo(cargo_bin, workspace_dir())
 
-    def build_binary(self, package: Path, binary: str, profile: Profile) -> Path:
+    def build_bin(self, package: Path, binary: str, profile: Profile) -> Path:
         """Build a rust binary
 
         In a package relative to the project's root directory, uses cargo to
@@ -93,10 +112,14 @@ class Cargo:
         """
 
         subprocess.check_call(
-            [self.cargo_bin, "build", "--package", package, "--bin", binary, "--profile", str(profile)])
+            [self.cargo_bin, "build", "--package", package, "--bin", binary, "--profile", str(profile)],
+            cwd=self.workspace)
         binary_filename = binary + ".exe" if is_windows() else binary
 
         # This assumes the target directory is in the root of the project
         # directory.  Might want to update this to take into account
         # .cargo/config.toml and CARGO_TARGET_DIR.
         return self.workspace / "target" / profile.target_subdir() / binary_filename
+
+    def make_bin_func(self, package: Path, binary: str, profile: Profile) -> RustBinFunc:
+        return RustBinFunc(self.build_bin(package, binary, profile))
