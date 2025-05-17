@@ -9,7 +9,3 @@ def validate_fit_file(path: Path) -> None:
     messages, errors = decoder.read()
     if errors:
         raise ValueError(f"Errors reading FIT file: {errors}")
-
-
-def my_adder(a: int, b: int) -> int:
-    return a + b
