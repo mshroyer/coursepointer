@@ -17,6 +17,11 @@ use uom::si::time::second;
 
 use geographic::SurfacePoint;
 
+/// The version of the Garmin SDK from which we obtain our profile information.
+///
+/// Represented in base 10 as two digits for the major version, followed by three for the minor.
+pub const PROFILE_VERSION: u16 = 21158;
+
 #[derive(Error, Debug)]
 pub enum FitEncodeError {
     #[error("writing to output")]
@@ -217,16 +222,14 @@ enum ProtocolVersion {
 
 pub struct FileHeader {
     protocol_version: ProtocolVersion,
-    profile_version: u16,
     data_size: u32,
 }
 
 impl FileHeader {
-    pub fn new(profile_version: u16, data_size: usize) -> Result<Self> {
+    pub fn new(data_size: usize) -> Result<Self> {
         let data_size_u32 = u32::try_from(data_size)?;
         Ok(Self {
             protocol_version: ProtocolVersion::V10,
-            profile_version,
             data_size: data_size_u32,
         })
     }
@@ -234,7 +237,7 @@ impl FileHeader {
     pub fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
         w.write_u8(14)?;
         w.write_u8(self.protocol_version as u8)?;
-        w.write_u16::<LittleEndian>(self.profile_version)?;
+        w.write_u16::<LittleEndian>(PROFILE_VERSION)?;
         w.write_u32::<LittleEndian>(self.data_size)?;
         write!(w, ".FIT")?;
         Ok(())
@@ -508,7 +511,6 @@ impl RecordMessage {
 }
 
 pub struct CourseFile {
-    profile_version: u16,
     name: String,
     start_time: DateTime<Utc>,
     speed: Velocity,
@@ -519,13 +521,11 @@ pub struct CourseFile {
 
 impl CourseFile {
     pub fn new(
-        profile_version: u16,
         name: String,
         start_time: DateTime<Utc>,
         speed: Velocity,
     ) -> Self {
         Self {
-            profile_version,
             name,
             start_time,
             speed,
@@ -556,7 +556,7 @@ impl CourseFile {
     pub fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
         // File header
         let mut hw = CheckSummingWrite::new(w);
-        let h = FileHeader::new(0u16, self.get_data_size())?;
+        let h = FileHeader::new(self.get_data_size())?;
         h.encode(&mut hw)?;
         hw.finish()?;
 
@@ -682,7 +682,7 @@ mod tests {
     #[test]
     fn test_header_encode() -> Result<()> {
         let mut buf: Vec<u8> = vec![];
-        let header = FileHeader::new(21170u16, 17032usize)?;
+        let header = FileHeader::new(17032usize)?;
         header.encode(&mut buf)?;
 
         assert_eq!(

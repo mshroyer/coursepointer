@@ -59,8 +59,24 @@ class CourseSpec:
             json.dump(self.to_dict(), f)
 
 
-def garmin_sdk_read_fit(path: Path) -> dict:
-    """Read messages from the FIT file using the Garmin SDK"""
+def garmin_sdk_read_fit_header(path: Path):
+    """Read the FIT file header using the Garmin SDK
+
+    Returns a FileHeader object, whose class is only locally defined in the SDK.
+
+    """
+
+    stream = garmin_fit_sdk.Stream.from_file(path)
+    decoder = garmin_fit_sdk.Decoder(stream)
+    return decoder.read_file_header(True)
+
+
+def garmin_sdk_read_fit_messages(path: Path) -> dict:
+    """Read messages from the FIT file using the Garmin SDK
+
+    Raises a ValueError if the file is invalid.
+
+    """
 
     stream = garmin_fit_sdk.Stream.from_file(path)
     decoder = garmin_fit_sdk.Decoder(stream)

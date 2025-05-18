@@ -20,7 +20,6 @@ fn main() -> Result<()> {
 
     let mut file = File::create(&args.output)?;
     let course_file = CourseFile::new(
-        21178u16,
         "Test course".to_string(),
         Utc::now(),
         Velocity::new::<kilometer_per_hour>(20.0),

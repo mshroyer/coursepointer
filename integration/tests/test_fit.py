@@ -7,7 +7,8 @@ results in the Garmin SDK.
 
 from datetime import datetime, timezone
 
-from integration import CourseSpec, garmin_sdk_read_fit, garmin_sdk_record_coords, semicircles_to_degrees, \
+from integration import CourseSpec, garmin_sdk_read_fit_messages, garmin_sdk_read_fit_header, garmin_sdk_record_coords, \
+    semicircles_to_degrees, \
     assert_coords_approx_eq
 from integration.fixtures import cargo, integration_stub
 
@@ -16,7 +17,7 @@ def test_empty_course(tmpdir, integration_stub):
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    garmin_sdk_read_fit(tmpdir / "out.fit")
+    garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
 
 def test_start_time(tmpdir, integration_stub):
@@ -25,7 +26,7 @@ def test_start_time(tmpdir, integration_stub):
     spec = CourseSpec(start_time=start_time)
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    messages = garmin_sdk_read_fit(tmpdir / "out.fit")
+    messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
     # The course's start time should be encoded correctly as the lap message's
     # start time.
@@ -37,13 +38,23 @@ def test_start_time(tmpdir, integration_stub):
     assert first_event["timestamp"] == start_time
 
 
+def test_header_profile_version(tmpdir, integration_stub):
+    lib_profile_version = int(integration_stub("show-profile-version").strip())
+
+    spec = CourseSpec()
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    header = garmin_sdk_read_fit_header(tmpdir / "out.fit")
+    assert header.profile_version == lib_profile_version
+
+
 def test_course_name(tmpdir, integration_stub):
     course_name = "Foo Course"
 
     spec = CourseSpec(name=course_name)
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    messages = garmin_sdk_read_fit(tmpdir / "out.fit")
+    messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
     assert messages["course_mesgs"][0]["name"] == course_name
 
@@ -54,7 +65,7 @@ def test_record_coords(tmpdir, integration_stub):
     spec = CourseSpec(records=coords)
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    messages = garmin_sdk_read_fit(tmpdir / "out.fit")
+    messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
     assert_coords_approx_eq(list(map(garmin_sdk_record_coords, messages["record_mesgs"])), coords)
 
@@ -65,7 +76,7 @@ def test_lap_coords(tmpdir, integration_stub):
     spec = CourseSpec(records=coords)
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    messages = garmin_sdk_read_fit(tmpdir / "out.fit")
+    messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
     lap = messages["lap_mesgs"][0]
     assert_coords_approx_eq(

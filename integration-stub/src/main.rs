@@ -19,6 +19,7 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Write a specified course into a FIT file
     WriteFit {
         /// Path to the JSON course spec file
         #[clap(long)]
@@ -28,6 +29,9 @@ enum Commands {
         #[clap(long)]
         out: PathBuf,
     },
+    
+    /// Show the library's Garmin global profile version
+    ShowProfileVersion {}
 }
 
 #[derive(Deserialize)]
@@ -62,7 +66,6 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
 
     let mut fit_file = File::create(&out)?;
     let mut course = CourseFile::new(
-        21178u16,
         spec.name,
         parse_rfc9557_utc(&spec.start_time)?,
         Velocity::new::<kilometer_per_hour>(20.0),
@@ -74,11 +77,17 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     Ok(())
 }
 
+fn show_profile_version() -> Result<()> {
+    println!("{}", coursepointer::PROFILE_VERSION);
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.cmd {
         Commands::WriteFit { spec, out } => write_fit(spec, out),
+        Commands::ShowProfileVersion {} => show_profile_version(),
     }
 }
 
