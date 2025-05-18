@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from pytest import approx
 import garmin_fit_sdk
 
 
@@ -68,3 +69,23 @@ def garmin_sdk_read_fit(path: Path) -> dict:
         raise ValueError(f"Errors reading FIT file: {errors}")
 
     return messages
+
+
+def garmin_sdk_record_coords(record: dict) -> Tuple[float, float]:
+    """Get coordinate tuple for a record message
+
+    Returns a (lat, lon) tuple in decimal degrees for the given FIT record
+    message, as returned by the Garmin SDK.
+
+    """
+    lat = 180 * record["position_lat"] / 2 ** 31
+    lon = 180 * record["position_long"] / 2 ** 31
+    return lat, lon
+
+
+def assert_coords_approx_eq(a: List[Tuple[float, float]], b: List[Tuple[float, float]]) -> None:
+    assert len(a) == len(b)
+    for i in range(len(a)):
+        # Test for approximate equality with an absolute tolerance of two
+        # Garmin semicircles.
+        assert a[i] == approx(b[i], rel=0.0, abs=(180.0 / (2 ** 30)))

@@ -6,11 +6,8 @@ results in the Garmin SDK.
 """
 
 from datetime import datetime, timezone
-from typing import List, Tuple
 
-from pytest import approx
-
-from integration import CourseSpec, garmin_sdk_read_fit
+from integration import CourseSpec, garmin_sdk_read_fit, garmin_sdk_record_coords, assert_coords_approx_eq
 from integration.fixtures import cargo, integration_stub
 
 
@@ -49,26 +46,6 @@ def test_course_name(tmpdir, integration_stub):
     assert messages["course_mesgs"][0]["name"] == course_name
 
 
-def record_coords(record: dict) -> Tuple[float, float]:
-    """Get coordinate tuple for a record message
-
-    Returns a (lat, lon) tuple in decimal degrees for the given FIT record
-    message, as returned by the Garmin SDK.
-
-    """
-    lat = 180 * record["position_lat"] / 2 ** 31
-    lon = 180 * record["position_long"] / 2 ** 31
-    return lat, lon
-
-
-def assert_coords_approx_eq(a: List[Tuple[float, float]], b: List[Tuple[float, float]]) -> None:
-    assert len(a) == len(b)
-    for i in range(len(a)):
-        # Test for approximate equality with an absolute tolerance of two
-        # Garmin semicircles.
-        assert a[i] == approx(b[i], rel=0.0, abs=(180.0 / (2 ** 30)))
-
-
 def test_record_coords(tmpdir, integration_stub):
     coords = [(0.0, 0.0), (0.5, -0.5), (1.0, 0.0), (-1.0, 0.5)]
 
@@ -77,4 +54,4 @@ def test_record_coords(tmpdir, integration_stub):
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
     messages = garmin_sdk_read_fit(tmpdir / "out.fit")
 
-    assert_coords_approx_eq(list(map(record_coords, messages["record_mesgs"])), coords)
+    assert_coords_approx_eq(list(map(garmin_sdk_record_coords, messages["record_mesgs"])), coords)
