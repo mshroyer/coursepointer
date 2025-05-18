@@ -1,8 +1,8 @@
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use anyhow::Result;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 use uom::si::f64::Velocity;
@@ -38,7 +38,16 @@ struct JsonPoint {
 
 #[derive(Deserialize)]
 struct CourseSpec {
+    /// Start timestamp in RFC3339 format.
+    start_time: String,
+
+    /// Ordered points along the course, i.e. trackpoints.
     records: Vec<JsonPoint>,
+}
+
+fn parse_rfc9557_utc(s: &str) -> Result<DateTime<Utc>> {
+    let ts = DateTime::parse_from_rfc3339(s)?;
+    Ok(ts.with_timezone(&Utc))
 }
 
 fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
@@ -49,7 +58,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let mut course = CourseFile::new(
         21178u16,
         "Test course".to_string(),
-        Utc::now(),
+        parse_rfc9557_utc(&spec.start_time)?,
         Velocity::new::<kilometer_per_hour>(20.0),
     );
     for point in &spec.records {
@@ -64,5 +73,20 @@ fn main() -> Result<()> {
 
     match args.cmd {
         Commands::WriteFit { spec, out } => write_fit(spec, out),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+    use chrono::prelude::*;
+
+    use super::parse_rfc9557_utc;
+
+    #[test]
+    fn test_parse_rfc9557_utc() -> Result<()> {
+        let ts = parse_rfc9557_utc("2025-05-17T01:02:03Z")?;
+        assert_eq!(ts, Utc.with_ymd_and_hms(2025, 5, 17, 1, 2, 3).unwrap());
+        Ok(())
     }
 }

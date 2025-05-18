@@ -49,7 +49,7 @@ fn write_string_field<W: Write>(s: &str, field_size: usize, w: &mut W) -> Result
 }
 
 static GARMIN_EPOCH: LazyLock<DateTime<Utc>> =
-    LazyLock::new(|| "1981-12-31T00:00:00Z".parse::<DateTime<Utc>>().unwrap());
+    LazyLock::new(|| "1989-12-31T00:00:00Z".parse::<DateTime<Utc>>().unwrap());
 
 // The minimum value of a date_time as per the FIT global profile.  Values lower than this are to
 // be interpreted as relative offsets rather than absolute times since the Garmin epoch.

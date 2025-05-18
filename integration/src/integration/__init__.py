@@ -1,8 +1,19 @@
+from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import garmin_fit_sdk
+
+
+def rfc9557_utc(ts: datetime) -> str:
+    """Formats an RFC9557 timestamp in UTC
+
+    Formats the timestamp as RFC9557 in UTC, using the 'Z' suffix to indicate
+    an unspecified local time offset.
+
+    """
+    return ts.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class SurfacePoint:
@@ -21,24 +32,34 @@ class CourseSpec:
 
     """
 
+    start_time: datetime
     records: List[SurfacePoint]
 
-    def __init__(self, records: List[Tuple[float, float]]) -> None:
+    def __init__(self, start_time: datetime = datetime.now(timezone.utc),
+                 records: Optional[List[Tuple[float, float]]] = None) -> None:
+        self.start_time = start_time
+
         self.records = []
-        for record in records:
-            self.records.append(SurfacePoint(*record))
+        if records:
+            for record in records:
+                self.records.append(SurfacePoint(*record))
 
     def to_dict(self) -> dict:
-        return {"records": list(map(lambda r: r.to_dict(), self.records))}
+        return {
+            "start_time": rfc9557_utc(self.start_time),
+            "records": list(map(lambda r: r.to_dict(), self.records)),
+        }
 
     def write_file(self, path: Path) -> None:
         with open(path, "w") as f:
             json.dump(self.to_dict(), f)
 
 
-def validate_fit_file(path: Path) -> None:
+def read_fit_messages(path: Path) -> dict:
     stream = garmin_fit_sdk.Stream.from_file(path)
     decoder = garmin_fit_sdk.Decoder(stream)
     messages, errors = decoder.read()
     if errors:
         raise ValueError(f"Errors reading FIT file: {errors}")
+
+    return messages
