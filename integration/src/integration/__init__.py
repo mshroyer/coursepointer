@@ -71,6 +71,12 @@ def garmin_sdk_read_fit(path: Path) -> dict:
     return messages
 
 
+def semicircles_to_degrees(coords: Tuple[float, float]) -> Tuple[float, float]:
+    lat = 180 * coords[0] / 2 ** 31
+    lon = 180 * coords[1] / 2 ** 31
+    return lat, lon
+
+
 def garmin_sdk_record_coords(record: dict) -> Tuple[float, float]:
     """Get coordinate tuple for a record message
 
@@ -78,9 +84,7 @@ def garmin_sdk_record_coords(record: dict) -> Tuple[float, float]:
     message, as returned by the Garmin SDK.
 
     """
-    lat = 180 * record["position_lat"] / 2 ** 31
-    lon = 180 * record["position_long"] / 2 ** 31
-    return lat, lon
+    return semicircles_to_degrees((record["position_lat"], record["position_long"]))
 
 
 def assert_coords_approx_eq(a: List[Tuple[float, float]], b: List[Tuple[float, float]]) -> None:
