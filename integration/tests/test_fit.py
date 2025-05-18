@@ -28,3 +28,8 @@ def test_start_time(tmpdir, integration_stub):
 
     assert len(messages["lap_mesgs"]) == 1
     assert messages["lap_mesgs"][0]["start_time"] == start_time
+
+    assert len(messages["event_mesgs"]) > 0
+    first_event = messages["event_mesgs"][0]
+    assert first_event["event_type"] == "start"
+    assert first_event["timestamp"] == start_time
