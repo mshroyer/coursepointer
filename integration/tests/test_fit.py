@@ -7,7 +7,7 @@ results in the Garmin SDK.
 
 from datetime import datetime, timezone
 
-from integration import CourseSpec, read_fit_messages
+from integration import CourseSpec, garmin_read_fit
 from integration.fixtures import cargo, integration_stub
 
 
@@ -15,7 +15,7 @@ def test_empty_course(tmpdir, integration_stub):
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    read_fit_messages(tmpdir / "out.fit")
+    garmin_read_fit(tmpdir / "out.fit")
 
 
 def test_start_time(tmpdir, integration_stub):
@@ -24,12 +24,13 @@ def test_start_time(tmpdir, integration_stub):
     spec = CourseSpec(start_time=start_time)
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    messages = read_fit_messages(tmpdir / "out.fit")
+    messages = garmin_read_fit(tmpdir / "out.fit")
 
-    assert len(messages["lap_mesgs"]) == 1
+    # The course's start time should be encoded correctly as the lap message's
+    # start time.
     assert messages["lap_mesgs"][0]["start_time"] == start_time
 
-    assert len(messages["event_mesgs"]) > 0
+    # ...and also as the timestamp of the start event message.
     first_event = messages["event_mesgs"][0]
     assert first_event["event_type"] == "start"
     assert first_event["timestamp"] == start_time

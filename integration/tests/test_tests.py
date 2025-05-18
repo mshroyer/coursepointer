@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from integration import read_fit_messages
+from integration import garmin_read_fit
 from integration.fixtures import data
 
 
 def test_validate(data: Path):
-    read_fit_messages(data / "cptr001.fit")
+    garmin_read_fit(data / "cptr001.fit")
     with pytest.raises(ValueError):
-        read_fit_messages(data / "invalid_truncated.fit")
+        garmin_read_fit(data / "invalid_truncated.fit")
