@@ -56,21 +56,17 @@ def record_coords(record: dict) -> Tuple[float, float]:
     message, as returned by the Garmin SDK.
 
     """
-    lat = 180 * record["position_lat"] / 2**31
-    lon = 180 * record["position_long"] / 2**31
+    lat = 180 * record["position_lat"] / 2 ** 31
+    lon = 180 * record["position_long"] / 2 ** 31
     return lat, lon
 
 
 def assert_coords_approx_eq(a: List[Tuple[float, float]], b: List[Tuple[float, float]]) -> None:
     assert len(a) == len(b)
     for i in range(len(a)):
-        lat_a = a[i][0]
-        lon_a = a[i][1]
-        lat_b = b[i][0]
-        lon_b = b[i][1]
-
-        assert lat_a == approx(lat_b)
-        assert lon_a == approx(lon_b)
+        # Test for approximate equality with an absolute tolerance of two
+        # Garmin semicircles.
+        assert a[i] == approx(b[i], rel=0.0, abs=(180.0 / (2 ** 30)))
 
 
 def test_record_coords(tmpdir, integration_stub):
