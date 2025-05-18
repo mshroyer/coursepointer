@@ -58,7 +58,7 @@ class CourseSpec:
             json.dump(self.to_dict(), f)
 
 
-def garmin_read_fit(path: Path) -> dict:
+def garmin_sdk_read_fit(path: Path) -> dict:
     """Read messages from the FIT file using the Garmin SDK"""
 
     stream = garmin_fit_sdk.Stream.from_file(path)

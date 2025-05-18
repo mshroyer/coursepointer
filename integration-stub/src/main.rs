@@ -32,7 +32,10 @@ enum Commands {
 
 #[derive(Deserialize)]
 struct JsonPoint {
+    /// Latitude in decimal degrees.
     lat: f64,
+
+    /// Longitude in decimal degrees.
     lon: f64,
 }
 

@@ -500,7 +500,7 @@ impl RecordMessage {
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
         w.write_i32::<BigEndian>(self.position.lat_semis)?;
-        w.write_i32::<BigEndian>(self.position.lat_semis)?;
+        w.write_i32::<BigEndian>(self.position.lon_semis)?;
         w.write_u32::<BigEndian>(self.dist_cm)?;
         w.write_u32::<BigEndian>(self.timestamp.value)?;
         Ok(())
