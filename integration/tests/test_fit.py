@@ -1,7 +1,16 @@
 """Test FIT file encoding
 
-Uses integration-stub to write specified FIT course files, then verifies the
-results in the Garmin SDK.
+Uses integration-stub to write specified FIT course files, then verifies using
+the Garmin SDK that the crate's output is valid and that various elements are
+written correctly to the course file.
+
+Because the FIT profile specifies unit scaling for some values and strange
+conventions (e.g., the Garmin epoch) for others, one goal of these tests is to
+ensure our implementation scales values appropriately.  Where possible, such as
+when interpreting date_time values, we rely on the SDK's own logic as a
+reference implementation.  In other cases, like when converting from semicircles
+back into degrees of latitude and longitude, the SDK does not provide the
+conversion, so we implement our own in Python.
 
 """
 
@@ -20,6 +29,26 @@ def test_empty_course(tmpdir, integration_stub):
     garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
 
+def test_header_protocol_version(tmpdir, integration_stub):
+    spec = CourseSpec()
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    header = garmin_sdk_read_fit_header(tmpdir / "out.fit")
+
+    # Protocol version 1 is represented as 0x10, 2 to 0x20.
+    assert header.protocol_version == 0x10
+
+
+def test_header_profile_version(tmpdir, integration_stub):
+    lib_profile_version = int(integration_stub("show-profile-version").strip())
+
+    spec = CourseSpec()
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    header = garmin_sdk_read_fit_header(tmpdir / "out.fit")
+    assert header.profile_version == lib_profile_version
+
+
 def test_start_time(tmpdir, integration_stub):
     start_time = datetime(2025, 5, 18, 1, 26, 10, tzinfo=timezone.utc)
 
@@ -36,16 +65,6 @@ def test_start_time(tmpdir, integration_stub):
     first_event = messages["event_mesgs"][0]
     assert first_event["event_type"] == "start"
     assert first_event["timestamp"] == start_time
-
-
-def test_header_profile_version(tmpdir, integration_stub):
-    lib_profile_version = int(integration_stub("show-profile-version").strip())
-
-    spec = CourseSpec()
-    spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
-    header = garmin_sdk_read_fit_header(tmpdir / "out.fit")
-    assert header.profile_version == lib_profile_version
 
 
 def test_course_name(tmpdir, integration_stub):
