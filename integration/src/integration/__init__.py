@@ -32,11 +32,13 @@ class CourseSpec:
 
     """
 
+    name: str
     start_time: datetime
     records: List[SurfacePoint]
 
-    def __init__(self, start_time: datetime = datetime.now(timezone.utc),
+    def __init__(self, name: str = "", start_time: datetime = datetime.now(timezone.utc),
                  records: Optional[List[Tuple[float, float]]] = None) -> None:
+        self.name = name
         self.start_time = start_time
 
         self.records = []
@@ -46,6 +48,7 @@ class CourseSpec:
 
     def to_dict(self) -> dict:
         return {
+            "name": self.name,
             "start_time": rfc9557_utc(self.start_time),
             "records": list(map(lambda r: r.to_dict(), self.records)),
         }

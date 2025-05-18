@@ -34,3 +34,13 @@ def test_start_time(tmpdir, integration_stub):
     first_event = messages["event_mesgs"][0]
     assert first_event["event_type"] == "start"
     assert first_event["timestamp"] == start_time
+
+
+def test_course_name(tmpdir, integration_stub):
+    course_name = "Foo Course"
+    spec = CourseSpec(name=course_name)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    messages = garmin_read_fit(tmpdir / "out.fit")
+
+    assert messages["course_mesgs"][0]["name"] == course_name

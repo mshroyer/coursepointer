@@ -38,6 +38,9 @@ struct JsonPoint {
 
 #[derive(Deserialize)]
 struct CourseSpec {
+    /// Course name.
+    name: String,
+
     /// Start timestamp in RFC3339 format.
     start_time: String,
 
@@ -57,7 +60,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let mut fit_file = File::create(&out)?;
     let mut course = CourseFile::new(
         21178u16,
-        "Test course".to_string(),
+        spec.name,
         parse_rfc9557_utc(&spec.start_time)?,
         Velocity::new::<kilometer_per_hour>(20.0),
     );
