@@ -37,8 +37,8 @@ where
     reader: Reader<R>,
 }
 
+#[derive(Clone, Copy, Debug)]
 pub enum GpxTrackElement {
-    Eof,
     Trackpoint(SurfacePoint),
 }
 
@@ -49,39 +49,48 @@ where
     pub fn new(reader: Reader<R>) -> GpxTrackReader<R> {
         Self { reader }
     }
+}
 
-    pub fn next<C>(&mut self) -> Result<GpxTrackElement> {
+impl<R> Iterator for GpxTrackReader<R>
+where
+    R: BufRead,
+{
+    type Item = Result<GpxTrackElement>;
+
+    fn next(&mut self) -> Option<Result<GpxTrackElement>> {
         // let mut txt = Vec::new();
         let mut buf = Vec::new();
 
         loop {
             match self.reader.read_event_into(&mut buf) {
-                Err(err) => return Err(GpxError::Xml(err)),
+                Err(err) => return Some(Err(GpxError::Xml(err))),
 
-                Ok(Event::Eof) => return Ok(GpxTrackElement::Eof),
+                Ok(Event::Eof) => return None,
 
                 Ok(Event::Start(ele)) => match ele.name().as_ref() {
                     b"trkpt" => {
-                        let mut lat: Option<f64> = None;
-                        let mut lon: Option<f64> = None;
-                        for attr in ele.attributes() {
-                            let a = attr?;
-                            if a.key == QName(b"lat") {
-                                lat = Some(str::from_utf8(&a.value)?.parse()?);
-                            } else if a.key == QName(b"lon") {
-                                lon = Some(str::from_utf8(&a.value)?.parse()?);
+                        return Some((|| {
+                            let mut lat: Option<f64> = None;
+                            let mut lon: Option<f64> = None;
+                            for attr in ele.attributes() {
+                                let a = attr?;
+                                if a.key == QName(b"lat") {
+                                    lat = Some(str::from_utf8(&a.value)?.parse()?);
+                                } else if a.key == QName(b"lon") {
+                                    lon = Some(str::from_utf8(&a.value)?.parse()?);
+                                }
                             }
-                        }
-                        return match (lat, lon) {
-                            (Some(lat), Some(lon)) => {
-                                Ok(GpxTrackElement::Trackpoint(SurfacePoint::new(lat, lon)))
-                            }
-                            _ => Err(GpxError::GpxSchemaError(
-                                "trkpt element missing lat or lon".to_owned(),
-                            )),
-                        };
+                            return match (lat, lon) {
+                                (Some(lat), Some(lon)) => {
+                                    Ok(GpxTrackElement::Trackpoint(SurfacePoint::new(lat, lon)))
+                                }
+                                _ => Err(GpxError::GpxSchemaError(
+                                    "trkpt element missing lat or lon".to_owned(),
+                                )),
+                            };
+                        })());
                     }
-                    
+
                     _ => (),
                 },
 
@@ -93,10 +102,57 @@ where
 
 #[cfg(test)]
 mod tests {
+    use geographic::SurfacePoint;
+    use quick_xml::Reader;
+
     use super::Result;
+    use super::{GpxTrackElement, GpxTrackReader};
+
+    macro_rules! surface_points {
+        [ $( ( $lat:expr, $lon:expr ) ),* $(,)? ] => {
+            vec![ $( SurfacePoint::new($lat, $lon) ),* ]
+        };
+    }
 
     #[test]
-    fn test_foo() -> Result<()> {
+    fn test_trkpt_parse() -> Result<()> {
+        let xml = r#"
+<trk>
+  <name>TR017-Coyote</name>
+  <trkseg>
+    <trkpt lat="37.37077" lon="-122.05903">
+      <ele>47.5</ele>
+    </trkpt>
+    <trkpt lat="37.37091" lon="-122.05936">
+      <ele>47.4</ele>
+    </trkpt>
+    <trkpt lat="37.37091" lon="-122.05936">
+      <ele>47.4</ele>
+    </trkpt>
+    <trkpt lat="37.37118" lon="-122.05982">
+      <ele>47.1</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+"#;
+
+        let expected = surface_points![
+            (37.37077, -122.05903),
+            (37.37091, -122.05936),
+            (37.37091, -122.05936),
+            (37.37118, -122.05982),
+        ];
+
+        let reader = GpxTrackReader::new(Reader::from_str(xml));
+        let elements = reader.collect::<Result<Vec<_>>>()?;
+        let result = elements
+            .iter()
+            .filter_map(|ele| match ele {
+                GpxTrackElement::Trackpoint(p) => Some(*p),
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(expected, result);
         Ok(())
     }
 }

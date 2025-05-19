@@ -24,7 +24,7 @@ mod ffi {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct SurfacePoint {
     pub lat: f64,
     pub lon: f64,
