@@ -35,17 +35,20 @@ def test_header_protocol_version(tmpdir, integration_stub):
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
     header = garmin_sdk_read_fit_header(tmpdir / "out.fit")
 
-    # Protocol version 1 is represented as 0x10, 2 to 0x20.
+    # Protocol version 1 is represented as 0x10, 2 as 0x20.
     assert header.protocol_version == 0x10
 
 
 def test_header_profile_version(tmpdir, integration_stub):
+    # Get the self-reported Garmin global profile version from the library.
     lib_profile_version = int(integration_stub("show-profile-version").strip())
 
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
     header = garmin_sdk_read_fit_header(tmpdir / "out.fit")
+
+    # The output file should encode the same profile version.
     assert header.profile_version == lib_profile_version
 
 
