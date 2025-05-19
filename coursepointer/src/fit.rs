@@ -3,7 +3,7 @@ use std::io::Write;
 use std::ops::Add;
 use std::sync::LazyLock;
 
-use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
+use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
 use num_traits::Pow;
 use num_traits::bounds::Bounded;
@@ -436,7 +436,6 @@ enum Event {
 enum EventType {
     Start = 0u8,
     Stop = 1u8,
-    StopAll = 4u8,
 }
 
 struct EventMessage {
