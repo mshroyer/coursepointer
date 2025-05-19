@@ -491,6 +491,7 @@ impl RecordMessage {
         }
     }
 
+    // TODO: Proc macro for deriving field definitions + maybe encoding too?
     fn field_definitions() -> Vec<FieldDefinition> {
         vec![
             FieldDefinition::new(0, 4, 133),   // lat
@@ -563,6 +564,7 @@ impl CourseFile {
         // File data
         let mut dw = CheckSummingWrite::new(w);
 
+        // TODO: Add software info to file_id, maybe file_creator messages
         DefinitionFrame::new(
             GlobalMessage::FileId,
             0u8,
@@ -630,6 +632,7 @@ impl CourseFile {
     fn get_data_size(&self) -> usize {
         let mut sz = 0usize;
 
+        // TODO: Abstract out message definition encoding
         sz += CourseFile::get_definition_message_size(FileIdMessage::field_definitions().len());
         sz += CourseFile::get_data_message_size(FileIdMessage::field_definitions());
 
