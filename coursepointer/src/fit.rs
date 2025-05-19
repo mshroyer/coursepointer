@@ -668,7 +668,7 @@ impl CourseFile {
 
 #[cfg(test)]
 mod tests {
-    use super::{Crc, FileHeader, Result};
+    use super::{CheckSummingWrite, Crc, FileHeader, Result};
 
     #[test]
     fn test_header_crc() {
@@ -684,13 +684,15 @@ mod tests {
     #[test]
     fn test_header_encode() -> Result<()> {
         let mut buf: Vec<u8> = vec![];
+        let mut cw = CheckSummingWrite::new(&mut buf);
         let header = FileHeader::new(17032usize)?;
-        header.encode(&mut buf)?;
+        header.encode(&mut cw)?;
+        cw.finish()?;
 
         assert_eq!(
             buf,
             &[
-                0x0e, 0x10, 0xb2, 0x52, 0x88, 0x42, 0x00, 0x00, 0x2e, 0x46, 0x49, 0x54, 0x4b, 0xf9
+                0x0e, 0x10, 0xa6, 0x52, 0x88, 0x42, 0x00, 0x00, 0x2e, 0x46, 0x49, 0x54, 0x0b, 0xb9,
             ]
         );
 
