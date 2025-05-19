@@ -1,4 +1,5 @@
 pub mod fit;
+pub mod gpx;
 
 pub use fit::CourseFile;
 pub use fit::PROFILE_VERSION;
