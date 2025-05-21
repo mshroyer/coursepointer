@@ -30,16 +30,14 @@ pub enum GpxError {
 
 type Result<T> = std::result::Result<T, GpxError>;
 
+/// A reader for GPX Track files
+///
+/// Implements an Iterator that emits the track's trackpoints and waypoints.
 pub struct GpxTrackReader<R>
 where
     R: BufRead,
 {
     reader: Reader<R>,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum GpxTrackElement {
-    Trackpoint(SurfacePoint),
 }
 
 impl<R> GpxTrackReader<R>
@@ -51,6 +49,13 @@ where
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum GpxTrackElement {
+    Name(String),
+    Trackpoint(SurfacePoint),
+    Waypoint(SurfacePoint, String),
+}
+
 impl<R> Iterator for GpxTrackReader<R>
 where
     R: BufRead,
@@ -58,8 +63,8 @@ where
     type Item = Result<GpxTrackElement>;
 
     fn next(&mut self) -> Option<Result<GpxTrackElement>> {
-        // let mut txt = Vec::new();
         let mut buf = Vec::new();
+        let mut elt_stack = Vec::new();
 
         loop {
             match self.reader.read_event_into(&mut buf) {
@@ -67,32 +72,40 @@ where
 
                 Ok(Event::Eof) => return None,
 
-                Ok(Event::Start(ele)) => match ele.name().as_ref() {
-                    b"trkpt" => {
-                        return Some((|| {
-                            let mut lat: Option<f64> = None;
-                            let mut lon: Option<f64> = None;
-                            for attr in ele.attributes() {
-                                let a = attr?;
-                                if a.key == QName(b"lat") {
-                                    lat = Some(str::from_utf8(&a.value)?.parse()?);
-                                } else if a.key == QName(b"lon") {
-                                    lon = Some(str::from_utf8(&a.value)?.parse()?);
+                Ok(Event::Start(elt)) => {
+                    let name_bytes = elt.name().as_ref().to_owned();
+                    elt_stack.push(name_bytes);
+                    match elt.name().as_ref() {
+                        b"trkpt" => {
+                            return Some((|| {
+                                let mut lat: Option<f64> = None;
+                                let mut lon: Option<f64> = None;
+                                for attr in elt.attributes() {
+                                    let a = attr?;
+                                    if a.key == QName(b"lat") {
+                                        lat = Some(str::from_utf8(&a.value)?.parse()?);
+                                    } else if a.key == QName(b"lon") {
+                                        lon = Some(str::from_utf8(&a.value)?.parse()?);
+                                    }
                                 }
-                            }
-                            return match (lat, lon) {
-                                (Some(lat), Some(lon)) => {
-                                    Ok(GpxTrackElement::Trackpoint(SurfacePoint::new(lat, lon)))
+                                match (lat, lon) {
+                                    (Some(lat), Some(lon)) => {
+                                        Ok(GpxTrackElement::Trackpoint(SurfacePoint::new(lat, lon)))
+                                    },
+                                    _ => Err(GpxError::GpxSchemaError(
+                                        "trkpt element missing lat or lon".to_owned(),
+                                    )),
                                 }
-                                _ => Err(GpxError::GpxSchemaError(
-                                    "trkpt element missing lat or lon".to_owned(),
-                                )),
-                            };
-                        })());
-                    }
+                            })());
+                        }
 
-                    _ => (),
-                },
+                        _ => (),
+                    }
+                }
+                
+                Ok(Event::End(_elt)) => {
+                    elt_stack.pop();
+                }
 
                 _ => (),
             }
@@ -109,38 +122,38 @@ mod tests {
     use super::{GpxTrackElement, GpxTrackReader};
 
     macro_rules! surface_points {
-        [ $( ( $lat:expr, $lon:expr ) ),* $(,)? ] => {
+        ( $( ( $lat:expr, $lon:expr ) ),* $(,)? ) => {
             vec![ $( SurfacePoint::new($lat, $lon) ),* ]
         };
     }
 
     #[test]
-    fn test_trkpt_parse() -> Result<()> {
+    fn test_trackpoints() -> Result<()> {
         let xml = r#"
 <trk>
-  <name>TR017-Coyote</name>
+  <name>Coyote</name>
   <trkseg>
-    <trkpt lat="37.37077" lon="-122.05903">
-      <ele>47.5</ele>
+    <trkpt lat="37.39987" lon="-122.13737">
+      <ele>30.5</ele>
     </trkpt>
-    <trkpt lat="37.37091" lon="-122.05936">
-      <ele>47.4</ele>
+    <trkpt lat="37.39958" lon="-122.13684">
+      <ele>29.9</ele>
     </trkpt>
-    <trkpt lat="37.37091" lon="-122.05936">
-      <ele>47.4</ele>
+    <trkpt lat="37.39923" lon="-122.13591">
+      <ele>29.8</ele>
     </trkpt>
-    <trkpt lat="37.37118" lon="-122.05982">
-      <ele>47.1</ele>
+    <trkpt lat="37.39888" lon="-122.13498">
+      <ele>31.8</ele>
     </trkpt>
   </trkseg>
 </trk>
 "#;
 
         let expected = surface_points![
-            (37.37077, -122.05903),
-            (37.37091, -122.05936),
-            (37.37091, -122.05936),
-            (37.37118, -122.05982),
+            (37.39987, -122.13737),
+            (37.39958, -122.13684),
+            (37.39923, -122.13591),
+            (37.39888, -122.13498),
         ];
 
         let reader = GpxTrackReader::new(Reader::from_str(xml));
@@ -149,10 +162,11 @@ mod tests {
             .iter()
             .filter_map(|ele| match ele {
                 GpxTrackElement::Trackpoint(p) => Some(*p),
+                _ => None,
             })
             .collect::<Vec<_>>();
 
-        assert_eq!(expected, result);
+        assert_eq!(result, expected);
         Ok(())
     }
 }
