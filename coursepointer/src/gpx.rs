@@ -64,7 +64,7 @@ where
 
     fn next(&mut self) -> Option<Result<GpxTrackElement>> {
         let mut buf = Vec::new();
-        let mut elt_stack = Vec::new();
+        let mut path = Vec::new();
 
         loop {
             match self.reader.read_event_into(&mut buf) {
@@ -74,7 +74,7 @@ where
 
                 Ok(Event::Start(elt)) => {
                     let name_bytes = elt.name().as_ref().to_owned();
-                    elt_stack.push(name_bytes);
+                    path.push(name_bytes);
                     match elt.name().as_ref() {
                         b"trkpt" => {
                             return Some((|| {
@@ -91,7 +91,7 @@ where
                                 match (lat, lon) {
                                     (Some(lat), Some(lon)) => {
                                         Ok(GpxTrackElement::Trackpoint(SurfacePoint::new(lat, lon)))
-                                    },
+                                    }
                                     _ => Err(GpxError::GpxSchemaError(
                                         "trkpt element missing lat or lon".to_owned(),
                                     )),
@@ -101,11 +101,24 @@ where
 
                         _ => (),
                     }
-                }
-                
+                },
+
+                Ok(Event::Text(text)) => {
+                    let trk_name_path: Vec<Vec<u8>> =
+                        vec![b"gpx".into(), b"trk".into(), b"name".into()];
+                    if path == trk_name_path {
+                        return Some(match str::from_utf8(text.as_ref()) {
+                            Err(err) => Err(GpxError::Utf8Error(err)),
+                            Ok(s) => Ok(GpxTrackElement::Name(s.to_owned())),
+                        })
+                    } else {
+                        continue;
+                    }
+                },
+
                 Ok(Event::End(_elt)) => {
-                    elt_stack.pop();
-                }
+                    path.pop();
+                },
 
                 _ => (),
             }
@@ -167,6 +180,38 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(result, expected);
+        Ok(())
+    }
+    
+    #[test]
+    fn test_track_name() -> Result<()> {
+        let xml = r#"
+<gpx>
+  <trk>
+    <name>Coyote</name>
+    <trkseg>
+      <trkpt lat="37.39987" lon="-122.13737">
+        <ele>30.5</ele>
+      </trkpt>
+      <trkpt lat="37.39958" lon="-122.13684">
+        <ele>29.9</ele>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+"#;
+
+        let reader = GpxTrackReader::new(Reader::from_str(xml));
+        let elements = reader.collect::<Result<Vec<_>>>()?;
+        let result = elements
+            .iter()
+            .filter_map(|ele| match ele {
+                GpxTrackElement::Name(n) => Some(n),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        
+        assert_eq!(result, vec!["Coyote"]);
         Ok(())
     }
 }
