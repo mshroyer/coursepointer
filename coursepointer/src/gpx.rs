@@ -49,12 +49,20 @@ where
     }
 }
 
+/// An elevation from sea level, measured in meters.
+#[derive(Copy, Clone, Debug)]
+pub struct Elevation {
+    meters: f64,
+}
+
 #[derive(Clone, Debug)]
 pub enum GpxTrackElement {
     Name(String),
-    Trackpoint(SurfacePoint),
+    Trackpoint(SurfacePoint, Option<Elevation>),
     Waypoint(SurfacePoint, String),
 }
+
+type EltPath = Vec<Vec<u8>>;
 
 impl<R> Iterator for GpxTrackReader<R>
 where
@@ -64,7 +72,9 @@ where
 
     fn next(&mut self) -> Option<Result<GpxTrackElement>> {
         let mut buf = Vec::new();
-        let mut path = Vec::new();
+        let mut path: EltPath = Vec::new();
+        let mut lat: Option<f64> = None;
+        let mut lon: Option<f64> = None;
 
         loop {
             match self.reader.read_event_into(&mut buf) {
@@ -77,9 +87,9 @@ where
                     path.push(name_bytes);
                     match elt.name().as_ref() {
                         b"trkpt" => {
-                            return Some((|| {
-                                let mut lat: Option<f64> = None;
-                                let mut lon: Option<f64> = None;
+                            lat = None;
+                            lon = None;
+                            if let Err(e) = (|| {
                                 for attr in elt.attributes() {
                                     let a = attr?;
                                     if a.key == QName(b"lat") {
@@ -88,20 +98,15 @@ where
                                         lon = Some(str::from_utf8(&a.value)?.parse()?);
                                     }
                                 }
-                                match (lat, lon) {
-                                    (Some(lat), Some(lon)) => {
-                                        Ok(GpxTrackElement::Trackpoint(SurfacePoint::new(lat, lon)))
-                                    }
-                                    _ => Err(GpxError::GpxSchemaError(
-                                        "trkpt element missing lat or lon".to_owned(),
-                                    )),
-                                }
-                            })());
+                                Ok(())
+                            })() {
+                                return Some(Err(e));
+                            }
                         }
 
                         _ => (),
                     }
-                },
+                }
 
                 Ok(Event::Text(text)) => {
                     let trk_name_path: Vec<Vec<u8>> =
@@ -110,19 +115,55 @@ where
                         return Some(match str::from_utf8(text.as_ref()) {
                             Err(err) => Err(GpxError::Utf8Error(err)),
                             Ok(s) => Ok(GpxTrackElement::Name(s.to_owned())),
-                        })
+                        });
                     } else {
                         continue;
                     }
-                },
+                }
 
-                Ok(Event::End(_elt)) => {
-                    path.pop();
-                },
+                Ok(Event::End(elt)) => {
+                    // For consistency, keep the current element's name on the
+                    // path until we're done with the End event.
+                    EltPathPopper::new(&mut path);
+
+                    match elt.name().as_ref() {
+                        b"trkpt" => {
+                            return Some(match (lat, lon) {
+                                (Some(lat_val), Some(lon_val)) => {
+                                    Ok(GpxTrackElement::Trackpoint(
+                                        SurfacePoint::new(lat_val, lon_val),
+                                        None,
+                                    ))
+                                },
+                                _ => Err(GpxError::GpxSchemaError(
+                                    "trkpt element missing lat or lon".to_owned(),
+                                )),
+                            })
+                        },
+
+                        _ => (),
+                    }
+                }
 
                 _ => (),
             }
         }
+    }
+}
+
+struct EltPathPopper<'a> {
+    path: &'a mut EltPath,
+}
+
+impl <'a> EltPathPopper<'a> {
+    fn new(path: &'a mut EltPath) -> Self {
+        Self { path }
+    }
+}
+
+impl Drop for EltPathPopper<'_> {
+    fn drop(&mut self) {
+        self.path.pop();
     }
 }
 
@@ -174,7 +215,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackElement::Trackpoint(p) => Some(*p),
+                GpxTrackElement::Trackpoint(p, _) => Some(*p),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -182,7 +223,7 @@ mod tests {
         assert_eq!(result, expected);
         Ok(())
     }
-    
+
     #[test]
     fn test_track_name() -> Result<()> {
         let xml = r#"
@@ -210,7 +251,7 @@ mod tests {
                 _ => None,
             })
             .collect::<Vec<_>>();
-        
+
         assert_eq!(result, vec!["Coyote"]);
         Ok(())
     }
