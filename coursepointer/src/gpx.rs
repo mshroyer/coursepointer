@@ -56,21 +56,40 @@ pub struct Elevation {
 }
 
 #[derive(Clone, Debug)]
-pub enum GpxTrackElement {
+pub enum GpxTrackItem {
     Name(String),
     Trackpoint(SurfacePoint, Option<Elevation>),
     Waypoint(SurfacePoint, String),
 }
 
-type EltPath = Vec<Vec<u8>>;
+#[derive(Copy, Clone, PartialEq, Debug)]
+enum EltName {
+    Gpx,
+    Trk,
+    Trkpt,
+    Name,
+    Unknown,
+}
+
+fn get_name(name: &[u8]) -> EltName {
+    match name {
+        b"gpx" => EltName::Gpx,
+        b"trk" => EltName::Trk,
+        b"trkpt" => EltName::Trkpt,
+        b"name" => EltName::Name,
+        _ => EltName::Unknown,
+    }
+}
+
+type EltPath = Vec<EltName>;
 
 impl<R> Iterator for GpxTrackReader<R>
 where
     R: BufRead,
 {
-    type Item = Result<GpxTrackElement>;
+    type Item = Result<GpxTrackItem>;
 
-    fn next(&mut self) -> Option<Result<GpxTrackElement>> {
+    fn next(&mut self) -> Option<Result<GpxTrackItem>> {
         let mut buf = Vec::new();
         let mut path: EltPath = Vec::new();
         let mut lat: Option<f64> = None;
@@ -83,10 +102,10 @@ where
                 Ok(Event::Eof) => return None,
 
                 Ok(Event::Start(elt)) => {
-                    let name_bytes = elt.name().as_ref().to_owned();
-                    path.push(name_bytes);
-                    match elt.name().as_ref() {
-                        b"trkpt" => {
+                    let name = get_name(elt.name().as_ref());
+                    path.push(name);
+                    match name {
+                        EltName::Trkpt => {
                             lat = None;
                             lon = None;
                             if let Err(e) = (|| {
@@ -109,12 +128,12 @@ where
                 }
 
                 Ok(Event::Text(text)) => {
-                    let trk_name_path: Vec<Vec<u8>> =
-                        vec![b"gpx".into(), b"trk".into(), b"name".into()];
+                    let trk_name_path: EltPath =
+                        vec![EltName::Gpx, EltName::Trk, EltName::Name];
                     if path == trk_name_path {
                         return Some(match str::from_utf8(text.as_ref()) {
                             Err(err) => Err(GpxError::Utf8Error(err)),
-                            Ok(s) => Ok(GpxTrackElement::Name(s.to_owned())),
+                            Ok(s) => Ok(GpxTrackItem::Name(s.to_owned())),
                         });
                     } else {
                         continue;
@@ -126,11 +145,11 @@ where
                     // path until we're done with the End event.
                     EltPathPopper::new(&mut path);
 
-                    match elt.name().as_ref() {
-                        b"trkpt" => {
+                    match get_name(elt.name().as_ref()) {
+                        EltName::Trkpt => {
                             return Some(match (lat, lon) {
                                 (Some(lat_val), Some(lon_val)) => {
-                                    Ok(GpxTrackElement::Trackpoint(
+                                    Ok(GpxTrackItem::Trackpoint(
                                         SurfacePoint::new(lat_val, lon_val),
                                         None,
                                     ))
@@ -173,7 +192,7 @@ mod tests {
     use quick_xml::Reader;
 
     use super::Result;
-    use super::{GpxTrackElement, GpxTrackReader};
+    use super::{GpxTrackItem, GpxTrackReader};
 
     macro_rules! surface_points {
         ( $( ( $lat:expr, $lon:expr ) ),* $(,)? ) => {
@@ -215,7 +234,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackElement::Trackpoint(p, _) => Some(*p),
+                GpxTrackItem::Trackpoint(p, _) => Some(*p),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -247,7 +266,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackElement::Name(n) => Some(n),
+                GpxTrackItem::Name(n) => Some(n),
                 _ => None,
             })
             .collect::<Vec<_>>();
