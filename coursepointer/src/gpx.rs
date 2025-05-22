@@ -106,11 +106,14 @@ pub enum GpxItem {
     Track,
     /// Optionally provides the name of a GPX track.
     TrackName(String),
-    /// Indicates the start of a GPX track segment.  Subsequent TrackPoints belong to this segment.
+    /// Indicates the start of a GPX track segment.  Subsequent TrackPoints
+    /// belong to this segment.
     TrackSegment,
-    /// A point along a track segment, returned in order of its position along the track.
+    /// A point along a track segment, returned in order of its position along
+    /// the track.
     TrackPoint(TrackPoint),
-    /// A waypoint.  Global to the GPX document; not specifically associated with any track.
+    /// A waypoint.  Global to the GPX document; not specifically associated
+    /// with any track.
     Waypoint(Waypoint),
 }
 
