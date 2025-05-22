@@ -18,7 +18,7 @@ use std::str;
 
 use quick_xml;
 use quick_xml::events::attributes::AttrError;
-use quick_xml::events::{BytesStart, BytesText, Event};
+use quick_xml::events::Event;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
@@ -167,34 +167,6 @@ where
             next_pt_fields: NextPtFields::new(),
         }
     }
-
-    fn start_pt_tag(&mut self, elt: &BytesStart) -> Result<()> {
-        self.next_pt_fields = NextPtFields::new();
-        for attr in elt.attributes() {
-            let a = attr?;
-            if a.key == QName(b"lat") {
-                self.next_pt_fields.lat = Some(str::from_utf8(&a.value)?.parse()?);
-            } else if a.key == QName(b"lon") {
-                self.next_pt_fields.lon = Some(str::from_utf8(&a.value)?.parse()?);
-            }
-        }
-        Ok(())
-    }
-
-    fn handle_pt_ele(&mut self, text: &BytesText) -> Result<()> {
-        self.next_pt_fields.ele = Some(str::from_utf8(text.as_ref())?.parse()?);
-        Ok(())
-    }
-
-    fn handle_pt_name(&mut self, text: &BytesText) -> Result<()> {
-        self.next_pt_fields.name = Some(str::from_utf8(text.as_ref())?.to_owned());
-        Ok(())
-    }
-
-    fn handle_pt_type(&mut self, text: &BytesText) -> Result<()> {
-        self.next_pt_fields.type_ = Some(str::from_utf8(text.as_ref())?.to_owned());
-        Ok(())
-    }
 }
 
 impl GpxReader<&[u8]> {
@@ -287,7 +259,20 @@ where
                         }
 
                         [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] | [Tag::Gpx, Tag::Wpt] => {
-                            if let Err(e) = self.start_pt_tag(&elt) {
+                            if let Err(e) = (|| {
+                                self.next_pt_fields = NextPtFields::new();
+                                for attr in elt.attributes() {
+                                    let a = attr?;
+                                    if a.key == QName(b"lat") {
+                                        self.next_pt_fields.lat =
+                                            Some(str::from_utf8(&a.value)?.parse()?);
+                                    } else if a.key == QName(b"lon") {
+                                        self.next_pt_fields.lon =
+                                            Some(str::from_utf8(&a.value)?.parse()?);
+                                    }
+                                }
+                                Ok(())
+                            })() {
                                 return Some(Err(e));
                             }
                         }
@@ -306,20 +291,25 @@ where
 
                     [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt, Tag::Ele]
                     | [Tag::Gpx, Tag::Wpt, Tag::Ele] => {
-                        if let Err(e) = self.handle_pt_ele(&text) {
+                        if let Err(e) = (|| {
+                            self.next_pt_fields.ele = Some(str::from_utf8(text.as_ref())?.parse()?);
+                            Ok(())
+                        })() {
                             return Some(Err(e));
                         }
                     }
 
                     [Tag::Gpx, Tag::Wpt, Tag::Name] => {
-                        if let Err(e) = self.handle_pt_name(&text) {
-                            return Some(Err(e));
+                        match str::from_utf8(text.as_ref()) {
+                            Ok(name) => self.next_pt_fields.name = Some(name.to_owned()),
+                            Err(err) => return Some(Err(err.into())),
                         }
                     }
 
                     [Tag::Gpx, Tag::Wpt, Tag::Type] => {
-                        if let Err(e) = self.handle_pt_type(&text) {
-                            return Some(Err(e));
+                        match str::from_utf8(text.as_ref()) {
+                            Ok(type_) => self.next_pt_fields.type_ = Some(type_.to_owned()),
+                            Err(err) => return Some(Err(err.into())),
                         }
                     }
 
