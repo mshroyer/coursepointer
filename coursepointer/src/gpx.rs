@@ -399,7 +399,7 @@ mod tests {
     }
 
     macro_rules! waypoints {
-        ( $( ( $lat:expr, $lon:expr, $ele:expr, $name:expr, $type_:expr ) ),* $(,)? ) => {
+        ( $( ( $lat:expr, $lon:expr, $ele:expr, $name:expr, $type_:expr $(,)? ) ),* $(,)? ) => {
             vec![ $( Waypoint {
                 lat: $lat,
                 lon: $lon,
@@ -623,21 +623,21 @@ mod tests {
                 -122.12117999999951,
                 None,
                 "Hetch Hetchy Trail",
-                Some("info")
+                Some("info"),
             ),
             (
                 37.39866999999887,
                 -122.13531999999954,
                 None,
                 "Trail Turn-off",
-                Some("info")
+                Some("info"),
             ),
             (
                 37.38693915264021,
                 -122.15257150642014,
                 None,
                 "Trail ends",
-                Some("generic")
+                Some("generic"),
             ),
         ];
 
