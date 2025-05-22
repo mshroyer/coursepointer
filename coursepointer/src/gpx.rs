@@ -226,7 +226,7 @@ mod tests {
 
     macro_rules! track_point {
         ( $lat:expr, $lon:expr ) => {
-            SurfacePoint::new($lat, $lon)
+            GpxTrackItem::Trackpoint(SurfacePoint::new($lat, $lon), None)
         };
         ( $lat:expr, $lon:expr, $ele:expr ) => {
             GpxTrackItem::Trackpoint(
@@ -270,7 +270,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackItem::Trackpoint(p, _) => Some(*p),
+                GpxTrackItem::Trackpoint(p, ele) => Some(GpxTrackItem::Trackpoint(*p, *ele)),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -316,11 +316,10 @@ mod tests {
         let elements = track_reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
-            .filter(|i| match i {
-                GpxTrackItem::Trackpoint(_, _) => true,
-                _ => false,
+            .filter_map(|ele| match ele {
+                GpxTrackItem::Trackpoint(p, ele) => Some(GpxTrackItem::Trackpoint(*p, *ele)),
+                _ => None,
             })
-            .map(|i| i.clone())
             .collect::<Vec<_>>();
 
         assert_eq!(result, expected);
