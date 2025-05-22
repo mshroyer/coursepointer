@@ -38,7 +38,7 @@ where
     R: BufRead,
 {
     reader: Reader<R>,
-    path: EltPath,
+    tag_path: TagNamePath,
 }
 
 impl<R> GpxTrackReader<R>
@@ -46,10 +46,14 @@ where
     R: BufRead,
 {
     pub fn new(mut reader: Reader<R>) -> GpxTrackReader<R> {
+        // Needed because our parsing logic relies on maintaining a stack of tag
+        // names, which would otherwise be broken by empty trkpt tags not
+        // generating an "End" event.
         reader.config_mut().expand_empty_elements = true;
+
         Self {
             reader,
-            path: vec![],
+            tag_path: vec![],
         }
     }
 }
@@ -68,7 +72,7 @@ pub enum GpxTrackItem {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-enum EltName {
+enum TagName {
     Gpx,
     Trk,
     Trkseg,
@@ -78,19 +82,19 @@ enum EltName {
     Unknown,
 }
 
-fn get_name(name: &[u8]) -> EltName {
+fn get_name(name: &[u8]) -> TagName {
     match name {
-        b"gpx" => EltName::Gpx,
-        b"trk" => EltName::Trk,
-        b"trkseg" => EltName::Trkseg,
-        b"trkpt" => EltName::Trkpt,
-        b"ele" => EltName::Ele,
-        b"name" => EltName::Name,
-        _ => EltName::Unknown,
+        b"gpx" => TagName::Gpx,
+        b"trk" => TagName::Trk,
+        b"trkseg" => TagName::Trkseg,
+        b"trkpt" => TagName::Trkpt,
+        b"ele" => TagName::Ele,
+        b"name" => TagName::Name,
+        _ => TagName::Unknown,
     }
 }
 
-type EltPath = Vec<EltName>;
+type TagNamePath = Vec<TagName>;
 
 impl<R> Iterator for GpxTrackReader<R>
 where
@@ -112,10 +116,10 @@ where
 
                 Ok(Event::Start(elt)) => {
                     let name = get_name(elt.name().as_ref());
-                    self.path.push(name);
+                    self.tag_path.push(name);
 
-                    match self.path.as_slice() {
-                        [EltName::Gpx, EltName::Trk, EltName::Trkseg, EltName::Trkpt] => {
+                    match self.tag_path.as_slice() {
+                        [TagName::Gpx, TagName::Trk, TagName::Trkseg, TagName::Trkpt] => {
                             lat = None;
                             lon = None;
                             ele = None;
@@ -138,8 +142,8 @@ where
                     }
                 }
 
-                Ok(Event::Text(text)) => match self.path.as_slice() {
-                    [EltName::Gpx, EltName::Trk, EltName::Name] => {
+                Ok(Event::Text(text)) => match self.tag_path.as_slice() {
+                    [TagName::Gpx, TagName::Trk, TagName::Name] => {
                         return Some(match str::from_utf8(text.as_ref()) {
                             Err(err) => Err(GpxError::Utf8Error(err)),
                             Ok(s) => Ok(GpxTrackItem::Name(s.to_owned())),
@@ -147,11 +151,11 @@ where
                     }
 
                     [
-                        EltName::Gpx,
-                        EltName::Trk,
-                        EltName::Trkseg,
-                        EltName::Trkpt,
-                        EltName::Ele,
+                        TagName::Gpx,
+                        TagName::Trk,
+                        TagName::Trkseg,
+                        TagName::Trkpt,
+                        TagName::Ele,
                     ] => {
                         if let Err(e) = (|| {
                             ele = Some(Elevation {
@@ -171,10 +175,10 @@ where
                 Ok(Event::End(elt)) => {
                     // For consistency, keep the current element's name on the
                     // path until we're done with the End event.
-                    EltPathPopper::new(&mut self.path);
+                    TagNamePopper::new(&mut self.tag_path);
 
                     match get_name(elt.name().as_ref()) {
-                        EltName::Trkpt => {
+                        TagName::Trkpt => {
                             return Some(match (lat, lon) {
                                 (Some(lat_val), Some(lon_val)) => Ok(GpxTrackItem::Trackpoint(
                                     SurfacePoint::new(lat_val, lon_val),
@@ -196,17 +200,17 @@ where
     }
 }
 
-struct EltPathPopper<'a> {
-    path: &'a mut EltPath,
+struct TagNamePopper<'a> {
+    path: &'a mut TagNamePath,
 }
 
-impl<'a> EltPathPopper<'a> {
-    fn new(path: &'a mut EltPath) -> Self {
+impl<'a> TagNamePopper<'a> {
+    fn new(path: &'a mut TagNamePath) -> Self {
         Self { path }
     }
 }
 
-impl Drop for EltPathPopper<'_> {
+impl Drop for TagNamePopper<'_> {
     fn drop(&mut self) {
         self.path.pop();
     }
@@ -245,14 +249,10 @@ mod tests {
   <trk>
     <name>Coyote</name>
     <trkseg>
-      <trkpt lat="37.39987" lon="-122.13737">
-      </trkpt>
-      <trkpt lat="37.39958" lon="-122.13684">
-      </trkpt>
-      <trkpt lat="37.39923" lon="-122.13591">
-      </trkpt>
-      <trkpt lat="37.39888" lon="-122.13498">
-      </trkpt>
+      <trkpt lat="37.39987" lon="-122.13737" />
+      <trkpt lat="37.39958" lon="-122.13684" />
+      <trkpt lat="37.39923" lon="-122.13591" />
+      <trkpt lat="37.39888" lon="-122.13498" />
     </trkseg>
   </trk>
 </gpx>
