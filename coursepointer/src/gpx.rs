@@ -3,8 +3,8 @@ use std::num::ParseFloatError;
 use std::str;
 
 use quick_xml;
-use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
+use quick_xml::events::{BytesStart, Event};
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
@@ -30,6 +30,26 @@ pub enum GpxError {
 
 type Result<T> = std::result::Result<T, GpxError>;
 
+struct NextPtFields {
+    lat: Option<f64>,
+    lon: Option<f64>,
+    ele: Option<f64>,
+    name: Option<String>,
+    type_: Option<String>,
+}
+
+impl NextPtFields {
+    fn new() -> Self {
+        Self {
+            lat: None,
+            lon: None,
+            ele: None,
+            name: None,
+            type_: None,
+        }
+    }
+}
+
 /// A reader for GPX Track files
 ///
 /// Implements an Iterator that emits the track's trackpoints and waypoints.
@@ -39,6 +59,7 @@ where
 {
     reader: Reader<R>,
     tag_path: TagNamePath,
+    next_pt_fields: NextPtFields,
 }
 
 impl<R> GpxTrackReader<R>
@@ -54,33 +75,83 @@ where
         Self {
             reader,
             tag_path: vec![],
+            next_pt_fields: NextPtFields::new(),
         }
+    }
+
+    fn start_pt_tag(&mut self, elt: &BytesStart) -> Result<()> {
+        self.next_pt_fields = NextPtFields::new();
+        for attr in elt.attributes() {
+            let a = attr?;
+            if a.key == QName(b"lat") {
+                self.next_pt_fields.lat = Some(str::from_utf8(&a.value)?.parse()?);
+            } else if a.key == QName(b"lon") {
+                self.next_pt_fields.lon = Some(str::from_utf8(&a.value)?.parse()?);
+            }
+        }
+        Ok(())
     }
 }
 
-/// An elevation from sea level, measured in meters.
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub struct Elevation {
-    meters: f64,
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct TrackPoint {
+    pub lat: f64,
+    pub lon: f64,
+    pub ele: Option<f64>,
+}
+
+impl TryFrom<&NextPtFields> for TrackPoint {
+    type Error = GpxError;
+
+    fn try_from(value: &NextPtFields) -> Result<Self> {
+        let lat = value.lat.ok_or(GpxError::GpxSchemaError(
+            "trackpoint missing lat attribute".to_owned(),
+        ))?;
+        let lon = value.lon.ok_or(GpxError::GpxSchemaError(
+            "trackpoint missing lon attribute".to_owned(),
+        ))?;
+        Ok(Self {
+            lat,
+            lon,
+            ele: value.ele,
+        })
+    }
 }
 
 #[derive(Clone, PartialEq, Debug)]
+pub struct Waypoint {
+    pub lat: f64,
+    pub lon: f64,
+    pub ele: f64,
+    pub name: String,
+    pub type_: Option<String>,
+}
+
+/// An item parsed from a GPX document.
+#[derive(Clone, PartialEq, Debug)]
 pub enum GpxTrackItem {
-    Name(String),
+    /// Indicates the start of a GPX track.  Subsequent TrackName, TrackSegment,
+    /// and TrackPoint items belong to this track.
     Track,
+    /// Optionally provides the name of a GPX track.
+    TrackName(String),
+    /// Indicates the start of a GPX track segment.  Subsequent TrackPoints belong to this segment.
     TrackSegment,
-    TrackPoint(SurfacePoint, Option<Elevation>),
-    Waypoint(SurfacePoint, String),
+    /// A point along a track segment, returned in order of its position along the track.
+    TrackPoint(TrackPoint),
+    /// A waypoint.  Global to the GPX document; not specifically associated with any track.
+    Waypoint(Waypoint),
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum TagName {
     Gpx,
     Trk,
+    Name,
     Trkseg,
     Trkpt,
     Ele,
-    Name,
+    Wpt,
     Unknown,
 }
 
@@ -92,6 +163,7 @@ fn get_name(name: &[u8]) -> TagName {
         b"trkpt" => TagName::Trkpt,
         b"ele" => TagName::Ele,
         b"name" => TagName::Name,
+        b"wpt" => TagName::Wpt,
         _ => TagName::Unknown,
     }
 }
@@ -106,9 +178,6 @@ where
 
     fn next(&mut self) -> Option<Result<GpxTrackItem>> {
         let mut buf = Vec::new();
-        let mut lat: Option<f64> = None;
-        let mut lon: Option<f64> = None;
-        let mut ele: Option<Elevation> = None;
 
         loop {
             match self.reader.read_event_into(&mut buf) {
@@ -130,20 +199,13 @@ where
                         }
 
                         [TagName::Gpx, TagName::Trk, TagName::Trkseg, TagName::Trkpt] => {
-                            lat = None;
-                            lon = None;
-                            ele = None;
-                            if let Err(e) = (|| {
-                                for attr in elt.attributes() {
-                                    let a = attr?;
-                                    if a.key == QName(b"lat") {
-                                        lat = Some(str::from_utf8(&a.value)?.parse()?);
-                                    } else if a.key == QName(b"lon") {
-                                        lon = Some(str::from_utf8(&a.value)?.parse()?);
-                                    }
-                                }
-                                Ok(())
-                            })() {
+                            if let Err(e) = self.start_pt_tag(&elt) {
+                                return Some(Err(e));
+                            }
+                        }
+
+                        [TagName::Gpx, TagName::Wpt] => {
+                            if let Err(e) = self.start_pt_tag(&elt) {
                                 return Some(Err(e));
                             }
                         }
@@ -156,7 +218,7 @@ where
                     [TagName::Gpx, TagName::Trk, TagName::Name] => {
                         return Some(match str::from_utf8(text.as_ref()) {
                             Err(err) => Err(GpxError::Utf8Error(err)),
-                            Ok(s) => Ok(GpxTrackItem::Name(s.to_owned())),
+                            Ok(s) => Ok(GpxTrackItem::TrackName(s.to_owned())),
                         });
                     }
 
@@ -168,9 +230,7 @@ where
                         TagName::Ele,
                     ] => {
                         if let Err(e) = (|| {
-                            ele = Some(Elevation {
-                                meters: str::from_utf8(text.as_ref())?.parse()?,
-                            });
+                            self.next_pt_fields.ele = Some(str::from_utf8(text.as_ref())?.parse()?);
                             Ok(())
                         })() {
                             return Some(Err(e));
@@ -189,15 +249,11 @@ where
 
                     match get_name(elt.name().as_ref()) {
                         TagName::Trkpt => {
-                            return Some(match (lat, lon) {
-                                (Some(lat_val), Some(lon_val)) => Ok(GpxTrackItem::TrackPoint(
-                                    SurfacePoint::new(lat_val, lon_val),
-                                    ele,
-                                )),
-                                _ => Err(GpxError::GpxSchemaError(
-                                    "trkpt element missing lat or lon".to_owned(),
-                                )),
-                            });
+                            return Some((|| {
+                                Ok(GpxTrackItem::TrackPoint(TrackPoint::try_from(
+                                    &self.next_pt_fields,
+                                )?))
+                            })());
                         }
 
                         _ => (),
@@ -232,17 +288,22 @@ mod tests {
     use quick_xml::Reader;
 
     use super::Result;
-    use super::{Elevation, GpxTrackItem, GpxTrackReader};
+    use super::{GpxTrackItem, GpxTrackReader, TrackPoint};
 
     macro_rules! track_point {
         ( $lat:expr, $lon:expr ) => {
-            GpxTrackItem::TrackPoint(SurfacePoint::new($lat, $lon), None)
+            TrackPoint {
+                lat: $lat,
+                lon: $lon,
+                ele: None,
+            }
         };
         ( $lat:expr, $lon:expr, $ele:expr ) => {
-            GpxTrackItem::TrackPoint(
-                SurfacePoint::new($lat, $lon),
-                Some(Elevation { meters: $ele }),
-            )
+            TrackPoint {
+                lat: $lat,
+                lon: $lon,
+                ele: Some($ele),
+            }
         };
     }
 
@@ -280,7 +341,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackItem::TrackPoint(p, ele) => Some(GpxTrackItem::TrackPoint(*p, *ele)),
+                GpxTrackItem::TrackPoint(p) => Some(*p),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -327,7 +388,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackItem::TrackPoint(p, ele) => Some(GpxTrackItem::TrackPoint(*p, *ele)),
+                GpxTrackItem::TrackPoint(p) => Some(*p),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -359,7 +420,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackItem::Name(n) => Some(n),
+                GpxTrackItem::TrackName(n) => Some(n),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -389,15 +450,29 @@ mod tests {
         let reader = GpxTrackReader::new(Reader::from_str(xml));
         let elements = reader.collect::<Result<Vec<_>>>()?;
 
-        assert_eq!(elements.iter().filter(|e| match e {
-            GpxTrackItem::Track => true,
-            _ => false,
-        }).collect::<Vec<_>>().len(), 1);
+        assert_eq!(
+            elements
+                .iter()
+                .filter(|e| match e {
+                    GpxTrackItem::Track => true,
+                    _ => false,
+                })
+                .collect::<Vec<_>>()
+                .len(),
+            1
+        );
 
-        assert_eq!(elements.iter().filter(|e| match e {
-            GpxTrackItem::TrackSegment => true,
-            _ => false,
-        }).collect::<Vec<_>>().len(), 1);
+        assert_eq!(
+            elements
+                .iter()
+                .filter(|e| match e {
+                    GpxTrackItem::TrackSegment => true,
+                    _ => false,
+                })
+                .collect::<Vec<_>>()
+                .len(),
+            1
+        );
 
         Ok(())
     }
