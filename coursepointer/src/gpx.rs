@@ -478,8 +478,7 @@ mod tests {
             (37.39888, -122.13498, 31.8),
         ];
 
-        let mut reader = Reader::from_str(xml);
-        reader.config_mut().expand_empty_elements = true;
+        let reader = Reader::from_str(xml);
         let track_reader = GpxReader::new(reader);
         let elements = track_reader.collect::<Result<Vec<_>>>()?;
         let result = elements
@@ -641,8 +640,7 @@ mod tests {
             ),
         ];
 
-        let mut reader = Reader::from_str(xml);
-        reader.config_mut().expand_empty_elements = true;
+        let reader = Reader::from_str(xml);
         let track_reader = GpxReader::new(reader);
         let elements = track_reader.collect::<Result<Vec<_>>>()?;
         let result = elements
