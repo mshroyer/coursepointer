@@ -67,7 +67,9 @@ pub struct Elevation {
 #[derive(Clone, PartialEq, Debug)]
 pub enum GpxTrackItem {
     Name(String),
-    Trackpoint(SurfacePoint, Option<Elevation>),
+    Track,
+    TrackSegment,
+    TrackPoint(SurfacePoint, Option<Elevation>),
     Waypoint(SurfacePoint, String),
 }
 
@@ -119,6 +121,14 @@ where
                     self.tag_path.push(name);
 
                     match self.tag_path.as_slice() {
+                        [TagName::Gpx, TagName::Trk] => {
+                            return Some(Ok(GpxTrackItem::Track));
+                        }
+
+                        [TagName::Gpx, TagName::Trk, TagName::Trkseg] => {
+                            return Some(Ok(GpxTrackItem::TrackSegment));
+                        }
+
                         [TagName::Gpx, TagName::Trk, TagName::Trkseg, TagName::Trkpt] => {
                             lat = None;
                             lon = None;
@@ -180,7 +190,7 @@ where
                     match get_name(elt.name().as_ref()) {
                         TagName::Trkpt => {
                             return Some(match (lat, lon) {
-                                (Some(lat_val), Some(lon_val)) => Ok(GpxTrackItem::Trackpoint(
+                                (Some(lat_val), Some(lon_val)) => Ok(GpxTrackItem::TrackPoint(
                                     SurfacePoint::new(lat_val, lon_val),
                                     ele,
                                 )),
@@ -226,10 +236,10 @@ mod tests {
 
     macro_rules! track_point {
         ( $lat:expr, $lon:expr ) => {
-            GpxTrackItem::Trackpoint(SurfacePoint::new($lat, $lon), None)
+            GpxTrackItem::TrackPoint(SurfacePoint::new($lat, $lon), None)
         };
         ( $lat:expr, $lon:expr, $ele:expr ) => {
-            GpxTrackItem::Trackpoint(
+            GpxTrackItem::TrackPoint(
                 SurfacePoint::new($lat, $lon),
                 Some(Elevation { meters: $ele }),
             )
@@ -270,7 +280,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackItem::Trackpoint(p, ele) => Some(GpxTrackItem::Trackpoint(*p, *ele)),
+                GpxTrackItem::TrackPoint(p, ele) => Some(GpxTrackItem::TrackPoint(*p, *ele)),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -317,7 +327,7 @@ mod tests {
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
-                GpxTrackItem::Trackpoint(p, ele) => Some(GpxTrackItem::Trackpoint(*p, *ele)),
+                GpxTrackItem::TrackPoint(p, ele) => Some(GpxTrackItem::TrackPoint(*p, *ele)),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -355,6 +365,40 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(result, vec!["Coyote"]);
+        Ok(())
+    }
+
+    #[test]
+    fn test_track_and_track_segment() -> Result<()> {
+        let xml = r#"
+<gpx>
+  <trk>
+    <name>Coyote</name>
+    <trkseg>
+      <trkpt lat="37.39987" lon="-122.13737">
+        <ele>30.5</ele>
+      </trkpt>
+      <trkpt lat="37.39958" lon="-122.13684">
+        <ele>29.9</ele>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+"#;
+
+        let reader = GpxTrackReader::new(Reader::from_str(xml));
+        let elements = reader.collect::<Result<Vec<_>>>()?;
+
+        assert_eq!(elements.iter().filter(|e| match e {
+            GpxTrackItem::Track => true,
+            _ => false,
+        }).collect::<Vec<_>>().len(), 1);
+
+        assert_eq!(elements.iter().filter(|e| match e {
+            GpxTrackItem::TrackSegment => true,
+            _ => false,
+        }).collect::<Vec<_>>().len(), 1);
+
         Ok(())
     }
 }
