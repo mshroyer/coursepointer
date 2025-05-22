@@ -347,10 +347,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use quick_xml::Reader;
-
-    use super::Result;
-    use super::{GpxItem, GpxReader, TrackPoint, Waypoint};
+    use super::{GpxItem, GpxReader, Result, TrackPoint, Waypoint};
 
     macro_rules! track_point {
         ( $lat:expr, $lon:expr ) => {
@@ -519,7 +516,7 @@ mod tests {
 </gpx>
 "#;
 
-        let reader = GpxReader::new(Reader::from_str(xml));
+        let reader = GpxReader::from_str(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
 
         assert_eq!(
