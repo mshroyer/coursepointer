@@ -332,17 +332,17 @@ where
 
                     match tag_path.as_slice() {
                         [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] => {
-                            return Some((|| {
-                                Ok(GpxItem::TrackPoint(TrackPoint::try_from(
-                                    &self.next_pt_fields,
-                                )?))
-                            })());
+                            return Some(match TrackPoint::try_from(&self.next_pt_fields) {
+                                Ok(p) => Ok(GpxItem::TrackPoint(p)),
+                                Err(e) => Err(e),
+                            });
                         }
 
                         [Tag::Gpx, Tag::Wpt] => {
-                            return Some((|| {
-                                Ok(GpxItem::Waypoint(Waypoint::try_from(&self.next_pt_fields)?))
-                            })());
+                            return Some(match Waypoint::try_from(&self.next_pt_fields) {
+                                Ok(p) => Ok(GpxItem::Waypoint(p)),
+                                Err(e) => Err(e),
+                            });
                         }
 
                         _ => (),
