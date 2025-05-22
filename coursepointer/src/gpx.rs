@@ -38,24 +38,29 @@ where
     R: BufRead,
 {
     reader: Reader<R>,
+    path: EltPath,
 }
 
 impl<R> GpxTrackReader<R>
 where
     R: BufRead,
 {
-    pub fn new(reader: Reader<R>) -> GpxTrackReader<R> {
-        Self { reader }
+    pub fn new(mut reader: Reader<R>) -> GpxTrackReader<R> {
+        reader.config_mut().expand_empty_elements = true;
+        Self {
+            reader,
+            path: vec![],
+        }
     }
 }
 
 /// An elevation from sea level, measured in meters.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Elevation {
     meters: f64,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum GpxTrackItem {
     Name(String),
     Trackpoint(SurfacePoint, Option<Elevation>),
@@ -66,7 +71,9 @@ pub enum GpxTrackItem {
 enum EltName {
     Gpx,
     Trk,
+    Trkseg,
     Trkpt,
+    Ele,
     Name,
     Unknown,
 }
@@ -75,7 +82,9 @@ fn get_name(name: &[u8]) -> EltName {
     match name {
         b"gpx" => EltName::Gpx,
         b"trk" => EltName::Trk,
+        b"trkseg" => EltName::Trkseg,
         b"trkpt" => EltName::Trkpt,
+        b"ele" => EltName::Ele,
         b"name" => EltName::Name,
         _ => EltName::Unknown,
     }
@@ -91,9 +100,9 @@ where
 
     fn next(&mut self) -> Option<Result<GpxTrackItem>> {
         let mut buf = Vec::new();
-        let mut path: EltPath = Vec::new();
         let mut lat: Option<f64> = None;
         let mut lon: Option<f64> = None;
+        let mut ele: Option<Elevation> = None;
 
         loop {
             match self.reader.read_event_into(&mut buf) {
@@ -103,11 +112,13 @@ where
 
                 Ok(Event::Start(elt)) => {
                     let name = get_name(elt.name().as_ref());
-                    path.push(name);
-                    match name {
-                        EltName::Trkpt => {
+                    self.path.push(name);
+
+                    match self.path.as_slice() {
+                        [EltName::Gpx, EltName::Trk, EltName::Trkseg, EltName::Trkpt] => {
                             lat = None;
                             lon = None;
+                            ele = None;
                             if let Err(e) = (|| {
                                 for attr in elt.attributes() {
                                     let a = attr?;
@@ -127,38 +138,53 @@ where
                     }
                 }
 
-                Ok(Event::Text(text)) => {
-                    let trk_name_path: EltPath =
-                        vec![EltName::Gpx, EltName::Trk, EltName::Name];
-                    if path == trk_name_path {
+                Ok(Event::Text(text)) => match self.path.as_slice() {
+                    [EltName::Gpx, EltName::Trk, EltName::Name] => {
                         return Some(match str::from_utf8(text.as_ref()) {
                             Err(err) => Err(GpxError::Utf8Error(err)),
                             Ok(s) => Ok(GpxTrackItem::Name(s.to_owned())),
                         });
-                    } else {
+                    }
+
+                    [
+                        EltName::Gpx,
+                        EltName::Trk,
+                        EltName::Trkseg,
+                        EltName::Trkpt,
+                        EltName::Ele,
+                    ] => {
+                        if let Err(e) = (|| {
+                            ele = Some(Elevation {
+                                meters: str::from_utf8(text.as_ref())?.parse()?,
+                            });
+                            Ok(())
+                        })() {
+                            return Some(Err(e));
+                        }
+                    }
+
+                    _ => {
                         continue;
                     }
-                }
+                },
 
                 Ok(Event::End(elt)) => {
                     // For consistency, keep the current element's name on the
                     // path until we're done with the End event.
-                    EltPathPopper::new(&mut path);
+                    EltPathPopper::new(&mut self.path);
 
                     match get_name(elt.name().as_ref()) {
                         EltName::Trkpt => {
                             return Some(match (lat, lon) {
-                                (Some(lat_val), Some(lon_val)) => {
-                                    Ok(GpxTrackItem::Trackpoint(
-                                        SurfacePoint::new(lat_val, lon_val),
-                                        None,
-                                    ))
-                                },
+                                (Some(lat_val), Some(lon_val)) => Ok(GpxTrackItem::Trackpoint(
+                                    SurfacePoint::new(lat_val, lon_val),
+                                    ele,
+                                )),
                                 _ => Err(GpxError::GpxSchemaError(
                                     "trkpt element missing lat or lon".to_owned(),
                                 )),
-                            })
-                        },
+                            });
+                        }
 
                         _ => (),
                     }
@@ -174,7 +200,7 @@ struct EltPathPopper<'a> {
     path: &'a mut EltPath,
 }
 
-impl <'a> EltPathPopper<'a> {
+impl<'a> EltPathPopper<'a> {
     fn new(path: &'a mut EltPath) -> Self {
         Self { path }
     }
@@ -192,37 +218,47 @@ mod tests {
     use quick_xml::Reader;
 
     use super::Result;
-    use super::{GpxTrackItem, GpxTrackReader};
+    use super::{Elevation, GpxTrackItem, GpxTrackReader};
 
-    macro_rules! surface_points {
-        ( $( ( $lat:expr, $lon:expr ) ),* $(,)? ) => {
-            vec![ $( SurfacePoint::new($lat, $lon) ),* ]
+    macro_rules! track_point {
+        ( $lat:expr, $lon:expr ) => {
+            SurfacePoint::new($lat, $lon)
+        };
+        ( $lat:expr, $lon:expr, $ele:expr ) => {
+            GpxTrackItem::Trackpoint(
+                SurfacePoint::new($lat, $lon),
+                Some(Elevation { meters: $ele }),
+            )
+        };
+    }
+
+    macro_rules! track_points {
+        ( $( ( $lat:expr, $lon:expr $(, $ele:expr )? ) ),* $(,)? ) => {
+            vec![ $( track_point!($lat, $lon $( , $ele )?) ),* ]
         };
     }
 
     #[test]
     fn test_trackpoints() -> Result<()> {
         let xml = r#"
-<trk>
-  <name>Coyote</name>
-  <trkseg>
-    <trkpt lat="37.39987" lon="-122.13737">
-      <ele>30.5</ele>
-    </trkpt>
-    <trkpt lat="37.39958" lon="-122.13684">
-      <ele>29.9</ele>
-    </trkpt>
-    <trkpt lat="37.39923" lon="-122.13591">
-      <ele>29.8</ele>
-    </trkpt>
-    <trkpt lat="37.39888" lon="-122.13498">
-      <ele>31.8</ele>
-    </trkpt>
-  </trkseg>
-</trk>
+<gpx>
+  <trk>
+    <name>Coyote</name>
+    <trkseg>
+      <trkpt lat="37.39987" lon="-122.13737">
+      </trkpt>
+      <trkpt lat="37.39958" lon="-122.13684">
+      </trkpt>
+      <trkpt lat="37.39923" lon="-122.13591">
+      </trkpt>
+      <trkpt lat="37.39888" lon="-122.13498">
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
 "#;
 
-        let expected = surface_points![
+        let expected = track_points![
             (37.39987, -122.13737),
             (37.39958, -122.13684),
             (37.39923, -122.13591),
@@ -237,6 +273,54 @@ mod tests {
                 GpxTrackItem::Trackpoint(p, _) => Some(*p),
                 _ => None,
             })
+            .collect::<Vec<_>>();
+
+        assert_eq!(result, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn test_trackpoints_with_elevation() -> Result<()> {
+        let xml = r#"
+<gpx>
+  <trk>
+    <name>Coyote</name>
+    <trkseg>
+      <trkpt lat="37.39987" lon="-122.13737">
+        <ele>30.5</ele>
+      </trkpt>
+      <trkpt lat="37.39958" lon="-122.13684">
+        <ele>29.9</ele>
+      </trkpt>
+      <trkpt lat="37.39923" lon="-122.13591">
+        <ele>29.8</ele>
+      </trkpt>
+      <trkpt lat="37.39888" lon="-122.13498">
+        <ele>31.8</ele>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+"#;
+
+        let expected = track_points![
+            (37.39987, -122.13737, 30.5),
+            (37.39958, -122.13684, 29.9),
+            (37.39923, -122.13591, 29.8),
+            (37.39888, -122.13498, 31.8),
+        ];
+
+        let mut reader = Reader::from_str(xml);
+        reader.config_mut().expand_empty_elements = true;
+        let track_reader = GpxTrackReader::new(reader);
+        let elements = track_reader.collect::<Result<Vec<_>>>()?;
+        let result = elements
+            .iter()
+            .filter(|i| match i {
+                GpxTrackItem::Trackpoint(_, _) => true,
+                _ => false,
+            })
+            .map(|i| i.clone())
             .collect::<Vec<_>>();
 
         assert_eq!(result, expected);
