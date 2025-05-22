@@ -340,7 +340,7 @@ where
                 Ok(Event::End(elt)) => {
                     // For consistency, keep the current element's name on the
                     // path until we're done with the End event.
-                    TagNamePopper::new(&mut self.tag_path);
+                    TagPopper::new(&mut self.tag_path);
 
                     match get_tag(elt.name().as_ref()) {
                         Tag::Trkpt => {
@@ -369,17 +369,17 @@ where
     }
 }
 
-struct TagNamePopper<'a> {
+struct TagPopper<'a> {
     path: &'a mut TagPath,
 }
 
-impl<'a> TagNamePopper<'a> {
+impl<'a> TagPopper<'a> {
     fn new(path: &'a mut TagPath) -> Self {
         Self { path }
     }
 }
 
-impl Drop for TagNamePopper<'_> {
+impl Drop for TagPopper<'_> {
     fn drop(&mut self) {
         self.path.pop();
     }
