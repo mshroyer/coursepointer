@@ -167,7 +167,7 @@ where
             next_pt_fields: NextPtFields::new(),
         }
     }
-    
+
     fn start_pt_tag(&mut self, elt: &BytesStart) -> Result<()> {
         self.next_pt_fields = NextPtFields::new();
         for attr in elt.attributes() {
@@ -286,13 +286,7 @@ where
                             return Some(Ok(GpxItem::TrackSegment));
                         }
 
-                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] => {
-                            if let Err(e) = self.start_pt_tag(&elt) {
-                                return Some(Err(e));
-                            }
-                        }
-
-                        [Tag::Gpx, Tag::Wpt] => {
+                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] | [Tag::Gpx, Tag::Wpt] => {
                             if let Err(e) = self.start_pt_tag(&elt) {
                                 return Some(Err(e));
                             }
@@ -310,13 +304,8 @@ where
                         });
                     }
 
-                    [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt, Tag::Ele] => {
-                        if let Err(e) = self.handle_pt_ele(&text) {
-                            return Some(Err(e));
-                        }
-                    }
-
-                    [Tag::Gpx, Tag::Wpt, Tag::Ele] => {
+                    [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt, Tag::Ele]
+                    | [Tag::Gpx, Tag::Wpt, Tag::Ele] => {
                         if let Err(e) = self.handle_pt_ele(&text) {
                             return Some(Err(e));
                         }
@@ -340,7 +329,7 @@ where
                 Ok(Event::End(_elt)) => {
                     let tag_path = self.tag_path.clone();
                     self.tag_path.pop();
-                    
+
                     match tag_path.as_slice() {
                         [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] => {
                             return Some((|| {
@@ -352,9 +341,7 @@ where
 
                         [Tag::Gpx, Tag::Wpt] => {
                             return Some((|| {
-                                Ok(GpxItem::Waypoint(Waypoint::try_from(
-                                    &self.next_pt_fields,
-                                )?))
+                                Ok(GpxItem::Waypoint(Waypoint::try_from(&self.next_pt_fields)?))
                             })());
                         }
 
