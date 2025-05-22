@@ -5,13 +5,15 @@
 //! Provides an iterator that reads in sequence the trackpoints, waypoints,
 //! and other relevant items from a GPX track file.
 //!
-//! To use this module, instantiate a `quick_xml` reader from a file or a
-//! string, then use it to instantiate a [`GpxReader`].  Iterating over
-//! the [`GpxReader`] will produce a sequence of [`GpxItem`] describing the
-//! contents of the input.
+//! To use this module, instantiate a [`GpxReader`] by invoking
+//! [`GpxReader::from_str`] or [`GpxReader::from_path`]. Iterating over the
+//! [`GpxReader`] will produce a sequence of [`GpxItem`] describing the contents
+//! of the input.
 //!
-use std::io::BufRead;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::num::ParseFloatError;
+use std::path::Path;
 use std::str;
 
 use quick_xml;
@@ -39,64 +41,6 @@ pub enum GpxError {
 }
 
 type Result<T> = std::result::Result<T, GpxError>;
-
-/// A reader for GPX Track files
-///
-/// Implements an Iterator that emits the track's trackpoints and waypoints.
-pub struct GpxReader<R>
-where
-    R: BufRead,
-{
-    reader: Reader<R>,
-    tag_path: TagPath,
-    next_pt_fields: NextPtFields,
-}
-
-impl<R> GpxReader<R>
-where
-    R: BufRead,
-{
-    pub fn new(mut reader: Reader<R>) -> GpxReader<R> {
-        // Needed because our parsing logic relies on maintaining a stack of tag
-        // names, which would otherwise be broken by empty trkpt tags not
-        // generating an "End" event.
-        reader.config_mut().expand_empty_elements = true;
-
-        Self {
-            reader,
-            tag_path: vec![],
-            next_pt_fields: NextPtFields::new(),
-        }
-    }
-
-    fn start_pt_tag(&mut self, elt: &BytesStart) -> Result<()> {
-        self.next_pt_fields = NextPtFields::new();
-        for attr in elt.attributes() {
-            let a = attr?;
-            if a.key == QName(b"lat") {
-                self.next_pt_fields.lat = Some(str::from_utf8(&a.value)?.parse()?);
-            } else if a.key == QName(b"lon") {
-                self.next_pt_fields.lon = Some(str::from_utf8(&a.value)?.parse()?);
-            }
-        }
-        Ok(())
-    }
-
-    fn handle_pt_ele(&mut self, text: &BytesText) -> Result<()> {
-        self.next_pt_fields.ele = Some(str::from_utf8(text.as_ref())?.parse()?);
-        Ok(())
-    }
-
-    fn handle_pt_name(&mut self, text: &BytesText) -> Result<()> {
-        self.next_pt_fields.name = Some(str::from_utf8(text.as_ref())?.to_owned());
-        Ok(())
-    }
-
-    fn handle_pt_type(&mut self, text: &BytesText) -> Result<()> {
-        self.next_pt_fields.type_ = Some(str::from_utf8(text.as_ref())?.to_owned());
-        Ok(())
-    }
-}
 
 /// An item parsed from a GPX document.
 #[derive(Clone, PartialEq, Debug)]
@@ -192,6 +136,76 @@ impl TryFrom<&NextPtFields> for Waypoint {
             name,
             type_: value.type_.clone(),
         })
+    }
+}
+
+/// A reader for GPX Track files
+///
+/// Implements an Iterator that emits the track's trackpoints and waypoints.
+pub struct GpxReader<R>
+where
+    R: BufRead,
+{
+    reader: Reader<R>,
+    tag_path: TagPath,
+    next_pt_fields: NextPtFields,
+}
+
+impl<R> GpxReader<R>
+where
+    R: BufRead,
+{
+    fn new(mut reader: Reader<R>) -> GpxReader<R> {
+        // Needed because our parsing logic relies on maintaining a stack of tag
+        // names, which would otherwise be broken by empty trkpt tags not
+        // generating an "End" event.
+        reader.config_mut().expand_empty_elements = true;
+
+        Self {
+            reader,
+            tag_path: vec![],
+            next_pt_fields: NextPtFields::new(),
+        }
+    }
+    
+    fn start_pt_tag(&mut self, elt: &BytesStart) -> Result<()> {
+        self.next_pt_fields = NextPtFields::new();
+        for attr in elt.attributes() {
+            let a = attr?;
+            if a.key == QName(b"lat") {
+                self.next_pt_fields.lat = Some(str::from_utf8(&a.value)?.parse()?);
+            } else if a.key == QName(b"lon") {
+                self.next_pt_fields.lon = Some(str::from_utf8(&a.value)?.parse()?);
+            }
+        }
+        Ok(())
+    }
+
+    fn handle_pt_ele(&mut self, text: &BytesText) -> Result<()> {
+        self.next_pt_fields.ele = Some(str::from_utf8(text.as_ref())?.parse()?);
+        Ok(())
+    }
+
+    fn handle_pt_name(&mut self, text: &BytesText) -> Result<()> {
+        self.next_pt_fields.name = Some(str::from_utf8(text.as_ref())?.to_owned());
+        Ok(())
+    }
+
+    fn handle_pt_type(&mut self, text: &BytesText) -> Result<()> {
+        self.next_pt_fields.type_ = Some(str::from_utf8(text.as_ref())?.to_owned());
+        Ok(())
+    }
+}
+
+impl GpxReader<&[u8]> {
+    pub fn from_str(s: &str) -> GpxReader<&[u8]> {
+        GpxReader::new(Reader::from_reader(s.as_bytes()))
+    }
+}
+
+impl GpxReader<BufReader<File>> {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<GpxReader<BufReader<File>>> {
+        Ok(GpxReader::new(Reader::from_file(path)?))
     }
 }
 
@@ -436,7 +450,7 @@ mod tests {
             (37.39888, -122.13498),
         ];
 
-        let reader = GpxReader::new(Reader::from_str(xml));
+        let reader = GpxReader::from_str(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
@@ -481,9 +495,8 @@ mod tests {
             (37.39888, -122.13498, 31.8),
         ];
 
-        let reader = Reader::from_str(xml);
-        let track_reader = GpxReader::new(reader);
-        let elements = track_reader.collect::<Result<Vec<_>>>()?;
+        let reader = GpxReader::from_str(xml);
+        let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
@@ -514,7 +527,7 @@ mod tests {
 </gpx>
 "#;
 
-        let reader = GpxReader::new(Reader::from_str(xml));
+        let reader = GpxReader::from_str(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
@@ -643,9 +656,8 @@ mod tests {
             ),
         ];
 
-        let reader = Reader::from_str(xml);
-        let track_reader = GpxReader::new(reader);
-        let elements = track_reader.collect::<Result<Vec<_>>>()?;
+        let reader = GpxReader::from_str(xml);
+        let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
             .filter_map(|ele| match ele {
