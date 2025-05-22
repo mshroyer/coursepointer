@@ -48,7 +48,7 @@ where
     R: BufRead,
 {
     reader: Reader<R>,
-    tag_path: TagNamePath,
+    tag_path: TagPath,
     next_pt_fields: NextPtFields,
 }
 
@@ -216,7 +216,7 @@ impl NextPtFields {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-enum TagName {
+enum Tag {
     Gpx,
     Trk,
     Name,
@@ -228,21 +228,21 @@ enum TagName {
     Unknown,
 }
 
-fn get_tag_name(name: &[u8]) -> TagName {
+fn get_tag(name: &[u8]) -> Tag {
     match name {
-        b"gpx" => TagName::Gpx,
-        b"trk" => TagName::Trk,
-        b"trkseg" => TagName::Trkseg,
-        b"trkpt" => TagName::Trkpt,
-        b"ele" => TagName::Ele,
-        b"name" => TagName::Name,
-        b"wpt" => TagName::Wpt,
-        b"type" => TagName::Type,
-        _ => TagName::Unknown,
+        b"gpx" => Tag::Gpx,
+        b"trk" => Tag::Trk,
+        b"trkseg" => Tag::Trkseg,
+        b"trkpt" => Tag::Trkpt,
+        b"ele" => Tag::Ele,
+        b"name" => Tag::Name,
+        b"wpt" => Tag::Wpt,
+        b"type" => Tag::Type,
+        _ => Tag::Unknown,
     }
 }
 
-type TagNamePath = Vec<TagName>;
+type TagPath = Vec<Tag>;
 
 impl<R> Iterator for GpxReader<R>
 where
@@ -260,25 +260,25 @@ where
                 Ok(Event::Eof) => return None,
 
                 Ok(Event::Start(elt)) => {
-                    let name = get_tag_name(elt.name().as_ref());
+                    let name = get_tag(elt.name().as_ref());
                     self.tag_path.push(name);
 
                     match self.tag_path.as_slice() {
-                        [TagName::Gpx, TagName::Trk] => {
+                        [Tag::Gpx, Tag::Trk] => {
                             return Some(Ok(GpxItem::Track));
                         }
 
-                        [TagName::Gpx, TagName::Trk, TagName::Trkseg] => {
+                        [Tag::Gpx, Tag::Trk, Tag::Trkseg] => {
                             return Some(Ok(GpxItem::TrackSegment));
                         }
 
-                        [TagName::Gpx, TagName::Trk, TagName::Trkseg, TagName::Trkpt] => {
+                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] => {
                             if let Err(e) = self.start_pt_tag(&elt) {
                                 return Some(Err(e));
                             }
                         }
 
-                        [TagName::Gpx, TagName::Wpt] => {
+                        [Tag::Gpx, Tag::Wpt] => {
                             if let Err(e) = self.start_pt_tag(&elt) {
                                 return Some(Err(e));
                             }
@@ -289,32 +289,32 @@ where
                 }
 
                 Ok(Event::Text(text)) => match self.tag_path.as_slice() {
-                    [TagName::Gpx, TagName::Trk, TagName::Name] => {
+                    [Tag::Gpx, Tag::Trk, Tag::Name] => {
                         return Some(match str::from_utf8(text.as_ref()) {
                             Err(err) => Err(GpxError::Utf8Error(err)),
                             Ok(s) => Ok(GpxItem::TrackName(s.to_owned())),
                         });
                     }
 
-                    [TagName::Gpx, TagName::Trk, TagName::Trkseg, TagName::Trkpt, TagName::Ele] => {
+                    [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt, Tag::Ele] => {
                         if let Err(e) = self.handle_pt_ele(&text) {
                             return Some(Err(e));
                         }
                     }
 
-                    [TagName::Gpx, TagName::Wpt, TagName::Ele] => {
+                    [Tag::Gpx, Tag::Wpt, Tag::Ele] => {
                         if let Err(e) = self.handle_pt_ele(&text) {
                             return Some(Err(e));
                         }
                     }
 
-                    [TagName::Gpx, TagName::Wpt, TagName::Name] => {
+                    [Tag::Gpx, Tag::Wpt, Tag::Name] => {
                         if let Err(e) = self.handle_pt_name(&text) {
                             return Some(Err(e));
                         }
                     }
 
-                    [TagName::Gpx, TagName::Wpt, TagName::Type] => {
+                    [Tag::Gpx, Tag::Wpt, Tag::Type] => {
                         if let Err(e) = self.handle_pt_type(&text) {
                             return Some(Err(e));
                         }
@@ -328,8 +328,8 @@ where
                     // path until we're done with the End event.
                     TagNamePopper::new(&mut self.tag_path);
 
-                    match get_tag_name(elt.name().as_ref()) {
-                        TagName::Trkpt => {
+                    match get_tag(elt.name().as_ref()) {
+                        Tag::Trkpt => {
                             return Some((|| {
                                 Ok(GpxItem::TrackPoint(TrackPoint::try_from(
                                     &self.next_pt_fields,
@@ -337,7 +337,7 @@ where
                             })());
                         }
 
-                        TagName::Wpt => {
+                        Tag::Wpt => {
                             return Some((|| {
                                 Ok(GpxItem::Waypoint(Waypoint::try_from(
                                     &self.next_pt_fields,
@@ -356,11 +356,11 @@ where
 }
 
 struct TagNamePopper<'a> {
-    path: &'a mut TagNamePath,
+    path: &'a mut TagPath,
 }
 
 impl<'a> TagNamePopper<'a> {
-    fn new(path: &'a mut TagNamePath) -> Self {
+    fn new(path: &'a mut TagPath) -> Self {
         Self { path }
     }
 }
