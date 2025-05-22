@@ -337,13 +337,12 @@ where
                     _ => (),
                 },
 
-                Ok(Event::End(elt)) => {
-                    // For consistency, keep the current element's name on the
-                    // path until we're done with the End event.
-                    TagPopper::new(&mut self.tag_path);
-
-                    match get_tag(elt.name().as_ref()) {
-                        Tag::Trkpt => {
+                Ok(Event::End(_elt)) => {
+                    let tag_path = self.tag_path.clone();
+                    self.tag_path.pop();
+                    
+                    match tag_path.as_slice() {
+                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] => {
                             return Some((|| {
                                 Ok(GpxItem::TrackPoint(TrackPoint::try_from(
                                     &self.next_pt_fields,
@@ -351,7 +350,7 @@ where
                             })());
                         }
 
-                        Tag::Wpt => {
+                        [Tag::Gpx, Tag::Wpt] => {
                             return Some((|| {
                                 Ok(GpxItem::Waypoint(Waypoint::try_from(
                                     &self.next_pt_fields,
@@ -366,22 +365,6 @@ where
                 _ => (),
             }
         }
-    }
-}
-
-struct TagPopper<'a> {
-    path: &'a mut TagPath,
-}
-
-impl<'a> TagPopper<'a> {
-    fn new(path: &'a mut TagPath) -> Self {
-        Self { path }
-    }
-}
-
-impl Drop for TagPopper<'_> {
-    fn drop(&mut self) {
-        self.path.pop();
     }
 }
 
