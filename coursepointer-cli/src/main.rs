@@ -3,8 +3,6 @@ use std::fs::File;
 use anyhow::Result;
 use chrono::Utc;
 use clap::Parser;
-use uom::si::f64::Velocity;
-use uom::si::velocity::kilometer_per_hour;
 
 use coursepointer::CourseFile;
 use coursepointer::measure::KilometersPerHour;

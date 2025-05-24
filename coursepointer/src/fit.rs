@@ -14,7 +14,7 @@ use thiserror::Error;
 
 use geographic::SurfacePoint;
 
-use crate::measure::{Centimeters, Degrees, Meters, MetersPerSecond};
+use crate::measure::{Centimeters, Meters, MetersPerSecond};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///

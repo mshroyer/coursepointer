@@ -242,6 +242,8 @@ where
     fn next(&mut self) -> Option<Result<GpxItem>> {
         let mut buf = Vec::new();
 
+        // Keep iterating through quick_xml events until a new GpxItem can be
+        // successfully emitted, any error occurs, or EOF is reached.
         loop {
             match self.reader.read_event_into(&mut buf) {
                 Err(err) => return Some(Err(GpxError::Xml(err))),
