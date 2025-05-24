@@ -549,6 +549,7 @@ impl CourseFile {
             truncate_float(Centimeters::from(self.total_distance).0)?,
             FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
         ));
+        self.last_record_added = Some(point);
         Ok(())
     }
 
