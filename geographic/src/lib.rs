@@ -51,6 +51,7 @@ pub struct InverseSolution {
     pub meters: f64,
     pub azimuth1: f64,
     pub azimuth2: f64,
+    pub arc_distance: f64,
 }
 
 /// Calculate a solution to the inverse geodesic problem.
@@ -59,9 +60,10 @@ pub fn inverse(point1: &SurfacePoint, point2: &SurfacePoint) -> Result<InverseSo
         meters: 0.0,
         azimuth1: 0.0,
         azimuth2: 0.0,
+        arc_distance: 0.0,
     };
 
-    let _ = ffi::GetWGS84().Inverse(
+    solution.arc_distance = ffi::GetWGS84().Inverse(
         point1.lat,
         point1.lon,
         point2.lat,
