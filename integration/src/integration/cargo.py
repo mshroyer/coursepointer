@@ -76,7 +76,7 @@ class RustBinFunc:
     def __init__(self, bin: Path):
         self.bin = bin
 
-    def __call__(self, *args: str) -> str:
+    def __call__(self, *args: str | Path) -> str:
         print("Calling subprocess: {}".format(self.bin))
         return str(
             subprocess.check_output([str(self.bin)] + list(args), universal_newlines=True))

@@ -87,6 +87,18 @@ def garmin_sdk_read_fit_messages(path: Path) -> dict:
     return messages
 
 
+def garmin_sdk_get_lap_distance_meters(path: Path) -> float:
+    """Get the total distance of the lap in the course file
+
+    Result is in meters.
+
+    """
+    messages = garmin_sdk_read_fit_messages(path)
+    lap_mesgs = messages["lap_mesgs"]
+    assert len(lap_mesgs) == 1
+    return lap_mesgs[0]["total_distance"]
+
+
 def semicircles_to_degrees(coords: Tuple[float, float]) -> Tuple[float, float]:
     lat = 180 * coords[0] / 2 ** 31
     lon = 180 * coords[1] / 2 ** 31
@@ -103,9 +115,13 @@ def garmin_sdk_record_coords(record: dict) -> Tuple[float, float]:
     return semicircles_to_degrees((record["position_lat"], record["position_long"]))
 
 
-def assert_coords_approx_eq(a: List[Tuple[float, float]], b: List[Tuple[float, float]]) -> None:
-    assert len(a) == len(b)
-    for i in range(len(a)):
-        # Test for approximate equality with an absolute tolerance of two
-        # Garmin semicircles.
-        assert a[i] == approx(b[i], rel=0.0, abs=(180.0 / (2 ** 30)))
+def assert_coords_approx_equal(left: Tuple[float, float], right: Tuple[float, float]) -> None:
+    # Test for approximate equality with an absolute tolerance of two
+    # Garmin semicircles.
+    assert left == approx(right, rel=0.0, abs=(180.0 / (2 ** 30)))
+
+
+def assert_all_coords_approx_equal(left: List[Tuple[float, float]], right: List[Tuple[float, float]]) -> None:
+    assert len(left) == len(right)
+    for i in range(len(left)):
+        assert_coords_approx_equal(left[i], right[i])

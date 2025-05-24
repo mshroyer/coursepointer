@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 from integration import CourseSpec, garmin_sdk_read_fit_messages, garmin_sdk_read_fit_header, garmin_sdk_record_coords, \
     semicircles_to_degrees, \
-    assert_coords_approx_eq
+    assert_all_coords_approx_equal
 from integration.fixtures import cargo, integration_stub
 
 
@@ -89,7 +89,7 @@ def test_record_coords(tmpdir, integration_stub):
     integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
     messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
-    assert_coords_approx_eq(list(map(garmin_sdk_record_coords, messages["record_mesgs"])), coords)
+    assert_all_coords_approx_equal(list(map(garmin_sdk_record_coords, messages["record_mesgs"])), coords)
 
 
 def test_lap_coords(tmpdir, integration_stub):
@@ -101,7 +101,7 @@ def test_lap_coords(tmpdir, integration_stub):
     messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
     lap = messages["lap_mesgs"][0]
-    assert_coords_approx_eq(
+    assert_all_coords_approx_equal(
         [semicircles_to_degrees((lap["start_position_lat"], lap["start_position_long"])),
          semicircles_to_degrees((lap["end_position_lat"], lap["end_position_long"]))],
         [coords[0], coords[-1]])
