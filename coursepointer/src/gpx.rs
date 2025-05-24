@@ -17,11 +17,14 @@ use std::path::Path;
 use std::str;
 
 use quick_xml;
-use quick_xml::events::attributes::AttrError;
 use quick_xml::events::Event;
+use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
+
+use crate::measure::Degrees;
+use crate::measure::Meters;
 
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]
@@ -65,13 +68,13 @@ pub enum GpxItem {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct TrackPoint {
     /// Latitude in decimal degrees.
-    pub lat: f64,
+    pub lat: Degrees<f64>,
 
     /// Longitude in decimal degrees.
-    pub lon: f64,
+    pub lon: Degrees<f64>,
 
     /// Elevation in meters, if known.
-    pub ele: Option<f64>,
+    pub ele: Option<Meters<f64>>,
 }
 
 impl TryFrom<&NextPtFields> for TrackPoint {
@@ -96,13 +99,13 @@ impl TryFrom<&NextPtFields> for TrackPoint {
 #[derive(Clone, PartialEq, Debug)]
 pub struct Waypoint {
     /// Latitude in decimal degrees.
-    pub lat: f64,
+    pub lat: Degrees<f64>,
 
     /// Longitude in decimal degrees.
-    pub lon: f64,
+    pub lon: Degrees<f64>,
 
     /// Elevation in meters, if known.
-    pub ele: Option<f64>,
+    pub ele: Option<Meters<f64>>,
 
     /// Waypoint name.
     pub name: String,
@@ -182,9 +185,9 @@ impl GpxReader<BufReader<File>> {
 }
 
 struct NextPtFields {
-    lat: Option<f64>,
-    lon: Option<f64>,
-    ele: Option<f64>,
+    lat: Option<Degrees<f64>>,
+    lon: Option<Degrees<f64>>,
+    ele: Option<Meters<f64>>,
     name: Option<String>,
     type_: Option<String>,
 }
@@ -265,10 +268,10 @@ where
                                     let a = attr?;
                                     if a.key == QName(b"lat") {
                                         self.next_pt_fields.lat =
-                                            Some(str::from_utf8(&a.value)?.parse()?);
+                                            Some(Degrees(str::from_utf8(&a.value)?.parse()?));
                                     } else if a.key == QName(b"lon") {
                                         self.next_pt_fields.lon =
-                                            Some(str::from_utf8(&a.value)?.parse()?);
+                                            Some(Degrees(str::from_utf8(&a.value)?.parse()?));
                                     }
                                 }
                                 Ok(())
@@ -292,26 +295,23 @@ where
                     [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt, Tag::Ele]
                     | [Tag::Gpx, Tag::Wpt, Tag::Ele] => {
                         if let Err(e) = (|| {
-                            self.next_pt_fields.ele = Some(str::from_utf8(text.as_ref())?.parse()?);
+                            self.next_pt_fields.ele =
+                                Some(Meters(str::from_utf8(text.as_ref())?.parse()?));
                             Ok(())
                         })() {
                             return Some(Err(e));
                         }
                     }
 
-                    [Tag::Gpx, Tag::Wpt, Tag::Name] => {
-                        match str::from_utf8(text.as_ref()) {
-                            Ok(name) => self.next_pt_fields.name = Some(name.to_owned()),
-                            Err(err) => return Some(Err(err.into())),
-                        }
-                    }
+                    [Tag::Gpx, Tag::Wpt, Tag::Name] => match str::from_utf8(text.as_ref()) {
+                        Ok(name) => self.next_pt_fields.name = Some(name.to_owned()),
+                        Err(err) => return Some(Err(err.into())),
+                    },
 
-                    [Tag::Gpx, Tag::Wpt, Tag::Type] => {
-                        match str::from_utf8(text.as_ref()) {
-                            Ok(type_) => self.next_pt_fields.type_ = Some(type_.to_owned()),
-                            Err(err) => return Some(Err(err.into())),
-                        }
-                    }
+                    [Tag::Gpx, Tag::Wpt, Tag::Type] => match str::from_utf8(text.as_ref()) {
+                        Ok(type_) => self.next_pt_fields.type_ = Some(type_.to_owned()),
+                        Err(err) => return Some(Err(err.into())),
+                    },
 
                     _ => (),
                 },
@@ -347,21 +347,24 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::measure::Degrees;
+    use crate::measure::Meters;
+
     use super::{GpxItem, GpxReader, Result, TrackPoint, Waypoint};
 
     macro_rules! track_point {
         ( $lat:expr, $lon:expr ) => {
             TrackPoint {
-                lat: $lat,
-                lon: $lon,
+                lat: Degrees($lat),
+                lon: Degrees($lon),
                 ele: None,
             }
         };
         ( $lat:expr, $lon:expr, $ele:expr ) => {
             TrackPoint {
-                lat: $lat,
-                lon: $lon,
-                ele: Some($ele),
+                lat: Degrees($lat),
+                lon: Degrees($lon),
+                ele: Some(Meters($ele)),
             }
         };
     }
@@ -375,9 +378,9 @@ mod tests {
     macro_rules! waypoints {
         ( $( ( $lat:expr, $lon:expr, $ele:expr, $name:expr, $type_:expr $(,)? ) ),* $(,)? ) => {
             vec![ $( Waypoint {
-                lat: $lat,
-                lon: $lon,
-                ele: $ele,
+                lat: Degrees($lat),
+                lon: Degrees($lon),
+                ele: $ele.map(Meters),
                 name: $name.to_owned(),
                 type_: $type_.map(|s| s.to_owned())
             } ),* ]
