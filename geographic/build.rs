@@ -31,7 +31,9 @@ fn main() {
     //
     // We could in principle identify the smallest set of .cpp files needed to build the functions
     // we need, which would slightly speed up the build, but that's a pain and the linker will
-    // strip out what we don't need anyway.
+    // strip out what we don't need anyway.  It would be faster to build though.
+    //
+    // TODO: Compile minimal set of GeographicLib C++ sources
     cxx_build::bridge("src/lib.rs")
         .file("src/shim.cc")
         .files(list_cpp_files("geographiclib/src").unwrap())

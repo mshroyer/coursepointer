@@ -543,6 +543,7 @@ impl CourseFile {
                 Meters(sln.meters)
             }
         };
+        // TODO: Investigate using elevation-corrected distance.
         self.total_distance += incremental_distance;
         self.records.push(RecordMessage::new(
             FitSurfacePoint::try_from(point)?,
