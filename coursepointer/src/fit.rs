@@ -11,11 +11,10 @@ use num_traits::cast::NumCast;
 use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
-use uom::si::f64::{Length, Velocity};
-use uom::si::length::{centimeter, meter};
-use uom::si::time::second;
 
 use geographic::SurfacePoint;
+
+use crate::measure::{Centimeters, Degrees, Meters, MetersPerSecond};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///
@@ -513,9 +512,9 @@ impl RecordMessage {
 pub struct CourseFile {
     name: String,
     start_time: DateTime<Utc>,
-    speed: Velocity,
+    speed: MetersPerSecond<f64>,
     records: Vec<RecordMessage>,
-    total_distance: Length,
+    total_distance: Meters<f64>,
     last_record_added: Option<SurfacePoint>,
 }
 
@@ -523,31 +522,31 @@ impl CourseFile {
     pub fn new(
         name: String,
         start_time: DateTime<Utc>,
-        speed: Velocity,
+        speed: MetersPerSecond<f64>,
     ) -> Self {
         Self {
             name,
             start_time,
             speed,
             records: vec![],
-            total_distance: Length::new::<meter>(0.0),
+            total_distance: Meters(0.0),
             last_record_added: None,
         }
     }
 
     pub fn add_record(&mut self, point: SurfacePoint) -> Result<()> {
         let incremental_distance = match self.last_record_added {
-            None => Length::new::<meter>(0.0),
+            None => Meters(0.0),
             Some(prev_point) => {
                 let sln = geographic::inverse(&prev_point, &point)
                     .or_else(|s| Err(FitEncodeError::GeographicLibError(s)))?;
-                Length::new::<meter>(sln.meters)
+                Meters(sln.meters)
             }
         };
         self.total_distance += incremental_distance;
         self.records.push(RecordMessage::new(
             FitSurfacePoint::try_from(point)?,
-            truncate_float(self.total_distance.get::<centimeter>())?,
+            truncate_float(Centimeters::from(self.total_distance).0)?,
             FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
         ));
         Ok(())
@@ -587,7 +586,7 @@ impl CourseFile {
         LapMessage::new(
             FitDateTime::try_from(self.start_time)?,
             u32::try_from(self.total_duration()?.num_milliseconds())?,
-            truncate_float(self.total_distance.get::<centimeter>())?,
+            truncate_float(Centimeters::from(self.total_distance).0)?,
             start_pos,
             end_pos,
         )
@@ -621,8 +620,7 @@ impl CourseFile {
 
     /// Returns the timestamp corresponding to the course's speed and total distance.
     fn total_duration(&self) -> Result<TimeDelta> {
-        let total_duration_quantity = self.total_distance / self.speed;
-        let total_duration_seconds: i64 = truncate_float(total_duration_quantity.get::<second>())?;
+        let total_duration_seconds: i64 = truncate_float((self.total_distance / self.speed).0)?;
         Ok(TimeDelta::seconds(total_duration_seconds))
     }
 

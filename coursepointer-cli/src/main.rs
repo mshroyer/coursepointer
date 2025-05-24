@@ -7,6 +7,7 @@ use uom::si::f64::Velocity;
 use uom::si::velocity::kilometer_per_hour;
 
 use coursepointer::CourseFile;
+use coursepointer::measure::KilometersPerHour;
 
 #[derive(Parser)]
 struct Args {
@@ -22,7 +23,7 @@ fn main() -> Result<()> {
     let course_file = CourseFile::new(
         "Test course".to_string(),
         Utc::now(),
-        Velocity::new::<kilometer_per_hour>(20.0),
+        KilometersPerHour(20.0).into(),
     );
     course_file.encode(&mut file)?;
 

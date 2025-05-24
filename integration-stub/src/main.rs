@@ -5,10 +5,9 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
-use uom::si::f64::Velocity;
-use uom::si::velocity::kilometer_per_hour;
 
 use coursepointer::CourseFile;
+use coursepointer::measure::KilometersPerHour;
 use geographic::SurfacePoint;
 
 #[derive(Parser)]
@@ -68,7 +67,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let mut course = CourseFile::new(
         spec.name,
         parse_rfc9557_utc(&spec.start_time)?,
-        Velocity::new::<kilometer_per_hour>(20.0),
+        KilometersPerHour(18.0).into(),
     );
     for point in &spec.records {
         course.add_record(SurfacePoint::new(point.lat, point.lon))?;
