@@ -1,4 +1,4 @@
-// static WGS84: LazyLock<ffi::Geodesic> = LazyLock::new(|| ffi::Geodesic::new(0.0, 0.0));
+use thiserror::Error;
 
 #[cxx::bridge(namespace = "GeographicLib")]
 mod ffi {
@@ -6,11 +6,14 @@ mod ffi {
         include!("geographic/geographiclib/include/GeographicLib/Geodesic.hpp");
         include!("geographic/include/shim.h");
 
+        /// Get the static GeographicLib WGS84 geodesic.
+        /// 
+        /// We rely on C++11's guarantee of thread safety for the static local
+        /// variable's initialization.
         fn GetWGS84() -> &'static Geodesic;
 
         type Geodesic;
 
-        // TODO: Exception safety and return value handling
         fn Inverse(
             &self,
             lat1: f64,
@@ -20,9 +23,17 @@ mod ffi {
             s12: &mut f64,
             azi1: &mut f64,
             azi2: &mut f64,
-        ) -> f64;
+        ) -> Result<f64>;
     }
 }
+
+#[derive(Error, Debug)]
+pub enum GeographicError {
+    #[error("C++ exception from GeographicLib: {0}")]
+    Exception(#[from] cxx::Exception),
+}
+
+type Result<T> = std::result::Result<T, GeographicError>;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct SurfacePoint {
@@ -43,7 +54,7 @@ pub struct InverseSolution {
 }
 
 /// Calculate a solution to the inverse geodesic problem.
-pub fn inverse(point1: &SurfacePoint, point2: &SurfacePoint) -> Result<InverseSolution, String> {
+pub fn inverse(point1: &SurfacePoint, point2: &SurfacePoint) -> Result<InverseSolution> {
     let mut solution = InverseSolution {
         meters: 0.0,
         azimuth1: 0.0,
@@ -58,7 +69,7 @@ pub fn inverse(point1: &SurfacePoint, point2: &SurfacePoint) -> Result<InverseSo
         &mut solution.meters,
         &mut solution.azimuth1,
         &mut solution.azimuth2,
-    );
+    )?;
 
     Ok(solution)
 }
@@ -66,7 +77,7 @@ pub fn inverse(point1: &SurfacePoint, point2: &SurfacePoint) -> Result<InverseSo
 #[cfg(test)]
 mod tests {
     use approx::assert_relative_eq;
-    
+
     use super::SurfacePoint;
     use super::inverse;
 

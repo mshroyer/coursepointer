@@ -33,8 +33,8 @@ pub enum FitEncodeError {
     StringEncoding,
     #[error("encoding date_time")]
     DateTimeEncoding,
-    #[error("geographiclib error: {0}")]
-    GeographicLibError(String),
+    #[error("geographic error: {0}")]
+    GeographicError(#[from] geographic::GeographicError),
     #[error("infallible")]
     Infallible(#[from] Infallible),
 }
@@ -539,7 +539,7 @@ impl CourseFile {
             None => Meters(0.0),
             Some(prev_point) => {
                 let sln = geographic::inverse(&prev_point, &point)
-                    .or_else(|s| Err(FitEncodeError::GeographicLibError(s)))?;
+                    .or_else(|err| Err(FitEncodeError::GeographicError(err)))?;
                 Meters(sln.meters)
             }
         };

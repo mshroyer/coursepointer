@@ -286,6 +286,7 @@ dependencies = [
  "approx",
  "cxx",
  "cxx-build",
+ "thiserror",
 ]
 
 [[package]]
