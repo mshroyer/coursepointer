@@ -197,6 +197,7 @@ name = "coretypes"
 version = "0.1.0"
 dependencies = [
  "num-traits",
+ "thiserror",
 ]
 
 [[package]]
