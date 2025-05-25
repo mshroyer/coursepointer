@@ -539,9 +539,9 @@ impl CourseFile {
         let incremental_distance = match self.last_record_added {
             None => Meters(0.0),
             Some(prev_point) => {
-                let sln = geographic::inverse(&prev_point, &point)
+                let sln = geographic::solve_inverse(&prev_point, &point)
                     .or_else(|err| Err(FitEncodeError::GeographicError(err)))?;
-                Meters(sln.meters)
+                sln.geo_distance
             }
         };
         // TODO: Investigate using elevation-corrected distance.

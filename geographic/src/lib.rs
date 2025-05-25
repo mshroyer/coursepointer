@@ -1,6 +1,7 @@
 use thiserror::Error;
 
 use coretypes::GeoPoint;
+use coretypes::measure::{Degrees, Meters};
 
 #[cxx::bridge(namespace = "GeographicLib")]
 mod ffi {
@@ -37,35 +38,43 @@ pub enum GeographicError {
 
 type Result<T> = std::result::Result<T, GeographicError>;
 
+/// A solution to the inverse problem in geodesy.
 pub struct InverseSolution {
-    pub meters: f64,
-    pub azimuth1: f64,
-    pub azimuth2: f64,
-    pub arc_distance: f64,
+    /// Geodesic distance between the points.
+    pub geo_distance: Meters<f64>,
+    
+    /// Azimuth of the geodesic as measured at point1.
+    pub azimuth1: Degrees<f64>,
+    
+    /// Azimuth of the geodesic as measured at point2.
+    pub azimuth2: Degrees<f64>,
+    
+    /// Arc distance between the points.
+    pub arc_distance: Degrees<f64>,
 }
 
 /// Calculate a solution to the inverse geodesic problem.
-pub fn inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
-    let mut solution = InverseSolution {
-        meters: 0.0,
-        azimuth1: 0.0,
-        azimuth2: 0.0,
-        arc_distance: 0.0,
-    };
-
+pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
+    let mut geo_distance_m = 0.0;
+    let mut azimuth1_deg = 0.0;
+    let mut azimuth2_deg = 0.0;
+    
     let arc_distance = ffi::GetWGS84().Inverse(
         point1.lat().0,
         point1.lon().0,
         point2.lat().0,
         point2.lon().0,
-        &mut solution.meters,
-        &mut solution.azimuth1,
-        &mut solution.azimuth2,
+        &mut geo_distance_m,
+        &mut azimuth1_deg,
+        &mut azimuth2_deg,
     )?;
     
-    solution.arc_distance = arc_distance;
-
-    Ok(solution)
+    Ok(InverseSolution {
+        geo_distance: Meters(geo_distance_m),
+        azimuth1: Degrees(azimuth1_deg),
+        azimuth2: Degrees(azimuth2_deg),
+        arc_distance: Degrees(arc_distance),
+    })
 }
 
 #[cfg(test)]
@@ -76,7 +85,7 @@ mod tests {
     use coretypes::GeoPoint;
     use coretypes::TypeError;
 
-    use super::inverse;
+    use super::solve_inverse;
 
     #[test]
     fn test_inverse() -> Result<(), TypeError> {
@@ -84,9 +93,9 @@ mod tests {
         let point2 = GeoPoint::new(Degrees(5.0), Degrees(5.0), None)?;
 
         // let result = inverse(&point1, &point2).unwrap();
-        match inverse(&point1, &point2) {
+        match solve_inverse(&point1, &point2) {
             Ok(inverse_result) => {
-                assert_relative_eq!(inverse_result.meters, 784029.0, max_relative = 1.0);
+                assert_relative_eq!(inverse_result.geo_distance.0, 784029.0, max_relative = 1.0);
             }
             
             Err(e) => {
