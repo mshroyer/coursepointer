@@ -62,10 +62,10 @@ impl GeoPoint {
 #[macro_export]
 macro_rules! geo_point {
     ( $lat:expr, $lon:expr ) => {
-        GeoPoint::new(Degrees($lat), Degrees($lon), None)?
+        $crate::GeoPoint::new(Degrees($lat), Degrees($lon), None)?
     };
     ( $lat:expr, $lon:expr, $ele:expr ) => {
-        GeoPoint::new(Degrees($lat), Degrees($lon), Some(Meters($ele)))?
+        $crate::GeoPoint::new(Degrees($lat), Degrees($lon), Some(Meters($ele)))?
     };
 }
 
