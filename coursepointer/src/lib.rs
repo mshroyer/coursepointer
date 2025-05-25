@@ -9,7 +9,7 @@ use thiserror::Error;
 pub use gpx::GpxReader;
 pub use fit::CourseFile;
 pub use fit::PROFILE_VERSION;
-use coretypes::{GeoPoint, TypeError};
+use coretypes::TypeError;
 use coretypes::measure::KilometersPerHour;
 use crate::gpx::GpxItem;
 
@@ -53,7 +53,7 @@ pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
         KilometersPerHour(20.0).into(),
     );
     for track_point in track_points {
-        course.add_record(GeoPoint::new(track_point.lat, track_point.lon, None)?)?
+        course.add_record(track_point)?
     }
     course.encode(&mut fit_file)?;
 

@@ -42,7 +42,7 @@ type Result<T> = std::result::Result<T, GeographicError>;
 pub struct InverseSolution {
     /// Arc distance between the points.
     pub arc_distance: Degrees<f64>,
-    
+
     /// Geodesic distance between the points.
     pub geo_distance: Meters<f64>,
 
@@ -54,6 +54,9 @@ pub struct InverseSolution {
 }
 
 /// Calculate a solution to the inverse geodesic problem.
+/// 
+/// Finds the shortest geodesic between two points on the surface of WGS84,
+/// ignoring any elevation data.
 pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
     let mut geo_distance_m = 0.0;
     let mut azimuth1_deg = 0.0;

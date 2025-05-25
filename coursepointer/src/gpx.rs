@@ -22,7 +22,7 @@ use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
-
+use coretypes::{GeoPoint, TypeError};
 use coretypes::measure::Degrees;
 use coretypes::measure::Meters;
 
@@ -41,6 +41,8 @@ pub enum GpxError {
     ParseFloatError(#[from] ParseFloatError),
     #[error("GPX schema error: {0}")]
     GpxSchemaError(String),
+    #[error("type invariant error: {0}")]
+    TypeError(#[from] TypeError),
 }
 
 type Result<T> = std::result::Result<T, GpxError>;
@@ -58,26 +60,13 @@ pub enum GpxItem {
     TrackSegment,
     /// A point along a track segment, returned in order of its position along
     /// the track.
-    TrackPoint(TrackPoint),
+    TrackPoint(GeoPoint),
     /// A waypoint.  Global to the GPX document; not specifically associated
     /// with any track.
     Waypoint(Waypoint),
 }
 
-/// A GPX trackpoint or route point.
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub struct TrackPoint {
-    /// Latitude in decimal degrees.
-    pub lat: Degrees<f64>,
-
-    /// Longitude in decimal degrees.
-    pub lon: Degrees<f64>,
-
-    /// Elevation in meters, if known.
-    pub ele: Option<Meters<f64>>,
-}
-
-impl TryFrom<&NextPtFields> for TrackPoint {
+impl TryFrom<&NextPtFields> for GeoPoint {
     type Error = GpxError;
 
     fn try_from(value: &NextPtFields) -> Result<Self> {
@@ -87,25 +76,15 @@ impl TryFrom<&NextPtFields> for TrackPoint {
         let lon = value.lon.ok_or(GpxError::GpxSchemaError(
             "trackpoint missing lon attribute".to_owned(),
         ))?;
-        Ok(Self {
-            lat,
-            lon,
-            ele: value.ele,
-        })
+        Ok(GeoPoint::new(lat, lon, value.ele)?)
     }
 }
 
 /// A GPX waypoint.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Waypoint {
-    /// Latitude in decimal degrees.
-    pub lat: Degrees<f64>,
-
-    /// Longitude in decimal degrees.
-    pub lon: Degrees<f64>,
-
-    /// Elevation in meters, if known.
-    pub ele: Option<Meters<f64>>,
+    /// Position of the waypoint.
+    pub point: GeoPoint,
 
     /// Waypoint name.
     pub name: String,
@@ -133,9 +112,7 @@ impl TryFrom<&NextPtFields> for Waypoint {
             .ok_or(GpxError::GpxSchemaError("waypoint missing name".to_owned()))?;
 
         Ok(Self {
-            lat,
-            lon,
-            ele: value.ele,
+            point: GeoPoint::new(lat, lon, None)?,
             name,
             type_: value.type_.clone(),
         })
@@ -324,7 +301,7 @@ where
 
                     match tag_path.as_slice() {
                         [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] => {
-                            return Some(match TrackPoint::try_from(&self.next_pt_fields) {
+                            return Some(match GeoPoint::try_from(&self.next_pt_fields) {
                                 Ok(p) => Ok(GpxItem::TrackPoint(p)),
                                 Err(e) => Err(e),
                             });
@@ -349,40 +326,17 @@ where
 
 #[cfg(test)]
 mod tests {
+    use coretypes::geo_points;
+    use coretypes::GeoPoint;
     use coretypes::measure::Degrees;
     use coretypes::measure::Meters;
 
-    use super::{GpxItem, GpxReader, Result, TrackPoint, Waypoint};
-
-    macro_rules! track_point {
-        ( $lat:expr, $lon:expr ) => {
-            TrackPoint {
-                lat: Degrees($lat),
-                lon: Degrees($lon),
-                ele: None,
-            }
-        };
-        ( $lat:expr, $lon:expr, $ele:expr ) => {
-            TrackPoint {
-                lat: Degrees($lat),
-                lon: Degrees($lon),
-                ele: Some(Meters($ele)),
-            }
-        };
-    }
-
-    macro_rules! track_points {
-        ( $( ( $lat:expr, $lon:expr $(, $ele:expr )? ) ),* $(,)? ) => {
-            vec![ $( track_point!($lat, $lon $( , $ele )?) ),* ]
-        };
-    }
+    use super::{GpxItem, GpxReader, Result, Waypoint};
 
     macro_rules! waypoints {
         ( $( ( $lat:expr, $lon:expr, $ele:expr, $name:expr, $type_:expr $(,)? ) ),* $(,)? ) => {
             vec![ $( Waypoint {
-                lat: Degrees($lat),
-                lon: Degrees($lon),
-                ele: $ele.map(Meters),
+                point: GeoPoint::new(Degrees($lat), Degrees($lon), $ele.map(Meters))?,
                 name: $name.to_owned(),
                 type_: $type_.map(|s| s.to_owned())
             } ),* ]
@@ -405,7 +359,7 @@ mod tests {
 </gpx>
 "#;
 
-        let expected = track_points![
+        let expected = geo_points![
             (37.39987, -122.13737),
             (37.39958, -122.13684),
             (37.39923, -122.13591),
@@ -450,7 +404,7 @@ mod tests {
 </gpx>
 "#;
 
-        let expected = track_points![
+        let expected = geo_points![
             (37.39987, -122.13737, 30.5),
             (37.39958, -122.13684, 29.9),
             (37.39923, -122.13591, 29.8),
