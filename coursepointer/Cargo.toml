@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 byteorder = "1.5.0"
 chrono = "0.4.41"
+coretypes = { version = "0.1.0", path = "../coretypes" }
 geographic = { version = "0.1.0", path = "../geographic" }
 num-traits = "0.2.19"
 quick-xml = "0.37.5"

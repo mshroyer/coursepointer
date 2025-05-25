@@ -193,11 +193,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
+name = "coretypes"
+version = "0.1.0"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "coursepointer"
 version = "0.1.0"
 dependencies = [
  "byteorder",
  "chrono",
+ "coretypes",
  "geographic",
  "num-traits",
  "quick-xml",
@@ -326,6 +334,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "clap",
+ "coretypes",
  "coursepointer",
  "geographic",
  "serde",

@@ -1,6 +1,5 @@
 pub mod fit;
 pub mod gpx;
-pub mod measure;
 
 use std::fs::File;
 use std::path::Path;
@@ -10,9 +9,9 @@ use thiserror::Error;
 pub use gpx::GpxReader;
 pub use fit::CourseFile;
 pub use fit::PROFILE_VERSION;
+use coretypes::measure::KilometersPerHour;
 use geographic::SurfacePoint;
 use crate::gpx::GpxItem;
-use crate::measure::KilometersPerHour;
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["coursepointer", "coursepointer-cli","geographic","integration-stub"]
+members = [ "coretypes","coursepointer", "coursepointer-cli","geographic","integration-stub"]
 
 [profile.release]
 lto = true

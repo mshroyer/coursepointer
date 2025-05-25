@@ -23,8 +23,8 @@ use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
 
-use crate::measure::Degrees;
-use crate::measure::Meters;
+use coretypes::measure::Degrees;
+use coretypes::measure::Meters;
 
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]
@@ -349,8 +349,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::measure::Degrees;
-    use crate::measure::Meters;
+    use coretypes::measure::Degrees;
+    use coretypes::measure::Meters;
 
     use super::{GpxItem, GpxReader, Result, TrackPoint, Waypoint};
 

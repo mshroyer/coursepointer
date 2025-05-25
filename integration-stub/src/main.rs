@@ -6,8 +6,8 @@ use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
+use coretypes::measure::KilometersPerHour;
 use coursepointer::CourseFile;
-use coursepointer::measure::KilometersPerHour;
 use geographic::SurfacePoint;
 
 #[derive(Parser)]

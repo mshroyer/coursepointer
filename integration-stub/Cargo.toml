@@ -7,6 +7,7 @@ edition = "2024"
 anyhow = "1.0.98"
 chrono = "0.4.41"
 clap = { version = "4.5.38", features = ["derive"] }
+coretypes = { version = "0.1.0", path = "../coretypes" }
 coursepointer = { version = "0.1.0", path = "../coursepointer" }
 geographic = { version = "0.1.0", path = "../geographic" }
 serde = { version = "1.0.219", features = ["derive"] }
