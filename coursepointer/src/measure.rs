@@ -96,3 +96,13 @@ where
         Seconds(self.0 / rhs.0)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn convert_meters_to_cm() {
+        assert_eq!(Centimeters::from(Meters(5)), Centimeters(500));
+    }
+}
