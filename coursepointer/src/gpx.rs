@@ -162,21 +162,21 @@ impl GpxReader<BufReader<File>> {
 }
 
 struct NextPtFields {
+    name: Option<String>,
+    type_: Option<String>,
     lat: Option<Degrees<f64>>,
     lon: Option<Degrees<f64>>,
     ele: Option<Meters<f64>>,
-    name: Option<String>,
-    type_: Option<String>,
 }
 
 impl NextPtFields {
     fn new() -> Self {
         Self {
+            name: None,
+            type_: None,
             lat: None,
             lon: None,
             ele: None,
-            name: None,
-            type_: None,
         }
     }
 }
