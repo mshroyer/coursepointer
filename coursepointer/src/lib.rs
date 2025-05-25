@@ -1,17 +1,18 @@
-pub mod fit;
-pub mod gpx;
-
 use std::fs::File;
 use std::path::Path;
 use chrono::Utc;
 use thiserror::Error;
 
-pub use gpx::GpxReader;
-pub use fit::CourseFile;
-pub use fit::PROFILE_VERSION;
 use coretypes::TypeError;
 use coretypes::measure::KilometersPerHour;
 use crate::gpx::GpxItem;
+
+pub mod fit;
+pub mod gpx;
+
+pub use gpx::GpxReader;
+pub use fit::CourseFile;
+pub use fit::PROFILE_VERSION;
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {

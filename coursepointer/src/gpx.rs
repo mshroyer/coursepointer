@@ -16,15 +16,15 @@ use std::num::ParseFloatError;
 use std::path::Path;
 use std::str;
 
+use coretypes::measure::Degrees;
+use coretypes::measure::Meters;
+use coretypes::{GeoPoint, TypeError};
 use quick_xml;
 use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
-use coretypes::{GeoPoint, TypeError};
-use coretypes::measure::Degrees;
-use coretypes::measure::Meters;
 
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]
@@ -88,7 +88,7 @@ pub struct Waypoint {
 
     /// Waypoint type, if specified.
     pub type_: Option<String>,
-    
+
     /// Position of the waypoint.
     pub point: GeoPoint,
 }
@@ -326,13 +326,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use coretypes::geo_points;
     use coretypes::GeoPoint;
+    use coretypes::geo_points;
     use coretypes::measure::Degrees;
     use coretypes::measure::Meters;
 
     use super::{GpxItem, GpxReader, Result, Waypoint};
-    
+
     macro_rules! waypoint {
         ( $name:expr, $type_:expr, $lat:expr, $lon:expr ) => {
             Waypoint {
@@ -351,8 +351,8 @@ mod tests {
     }
 
     macro_rules! waypoints {
-        ( $( ( $name:expr, $type_:expr, $lat:expr, $lon:expr $(,)? ) ),* $(,)? ) => {
-            vec![ $( waypoint!($name, $type_, $lat, $lon ) ),* ]
+        ( $( ( $name:expr, $type_:expr, $lat:expr, $lon:expr $( , $ele:expr )? $(,)? ) ),* $(,)? ) => {
+            vec![ $( waypoint!($name, $type_, $lat, $lon $( , $ele )? ) ),* ]
         };
     }
 
