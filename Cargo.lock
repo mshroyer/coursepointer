@@ -293,6 +293,7 @@ name = "geographic"
 version = "0.1.0"
 dependencies = [
  "approx",
+ "coretypes",
  "cxx",
  "cxx-build",
  "thiserror",

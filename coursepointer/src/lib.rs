@@ -9,8 +9,8 @@ use thiserror::Error;
 pub use gpx::GpxReader;
 pub use fit::CourseFile;
 pub use fit::PROFILE_VERSION;
+use coretypes::{GeoPoint, TypeError};
 use coretypes::measure::KilometersPerHour;
-use geographic::SurfacePoint;
 use crate::gpx::GpxItem;
 
 #[derive(Error, Debug)]
@@ -21,6 +21,8 @@ pub enum CoursePointerError {
     Gpx(#[from] gpx::GpxError),
     #[error("FIT encode error: {0}")]
     FitEncode(#[from] fit::FitEncodeError),
+    #[error("type invariant error: {0}")]
+    TypeError(#[from] TypeError),
 }
 
 type Result<T> = std::result::Result<T, CoursePointerError>;
@@ -51,7 +53,7 @@ pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
         KilometersPerHour(20.0).into(),
     );
     for track_point in track_points {
-        course.add_record(SurfacePoint::new(track_point.lat.0, track_point.lon.0))?
+        course.add_record(GeoPoint::new(track_point.lat, track_point.lon, None)?)?
     }
     course.encode(&mut fit_file)?;
 

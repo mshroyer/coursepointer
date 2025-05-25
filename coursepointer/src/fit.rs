@@ -12,8 +12,8 @@ use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
 
-use coretypes::measure::{Centimeters, Meters, MetersPerSecond};
-use geographic::SurfacePoint;
+use coretypes::{GeoPoint, TypeError};
+use coretypes::measure::{Centimeters, Degrees, Meters, MetersPerSecond};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///
@@ -36,6 +36,8 @@ pub enum FitEncodeError {
     GeographicError(#[from] geographic::GeographicError),
     #[error("infallible")]
     Infallible(#[from] Infallible),
+    #[error("type invariant error: {0}")]
+    TypeError(#[from] TypeError),
 }
 
 type Result<T> = std::result::Result<T, FitEncodeError>;
@@ -119,12 +121,12 @@ where
     }
 }
 
-impl TryFrom<SurfacePoint> for FitSurfacePoint {
+impl TryFrom<GeoPoint> for FitSurfacePoint {
     type Error = FitEncodeError;
 
-    fn try_from(value: SurfacePoint) -> std::result::Result<Self, Self::Error> {
-        let lat_semis = truncate_float((2f64.pow(31) / 180.0) * value.lat)?;
-        let lon_semis = truncate_float((2f64.pow(31) / 180.0) * value.lon)?;
+    fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
+        let lat_semis = truncate_float((2f64.pow(31) / 180.0) * value.lat().0)?;
+        let lon_semis = truncate_float((2f64.pow(31) / 180.0) * value.lon().0)?;
         Ok(Self {
             lat_semis,
             lon_semis,
@@ -132,13 +134,13 @@ impl TryFrom<SurfacePoint> for FitSurfacePoint {
     }
 }
 
-impl TryFrom<FitSurfacePoint> for SurfacePoint {
+impl TryFrom<FitSurfacePoint> for GeoPoint {
     type Error = FitEncodeError;
 
     fn try_from(value: FitSurfacePoint) -> std::result::Result<Self, Self::Error> {
         let lat = <f64 as From<i32>>::from(value.lat_semis) * 180.0 / 2f64.pow(31);
         let lon = <f64 as From<i32>>::from(value.lon_semis) * 180.0 / 2f64.pow(31);
-        Ok(Self { lat, lon })
+        Ok(GeoPoint::new(Degrees(lat), Degrees(lon), None)?)
     }
 }
 
@@ -514,7 +516,7 @@ pub struct CourseFile {
     speed: MetersPerSecond<f64>,
     records: Vec<RecordMessage>,
     total_distance: Meters<f64>,
-    last_record_added: Option<SurfacePoint>,
+    last_record_added: Option<GeoPoint>,
 }
 
 impl CourseFile {
@@ -533,7 +535,7 @@ impl CourseFile {
         }
     }
 
-    pub fn add_record(&mut self, point: SurfacePoint) -> Result<()> {
+    pub fn add_record(&mut self, point: GeoPoint) -> Result<()> {
         let incremental_distance = match self.last_record_added {
             None => Meters(0.0),
             Some(prev_point) => {

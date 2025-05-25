@@ -6,9 +6,9 @@ use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
-use coretypes::measure::KilometersPerHour;
+use coretypes::GeoPoint;
+use coretypes::measure::{Degrees, KilometersPerHour};
 use coursepointer::CourseFile;
-use geographic::SurfacePoint;
 
 #[derive(Parser)]
 struct Args {
@@ -28,9 +28,9 @@ enum Commands {
         #[clap(long)]
         out: PathBuf,
     },
-    
+
     /// Show the library's Garmin global profile version
-    ShowProfileVersion {}
+    ShowProfileVersion {},
 }
 
 #[derive(Deserialize)]
@@ -70,7 +70,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
         KilometersPerHour(18.0).into(),
     );
     for point in &spec.records {
-        course.add_record(SurfacePoint::new(point.lat, point.lon))?;
+        course.add_record(GeoPoint::new(Degrees(point.lat), Degrees(point.lon), None)?)?;
     }
     course.encode(&mut fit_file)?;
     Ok(())
