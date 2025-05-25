@@ -218,7 +218,6 @@ name = "coursepointer-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "chrono",
  "clap",
  "coursepointer",
 ]
@@ -338,7 +337,6 @@ dependencies = [
  "clap",
  "coretypes",
  "coursepointer",
- "geographic",
  "serde",
  "serde_json",
 ]
