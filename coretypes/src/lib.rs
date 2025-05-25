@@ -73,7 +73,7 @@ macro_rules! geo_point {
 /// an elevation in meters.
 #[macro_export]
 macro_rules! geo_points {
-    ( $( ( $lat:expr, $lon:expr $(, $ele:expr )? ) ),* $(,)? ) => {
+    ( $( ( $lat:expr, $lon:expr $(, $ele:expr )? $(,)? ) ),* $(,)? ) => {
         vec![ $( $crate::geo_point!($lat, $lon $( , $ele )?) ),* ]
     };
 }

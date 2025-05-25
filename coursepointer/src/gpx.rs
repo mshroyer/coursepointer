@@ -83,14 +83,14 @@ impl TryFrom<&NextPtFields> for GeoPoint {
 /// A GPX waypoint.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Waypoint {
-    /// Position of the waypoint.
-    pub point: GeoPoint,
-
     /// Waypoint name.
     pub name: String,
 
     /// Waypoint type, if specified.
     pub type_: Option<String>,
+    
+    /// Position of the waypoint.
+    pub point: GeoPoint,
 }
 
 impl TryFrom<&NextPtFields> for Waypoint {
@@ -112,9 +112,9 @@ impl TryFrom<&NextPtFields> for Waypoint {
             .ok_or(GpxError::GpxSchemaError("waypoint missing name".to_owned()))?;
 
         Ok(Self {
-            point: GeoPoint::new(lat, lon, None)?,
             name,
             type_: value.type_.clone(),
+            point: GeoPoint::new(lat, lon, None)?,
         })
     }
 }
@@ -332,14 +332,27 @@ mod tests {
     use coretypes::measure::Meters;
 
     use super::{GpxItem, GpxReader, Result, Waypoint};
+    
+    macro_rules! waypoint {
+        ( $name:expr, $type_:expr, $lat:expr, $lon:expr ) => {
+            Waypoint {
+                name: $name.to_owned(),
+                type_: $type_.map(|s| s.to_owned()),
+                point: GeoPoint::new(Degrees($lat), Degrees($lon), None)?,
+            }
+        };
+        ( $name:expr, $type_:expr, $lat:expr, $lon:expr, $ele:expr ) => {
+            Waypoint {
+                name: $name.to_owned(),
+                type_: $type_.map(|s| s.to_owned()),
+                point: GeoPoint::new(Degrees($lat), Degrees($lon), Some(Meters($ele)))?,
+            }
+        };
+    }
 
     macro_rules! waypoints {
-        ( $( ( $lat:expr, $lon:expr, $ele:expr, $name:expr, $type_:expr $(,)? ) ),* $(,)? ) => {
-            vec![ $( Waypoint {
-                point: GeoPoint::new(Degrees($lat), Degrees($lon), $ele.map(Meters))?,
-                name: $name.to_owned(),
-                type_: $type_.map(|s| s.to_owned())
-            } ),* ]
+        ( $( ( $name:expr, $type_:expr, $lat:expr, $lon:expr $(,)? ) ),* $(,)? ) => {
+            vec![ $( waypoint!($name, $type_, $lat, $lon ) ),* ]
         };
     }
 
@@ -550,25 +563,22 @@ mod tests {
 
         let expected = waypoints![
             (
-                37.40147999999951,
-                -122.12117999999951,
-                None,
                 "Hetch Hetchy Trail",
                 Some("info"),
+                37.40147999999951,
+                -122.12117999999951,
             ),
             (
-                37.39866999999887,
-                -122.13531999999954,
-                None,
                 "Trail Turn-off",
                 Some("info"),
+                37.39866999999887,
+                -122.13531999999954,
             ),
             (
-                37.38693915264021,
-                -122.15257150642014,
-                None,
                 "Trail ends",
                 Some("generic"),
+                37.38693915264021,
+                -122.15257150642014,
             ),
         ];
 
