@@ -40,17 +40,17 @@ type Result<T> = std::result::Result<T, GeographicError>;
 
 /// A solution to the inverse problem in geodesy.
 pub struct InverseSolution {
-    /// Geodesic distance between the points.
-    pub geo_distance: Meters<f64>,
-    
-    /// Azimuth of the geodesic as measured at point1.
-    pub azimuth1: Degrees<f64>,
-    
-    /// Azimuth of the geodesic as measured at point2.
-    pub azimuth2: Degrees<f64>,
-    
     /// Arc distance between the points.
     pub arc_distance: Degrees<f64>,
+    
+    /// Geodesic distance between the points.
+    pub geo_distance: Meters<f64>,
+
+    /// Azimuth of the geodesic as measured at point1.
+    pub azimuth1: Degrees<f64>,
+
+    /// Azimuth of the geodesic as measured at point2.
+    pub azimuth2: Degrees<f64>,
 }
 
 /// Calculate a solution to the inverse geodesic problem.
@@ -58,7 +58,6 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
     let mut geo_distance_m = 0.0;
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
-    
     let arc_distance = ffi::GetWGS84().Inverse(
         point1.lat().0,
         point1.lon().0,
@@ -70,10 +69,10 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
     )?;
     
     Ok(InverseSolution {
+        arc_distance: Degrees(arc_distance),
         geo_distance: Meters(geo_distance_m),
         azimuth1: Degrees(azimuth1_deg),
         azimuth2: Degrees(azimuth2_deg),
-        arc_distance: Degrees(arc_distance),
     })
 }
 
@@ -92,16 +91,8 @@ mod tests {
         let point1 = GeoPoint::new(Degrees(0.0), Degrees(0.0), None)?;
         let point2 = GeoPoint::new(Degrees(5.0), Degrees(5.0), None)?;
 
-        // let result = inverse(&point1, &point2).unwrap();
-        match solve_inverse(&point1, &point2) {
-            Ok(inverse_result) => {
-                assert_relative_eq!(inverse_result.geo_distance.0, 784029.0, max_relative = 1.0);
-            }
-            
-            Err(e) => {
-                eprintln!("{:?}", e);    
-            }
-        }
+        let result = solve_inverse(&point1, &point2).unwrap();
+        assert_relative_eq!(result.geo_distance.0, 784029.0, max_relative = 1.0);
         Ok(())
     }
 }
