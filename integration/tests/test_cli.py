@@ -30,7 +30,17 @@ def test_conversion_course_name(tmpdir, data, coursepointer_cli):
 
 def test_conversion_distance(tmpdir, data, coursepointer_cli):
     coursepointer_cli("convert-gpx", "--input", data / "cptr003.gpx", "--output", tmpdir / "out.fit")
-    conversion_distance = garmin_sdk_get_lap_distance_meters(tmpdir / "out.fit")
-    expected_distance = garmin_sdk_get_lap_distance_meters(data / "cptr003_connect.fit")
 
-    assert conversion_distance == approx(expected_distance)
+    # Make sure the converted FIT file's lap distance is about equal to that of
+    # the FIT file we get when importing the GPX into Garmin Connect and then
+    # re-exporting it as FIT.  We use the Connect re-export because this puts
+    # the code under test on equal footing given the limited precision of
+    # RWGPS's GPX exports.
+    conversion_lap_distance = garmin_sdk_get_lap_distance_meters(tmpdir / "out.fit")
+    expected_lap_distance = garmin_sdk_get_lap_distance_meters(data / "cptr003_connect.fit")
+    assert conversion_lap_distance == approx(expected_lap_distance)
+
+    # Test the same for the final record distance along the course.
+    conversion_record_distance = garmin_sdk_read_fit_messages(tmpdir / "out.fit")["record_mesgs"][-1]["distance"]
+    expected_record_distance = garmin_sdk_read_fit_messages(data / "cptr003_connect.fit")["record_mesgs"][-1]["distance"]
+    assert conversion_record_distance == approx(expected_record_distance) == approx(conversion_lap_distance)
