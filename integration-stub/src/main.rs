@@ -66,14 +66,14 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
 
     let mut fit_file = File::create(&out)?;
     let mut course = CourseBuilder::new();
+    course.set_name(spec.name);
     for point in &spec.records {
         course.add_record(GeoPoint::new(Degrees(point.lat), Degrees(point.lon), None)?)?;
     }
     let course_file = CourseFile::new(
-        spec.name,
+        course,
         parse_rfc9557_utc(&spec.start_time)?,
         KilometersPerHour(18.0).into(),
-        course,
     );
     course_file.encode(&mut fit_file)?;
     Ok(())

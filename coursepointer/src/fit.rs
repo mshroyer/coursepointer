@@ -516,24 +516,21 @@ impl RecordMessage {
 }
 
 pub struct CourseFile {
-    name: String,
+    course: CourseBuilder,
     start_time: DateTime<Utc>,
     speed: MetersPerSecond<f64>,
-    course: CourseBuilder,
 }
 
 impl CourseFile {
     pub fn new(
-        name: String,
+        course: CourseBuilder,
         start_time: DateTime<Utc>,
         speed: MetersPerSecond<f64>,
-        course: CourseBuilder,
     ) -> Self {
         Self {
-            name,
+            course,
             start_time,
             speed,
-            course,
         }
     }
 
@@ -562,7 +559,8 @@ impl CourseFile {
             CourseMessage::field_definitions(),
         )
         .encode(&mut dw)?;
-        CourseMessage::new(self.name.clone(), Sport::Cycling).encode(1u8, &mut dw)?;
+        CourseMessage::new(self.course.get_name().to_string(), Sport::Cycling)
+            .encode(1u8, &mut dw)?;
 
         let start_pos = self
             .course

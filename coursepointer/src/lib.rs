@@ -33,18 +33,17 @@ pub enum CoursePointerError {
 type Result<T> = std::result::Result<T, CoursePointerError>;
 
 pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
+    let mut course = CourseBuilder::new();
     let gpx_reader = GpxReader::from_path(gpx_input)?;
-    let mut course_name = "Untitled course".to_string();
-    let mut track_points = vec![];
     for item in gpx_reader {
         let item = item?;
         match item {
             GpxItem::TrackName(name) => {
-                course_name = name;
+                course.set_name(name);
             }
 
             GpxItem::TrackPoint(p) => {
-                track_points.push(p);               
+                course.add_record(p)?;
             }
             
             _ => (),
@@ -52,15 +51,10 @@ pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
     }
     
     let mut fit_file = File::create(fit_output)?;
-    let mut course = CourseBuilder::new();
-    for track_point in track_points {
-        course.add_record(track_point)?;
-    }
     let course_file = CourseFile::new(
-        course_name,
+        course,
         Utc::now(),
         KilometersPerHour(20.0).into(),
-        course,
     );
     course_file.encode(&mut fit_file)?;
 
