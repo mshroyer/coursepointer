@@ -42,19 +42,16 @@ impl GeoPoint {
     }
     
     /// Get point latitude
-    #[inline(always)]
     pub fn lat(&self) -> Degrees<f64> {
         self.lat
     }
     
     /// Get point longitude
-    #[inline(always)]
     pub fn lon(&self) -> Degrees<f64> {
         self.lon
     }
     
     /// Get point elevation, if known
-    #[inline(always)]
     pub fn ele(&self) -> Option<Meters<f64>> {
         self.ele
     }
