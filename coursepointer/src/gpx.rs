@@ -16,15 +16,16 @@ use std::num::ParseFloatError;
 use std::path::Path;
 use std::str;
 
-use coretypes::measure::Degrees;
-use coretypes::measure::Meters;
-use coretypes::{GeoPoint, TypeError};
 use quick_xml;
 use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
+
+use coretypes::measure::Degrees;
+use coretypes::measure::Meters;
+use coretypes::{GeoPoint, TypeError};
 
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]

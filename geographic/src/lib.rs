@@ -61,7 +61,7 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
     let mut geo_distance_m = 0.0;
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
-    let arc_distance = ffi::GetWGS84().Inverse(
+    let arc_distance_deg = ffi::GetWGS84().Inverse(
         point1.lat().0,
         point1.lon().0,
         point2.lat().0,
@@ -72,7 +72,7 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
     )?;
     
     Ok(InverseSolution {
-        arc_distance: Degrees(arc_distance),
+        arc_distance: Degrees(arc_distance_deg),
         geo_distance: Meters(geo_distance_m),
         azimuth1: Degrees(azimuth1_deg),
         azimuth2: Degrees(azimuth2_deg),
