@@ -2,6 +2,9 @@
 resolver = "2"
 members = [ "coretypes","coursepointer", "coursepointer-cli","geographic","integration-stub"]
 
+[profile.test]
+#opt-level = 3
+
 [profile.release]
 lto = true
 #strip = true
