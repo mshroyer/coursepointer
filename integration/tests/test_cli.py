@@ -1,5 +1,6 @@
 """Test the main coursepointer-cli binary"""
 
+from itertools import pairwise
 
 from pytest import approx
 
@@ -40,7 +41,17 @@ def test_conversion_total_distance(tmpdir, data, coursepointer_cli):
     expected_lap_distance = garmin_sdk_get_lap_distance_meters(data / "cptr003_connect.fit")
     assert conversion_lap_distance == approx(expected_lap_distance)
 
-    # Test the same for the final record distance along the course.
-    conversion_record_distance = garmin_sdk_read_fit_messages(tmpdir / "out.fit")["record_mesgs"][-1]["distance"]
-    expected_record_distance = garmin_sdk_read_fit_messages(data / "cptr003_connect.fit")["record_mesgs"][-1]["distance"]
-    assert conversion_record_distance == approx(expected_record_distance) == approx(conversion_lap_distance)
+
+def test_conversion_record_distances(tmpdir, data, coursepointer_cli):
+    coursepointer_cli("convert-gpx", "--input", data / "cptr003.gpx", "--output", tmpdir / "out.fit")
+
+    records = garmin_sdk_read_fit_messages(tmpdir / "out.fit")["record_mesgs"]
+    assert records[0]["distance"] == 0
+
+    # Distances should be cumulative
+    for a, b in pairwise(records):
+        assert a["distance"] <= b["distance"]
+
+    # The final record's distance should be equal to the course file's lap
+    # distance
+    assert records[-1]["distance"] == garmin_sdk_get_lap_distance_meters(tmpdir / "out.fit")
