@@ -48,6 +48,8 @@ pub enum GpxError {
 type Result<T> = std::result::Result<T, GpxError>;
 
 /// An item parsed from a GPX document.
+/// 
+/// TODO: Also support rte/rtept, as in Gaia GPS exports.
 #[derive(Clone, PartialEq, Debug)]
 pub enum GpxItem {
     /// Indicates the start of a GPX track.  Subsequent TrackName, TrackSegment,
