@@ -23,7 +23,7 @@ TODO: More about the interception problem
 
 ## Development
 
-It's a Rust command-line tool—with integration tests written in Python, in order to use [Garmin's FIT SDK for Python](https://github.com/garmin/fit-python-sdk) as a reference implementation for FIT encoding.
+It's a Rust command-line tool—with integration tests written in Python, in order to use [Garmin's FIT SDK for Python](https://pypi.org/project/garmin-fit-sdk/) as a reference implementation for FIT encoding.
 
 This git repo includes GeographicLib as a submodule, so after checking it out you also need to do:
 

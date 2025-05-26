@@ -55,11 +55,11 @@ pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
             _ => (),
         }       
     }
-    
+
     if course_set.courses.len() != 1usize {
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
-    
+
     let mut fit_file = File::create(fit_output)?;
     let course_file = CourseFile::new(
         course_set.current()?,
