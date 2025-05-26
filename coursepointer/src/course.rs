@@ -9,8 +9,8 @@ use thiserror::Error;
 pub enum CourseError {
     #[error(transparent)]
     GeographicalError(#[from] GeographicError),
-    #[error("no course builder")]
-    NoCourseBuilder,
+    #[error("no course has been created")]
+    NoCourse,
 }
 
 type Result<T> = std::result::Result<T, CourseError>;
@@ -30,10 +30,17 @@ impl CourseSet {
         self.courses.push(Course::new());
     }
     
+    pub fn current(&self) -> Result<&Course> {
+        match self.courses.last() {
+            Some(course) => Ok(course),
+            None => Err(CourseError::NoCourse),
+        }
+    }
+    
     pub fn current_mut(&mut self) -> Result<&mut Course> {
         match self.courses.last_mut() {
             Some(course) => Ok(course),
-            None => Err(CourseError::NoCourseBuilder),
+            None => Err(CourseError::NoCourse),
         }
     }
 }

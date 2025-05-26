@@ -62,7 +62,7 @@ pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
     
     let mut fit_file = File::create(fit_output)?;
     let course_file = CourseFile::new(
-        course_set.courses.iter().last().unwrap(),
+        course_set.current()?,
         Utc::now(),
         KilometersPerHour(20.0).into(),
     );
