@@ -42,6 +42,28 @@ def test_conversion_total_distance(tmpdir, data, coursepointer_cli):
     assert conversion_lap_distance == approx(expected_lap_distance)
 
 
+def test_connect_record_distances(data, coursepointer_cli):
+    """Check assumptions about how record message distances work
+
+    It isn't obvious from Garmin's Profile.xlsx, but record messages' distances
+    as exported by Garmin Connect are cumulative. This test encodes this
+    assumption.
+
+    TODO: Move this to a new test file
+
+    """
+    records = garmin_sdk_read_fit_messages(data / "cptr003_connect.fit")["record_mesgs"]
+    assert records[0]["distance"] == 0
+
+    # Distances should be cumulative
+    for a, b in pairwise(records):
+        assert a["distance"] <= b["distance"]
+
+    # The final record's distance should be equal to the course file's lap
+    # distance
+    assert records[-1]["distance"] == approx(garmin_sdk_get_lap_distance_meters(data / "cptr003_connect.fit"))
+
+
 def test_conversion_record_distances(tmpdir, data, coursepointer_cli):
     coursepointer_cli("convert-gpx", "--input", data / "cptr003.gpx", "--output", tmpdir / "out.fit")
 
