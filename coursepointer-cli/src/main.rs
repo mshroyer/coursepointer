@@ -10,14 +10,15 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Convert a GPX file to FIT
+    /// Convert a GPX file to a FIT course
+    ///
+    /// Given a GPX file containing a single track, converts the track to a
+    /// Garmin FIT course file.
     ConvertGpx {
         /// GPX input path
-        #[clap(short, long)]
         input: PathBuf,
 
         /// Path where to write FIT output
-        #[clap(short, long)]
         output: PathBuf,
     },
 }

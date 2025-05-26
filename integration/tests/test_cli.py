@@ -14,12 +14,12 @@ def test_help(coursepointer_cli):
 
 
 def test_conversion_valid(tmpdir, data, coursepointer_cli):
-    coursepointer_cli("convert-gpx", "--input", data / "cptr002.gpx", "--output", tmpdir / "out.fit")
+    coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
     garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
 
 def test_conversion_course_name(tmpdir, data, coursepointer_cli):
-    coursepointer_cli("convert-gpx", "--input", data / "cptr002.gpx", "--output", tmpdir / "out.fit")
+    coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
     messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
     # The file should have a single course message containing the same track
@@ -30,7 +30,7 @@ def test_conversion_course_name(tmpdir, data, coursepointer_cli):
 
 
 def test_conversion_total_distance(tmpdir, data, coursepointer_cli):
-    coursepointer_cli("convert-gpx", "--input", data / "cptr003.gpx", "--output", tmpdir / "out.fit")
+    coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
 
     # Make sure the converted FIT file's lap distance is about equal to that of
     # the FIT file we get when importing the GPX into Garmin Connect and then
@@ -43,7 +43,7 @@ def test_conversion_total_distance(tmpdir, data, coursepointer_cli):
 
 
 def test_conversion_record_distances(tmpdir, data, coursepointer_cli):
-    coursepointer_cli("convert-gpx", "--input", data / "cptr003.gpx", "--output", tmpdir / "out.fit")
+    coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
 
     records = garmin_sdk_read_fit_messages(tmpdir / "out.fit")["record_mesgs"]
     assert records[0]["distance"] == 0
