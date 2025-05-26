@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from pytest import approx
 import garmin_fit_sdk
+import fitdecode
 
 
 def rfc9557_utc(ts: datetime) -> str:
@@ -113,6 +114,13 @@ def garmin_sdk_record_coords(record: dict) -> Tuple[float, float]:
 
     """
     return semicircles_to_degrees((record["position_lat"], record["position_long"]))
+
+
+def fitdecode_get_definition_frames(path: Path) -> Iterator[fitdecode.records.FitDefinitionMessage]:
+    with fitdecode.FitReader(path) as reader:
+        for frame in reader:
+            if frame.frame_type == fitdecode.FIT_FRAME_DEFINITION:
+                yield frame
 
 
 def assert_coords_approx_equal(left: Tuple[float, float], right: Tuple[float, float]) -> None:

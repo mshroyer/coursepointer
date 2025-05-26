@@ -4,7 +4,7 @@ Uses integration-stub to write specified FIT course files, then verifies using
 the Garmin SDK that the crate's output is valid and that various elements are
 written correctly to the course file.
 
-Because the FIT profile specifies unit scaling for some values and strange
+Because the FIT profile specifies unit scaling for some values and uncommon
 conventions (e.g., the Garmin epoch) for others, one goal of these tests is to
 ensure our implementation scales values appropriately.  Where possible, such as
 when interpreting date_time values, we rely on the SDK's own logic as a
