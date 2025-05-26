@@ -49,7 +49,7 @@ pub enum GpxError {
 type Result<T> = std::result::Result<T, GpxError>;
 
 /// An item parsed from a GPX document.
-/// 
+///
 /// TODO: Also support rte/rtept, as in Gaia GPS exports.
 #[derive(Clone, PartialEq, Debug)]
 pub enum GpxItem {
@@ -160,7 +160,9 @@ impl GpxReader<&[u8]> {
 
 impl GpxReader<BufReader<File>> {
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<GpxReader<BufReader<File>>> {
-        Ok(GpxReader::new(Reader::from_file(path)?))
+        let file = File::open(path)?;
+        let buf_reader = BufReader::new(file);
+        Ok(GpxReader::new(Reader::from_reader(buf_reader)))
     }
 }
 
