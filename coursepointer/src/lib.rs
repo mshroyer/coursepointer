@@ -9,10 +9,12 @@ use crate::gpx::GpxItem;
 
 pub mod fit;
 pub mod gpx;
+pub mod course;
 
 pub use gpx::GpxReader;
 pub use fit::CourseFile;
 pub use fit::PROFILE_VERSION;
+use crate::course::{CourseBuilder, CourseError};
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {
@@ -20,6 +22,8 @@ pub enum CoursePointerError {
     Io(#[from] std::io::Error),
     #[error("GPX error: {0}")]
     Gpx(#[from] gpx::GpxError),
+    #[error(transparent)]
+    Course(#[from] CourseError),
     #[error("FIT encode error: {0}")]
     FitEncode(#[from] fit::FitEncodeError),
     #[error("type invariant error: {0}")]
@@ -48,15 +52,17 @@ pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
     }
     
     let mut fit_file = File::create(fit_output)?;
-    let mut course = CourseFile::new(
+    let mut course = CourseBuilder::new();
+    for track_point in track_points {
+        course.add_record(track_point)?;
+    }
+    let course_file = CourseFile::new(
         course_name,
         Utc::now(),
         KilometersPerHour(20.0).into(),
+        course,
     );
-    for track_point in track_points {
-        course.add_record(track_point)?
-    }
-    course.encode(&mut fit_file)?;
+    course_file.encode(&mut fit_file)?;
 
     Ok(())
 }

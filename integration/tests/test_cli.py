@@ -28,7 +28,7 @@ def test_conversion_course_name(tmpdir, data, coursepointer_cli):
     assert course_mesgs[0]["name"] == "cptr002"
 
 
-def test_conversion_distance(tmpdir, data, coursepointer_cli):
+def test_conversion_total_distance(tmpdir, data, coursepointer_cli):
     coursepointer_cli("convert-gpx", "--input", data / "cptr003.gpx", "--output", tmpdir / "out.fit")
 
     # Make sure the converted FIT file's lap distance is about equal to that of

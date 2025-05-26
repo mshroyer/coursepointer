@@ -5,7 +5,7 @@
 //! crate because the latter obscures the actual storage unit and numeric
 //! type.
 
-use std::ops::{AddAssign, Div};
+use std::ops::{Add, AddAssign, Div};
 
 use num_traits::Num;
 
@@ -27,6 +27,17 @@ macro_rules! unit_of_measure {
         {
             fn value(&self) -> N {
                 self.0
+            }
+        }
+
+        impl<N> Add for $u<N>
+        where
+            N: Num + Copy + Add,
+        {
+            type Output = Self;
+
+            fn add(self, rhs: Self) -> Self {
+                Self(self.0 + rhs.0)
             }
         }
 

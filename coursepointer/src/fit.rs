@@ -12,8 +12,9 @@ use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
 
+use crate::course::CourseBuilder;
+use coretypes::measure::{Centimeters, Degrees, Meters, MetersPerSecond, Seconds};
 use coretypes::{GeoPoint, TypeError};
-use coretypes::measure::{Centimeters, Degrees, Meters, MetersPerSecond};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///
@@ -474,18 +475,22 @@ struct RecordMessage {
     /// The record's position on the surface of the ellipsoid.
     position: FitSurfacePoint,
 
-    /// The distance in cm from the previous record.
-    dist_cm: u32,
+    /// The record's cumulative distance along the entire course.
+    cumulative_distance: Centimeters<u32>,
 
     /// The absolute time of the record.
     timestamp: FitDateTime,
 }
 
 impl RecordMessage {
-    fn new(position: FitSurfacePoint, dist_cm: u32, timestamp: FitDateTime) -> Self {
+    fn new(
+        position: FitSurfacePoint,
+        cumulative_distance: Centimeters<u32>,
+        timestamp: FitDateTime,
+    ) -> Self {
         Self {
             position,
-            dist_cm,
+            cumulative_distance,
             timestamp,
         }
     }
@@ -504,7 +509,7 @@ impl RecordMessage {
         w.write_u8(local_message_id & 0x0F)?;
         w.write_i32::<BigEndian>(self.position.lat_semis)?;
         w.write_i32::<BigEndian>(self.position.lon_semis)?;
-        w.write_u32::<BigEndian>(self.dist_cm)?;
+        w.write_u32::<BigEndian>(self.cumulative_distance.0)?;
         w.write_u32::<BigEndian>(self.timestamp.value)?;
         Ok(())
     }
@@ -514,9 +519,7 @@ pub struct CourseFile {
     name: String,
     start_time: DateTime<Utc>,
     speed: MetersPerSecond<f64>,
-    records: Vec<RecordMessage>,
-    total_distance: Meters<f64>,
-    last_record_added: Option<GeoPoint>,
+    course: CourseBuilder,
 }
 
 impl CourseFile {
@@ -524,35 +527,14 @@ impl CourseFile {
         name: String,
         start_time: DateTime<Utc>,
         speed: MetersPerSecond<f64>,
+        course: CourseBuilder,
     ) -> Self {
         Self {
             name,
             start_time,
             speed,
-            records: vec![],
-            total_distance: Meters(0.0),
-            last_record_added: None,
+            course,
         }
-    }
-
-    pub fn add_record(&mut self, point: GeoPoint) -> Result<()> {
-        let incremental_distance = match self.last_record_added {
-            None => Meters(0.0),
-            Some(prev_point) => {
-                let sln = geographic::solve_inverse(&prev_point, &point)
-                    .or_else(|err| Err(FitEncodeError::GeographicError(err)))?;
-                sln.geo_distance
-            }
-        };
-        // TODO: Investigate using elevation-corrected distance.
-        self.total_distance += incremental_distance;
-        self.records.push(RecordMessage::new(
-            FitSurfacePoint::try_from(point)?,
-            truncate_float(Centimeters::from(self.total_distance).0)?,
-            FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
-        ));
-        self.last_record_added = Some(point);
-        Ok(())
     }
 
     pub fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
@@ -582,14 +564,24 @@ impl CourseFile {
         .encode(&mut dw)?;
         CourseMessage::new(self.name.clone(), Sport::Cycling).encode(1u8, &mut dw)?;
 
-        let start_pos = self.records.iter().map(|r| r.position).next();
-        let end_pos = self.records.iter().map(|r| r.position).last();
+        let start_pos = self
+            .course
+            .iter_records()
+            .next()
+            .map(|r| r.point.try_into())
+            .transpose()?;
+        let end_pos = self
+            .course
+            .iter_records()
+            .last()
+            .map(|r| r.point.try_into())
+            .transpose()?;
         DefinitionFrame::new(GlobalMessage::Lap, 2u8, LapMessage::field_definitions())
             .encode(&mut dw)?;
         LapMessage::new(
             FitDateTime::try_from(self.start_time)?,
             u32::try_from(self.total_duration()?.num_milliseconds())?,
-            truncate_float(Centimeters::from(self.total_distance).0)?,
+            truncate_float(Centimeters::from(self.course.total_distance()).0)?,
             start_pos,
             end_pos,
         )
@@ -604,10 +596,24 @@ impl CourseFile {
         )
         .encode(3u8, &mut dw)?;
 
-        DefinitionFrame::new(GlobalMessage::Record, 4u8, RecordMessage::field_definitions())
-            .encode(&mut dw)?;
-        for record in &self.records {
-            record.encode(4u8, &mut dw)?;
+        DefinitionFrame::new(
+            GlobalMessage::Record,
+            4u8,
+            RecordMessage::field_definitions(),
+        )
+        .encode(&mut dw)?;
+        for record in self.course.iter_records() {
+            let distance: Centimeters<f64> = record.distance.into();
+            let timedelta: Seconds<f64> = record.distance / self.speed;
+            let timestamp = self
+                .start_time
+                .add(TimeDelta::seconds(truncate_float(timedelta.0)?));
+            let record_message = RecordMessage::new(
+                record.point.try_into()?,
+                Centimeters(truncate_float(distance.0)?),
+                timestamp.try_into()?,
+            );
+            record_message.encode(4u8, &mut dw)?;
         }
 
         EventMessage::new(
@@ -621,9 +627,21 @@ impl CourseFile {
         Ok(())
     }
 
+    fn total_distance(&self) -> Meters<f64> {
+        self.course
+            .iter_records()
+            .last()
+            .map(|r| r.distance)
+            .unwrap_or(Meters(0.0))
+    }
+
     /// Returns the timestamp corresponding to the course's speed and total distance.
     fn total_duration(&self) -> Result<TimeDelta> {
-        let total_duration_seconds: i64 = truncate_float((self.total_distance / self.speed).0)?;
+        self.total_duration_at_distance(self.total_distance())
+    }
+
+    fn total_duration_at_distance(&self, distance: Meters<f64>) -> Result<TimeDelta> {
+        let total_duration_seconds: i64 = truncate_float((distance / self.speed).0)?;
         Ok(TimeDelta::seconds(total_duration_seconds))
     }
 
@@ -646,7 +664,7 @@ impl CourseFile {
         sz += 2 * CourseFile::get_data_message_size(EventMessage::field_definitions());
 
         sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
-        sz += self.records.len()
+        sz += self.course.records_len()
             * CourseFile::get_data_message_size(RecordMessage::field_definitions());
 
         sz
