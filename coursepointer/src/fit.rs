@@ -12,7 +12,7 @@ use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
 
-use crate::course::CourseBuilder;
+use crate::course::Course;
 use coretypes::measure::{Centimeters, Degrees, Meters, MetersPerSecond, Seconds};
 use coretypes::{GeoPoint, TypeError};
 
@@ -515,15 +515,15 @@ impl RecordMessage {
     }
 }
 
-pub struct CourseFile {
-    course: CourseBuilder,
+pub struct CourseFile<'a> {
+    course: &'a Course,
     start_time: DateTime<Utc>,
     speed: MetersPerSecond<f64>,
 }
 
-impl CourseFile {
+impl<'a> CourseFile<'a> {
     pub fn new(
-        course: CourseBuilder,
+        course: &'a Course,
         start_time: DateTime<Utc>,
         speed: MetersPerSecond<f64>,
     ) -> Self {

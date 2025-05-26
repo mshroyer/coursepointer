@@ -14,7 +14,7 @@ pub mod course;
 pub use gpx::GpxReader;
 pub use fit::CourseFile;
 pub use fit::PROFILE_VERSION;
-use crate::course::{CourseBuilder, CourseError};
+use crate::course::{CourseError, CourseSet};
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {
@@ -24,6 +24,8 @@ pub enum CoursePointerError {
     Gpx(#[from] gpx::GpxError),
     #[error(transparent)]
     Course(#[from] CourseError),
+    #[error("unexpected number of courses: {0}")]
+    CourseCount(usize),
     #[error("FIT encode error: {0}")]
     FitEncode(#[from] fit::FitEncodeError),
     #[error("type invariant error: {0}")]
@@ -33,26 +35,34 @@ pub enum CoursePointerError {
 type Result<T> = std::result::Result<T, CoursePointerError>;
 
 pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
-    let mut course = CourseBuilder::new();
+    let mut course_set = CourseSet::new();
     let gpx_reader = GpxReader::from_path(gpx_input)?;
     for item in gpx_reader {
         let item = item?;
         match item {
+            GpxItem::Track => {
+                course_set.create_course();
+            }
+
             GpxItem::TrackName(name) => {
-                course.set_name(name);
+                course_set.current_mut()?.set_name(name);
             }
 
             GpxItem::TrackPoint(p) => {
-                course.add_record(p)?;
+                course_set.current_mut()?.add_record(p)?;
             }
             
             _ => (),
         }       
     }
     
+    if course_set.courses.len() != 1usize {
+        return Err(CoursePointerError::CourseCount(course_set.courses.len()));
+    }
+    
     let mut fit_file = File::create(fit_output)?;
     let course_file = CourseFile::new(
-        course,
+        course_set.courses.iter().last().unwrap(),
         Utc::now(),
         KilometersPerHour(20.0).into(),
     );

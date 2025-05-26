@@ -9,7 +9,7 @@ use serde::Deserialize;
 use coretypes::GeoPoint;
 use coretypes::measure::{Degrees, KilometersPerHour};
 use coursepointer::CourseFile;
-use coursepointer::course::CourseBuilder;
+use coursepointer::course::Course;
 
 #[derive(Parser)]
 struct Args {
@@ -65,13 +65,13 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let spec: CourseSpec = serde_json::from_reader(spec_file)?;
 
     let mut fit_file = File::create(&out)?;
-    let mut course = CourseBuilder::new();
+    let mut course = Course::new();
     course.set_name(spec.name);
     for point in &spec.records {
         course.add_record(GeoPoint::new(Degrees(point.lat), Degrees(point.lon), None)?)?;
     }
     let course_file = CourseFile::new(
-        course,
+        &course,
         parse_rfc9557_utc(&spec.start_time)?,
         KilometersPerHour(18.0).into(),
     );
