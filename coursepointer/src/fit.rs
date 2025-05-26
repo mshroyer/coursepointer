@@ -23,21 +23,21 @@ pub const PROFILE_VERSION: u16 = 21158;
 
 #[derive(Error, Debug)]
 pub enum FitEncodeError {
-    #[error("writing to output")]
-    Write(#[from] std::io::Error),
-    #[error("encoding integer")]
+    #[error("I/O error")]
+    Io(#[from] std::io::Error),
+    #[error("Error encoding integer")]
     IntegerEncoding(#[from] std::num::TryFromIntError),
-    #[error("float conversion")]
+    #[error("Error in float conversion")]
     FloatConversion,
-    #[error("encoding string")]
+    #[error("Error encoding string")]
     StringEncoding,
-    #[error("encoding date_time")]
+    #[error("Error encoding date_time")]
     DateTimeEncoding,
-    #[error("geographic error: {0}")]
+    #[error("Geographic computation error")]
     GeographicError(#[from] geographic::GeographicError),
-    #[error("infallible")]
+    #[error("Infallible")]
     Infallible(#[from] Infallible),
-    #[error("type invariant error: {0}")]
+    #[error("Type error")]
     TypeError(#[from] TypeError),
 }
 

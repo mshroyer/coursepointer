@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -28,7 +28,8 @@ fn main() -> Result<()> {
 
     match args.cmd {
         Commands::ConvertGpx { input, output } => {
-            coursepointer::convert_gpx(input.as_ref(), output.as_ref())?
+            Result::from(coursepointer::convert_gpx(input.as_ref(), output.as_ref()))
+                .with_context(|| format!("Unable to convert the GPX file {:?}", input))?;
         }
     }
 

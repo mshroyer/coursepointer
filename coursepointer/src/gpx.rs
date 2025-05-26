@@ -30,20 +30,20 @@ use coretypes::{GeoPoint, TypeError};
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]
 pub enum GpxError {
-    #[error("I/O error: {0}")]
+    #[error("I/O error")]
     Io(#[from] std::io::Error),
-    #[error("XML error: {0}")]
+    #[error("XML processing error")]
     Xml(#[from] quick_xml::Error),
-    #[error("XML attribute error: {0}")]
-    AttrError(#[from] AttrError),
-    #[error("UTF-8 decoding error: {0}")]
-    Utf8Error(#[from] str::Utf8Error),
-    #[error("parsing floating-point number: {0}")]
-    ParseFloatError(#[from] ParseFloatError),
-    #[error("GPX schema error: {0}")]
-    GpxSchemaError(String),
-    #[error("type invariant error: {0}")]
-    TypeError(#[from] TypeError),
+    #[error("XML attribute processing error")]
+    XmlAttr(#[from] AttrError),
+    #[error("UTF-8 decoding error")]
+    Utf8(#[from] str::Utf8Error),
+    #[error("parsing floating-point number")]
+    ParseFloat(#[from] ParseFloatError),
+    #[error("GPX schema error")]
+    GpxSchema(String),
+    #[error("type invariant error")]
+    Type(#[from] TypeError),
 }
 
 type Result<T> = std::result::Result<T, GpxError>;
@@ -73,10 +73,10 @@ impl TryFrom<&NextPtFields> for GeoPoint {
     type Error = GpxError;
 
     fn try_from(value: &NextPtFields) -> Result<Self> {
-        let lat = value.lat.ok_or(GpxError::GpxSchemaError(
+        let lat = value.lat.ok_or(GpxError::GpxSchema(
             "trackpoint missing lat attribute".to_owned(),
         ))?;
-        let lon = value.lon.ok_or(GpxError::GpxSchemaError(
+        let lon = value.lon.ok_or(GpxError::GpxSchema(
             "trackpoint missing lon attribute".to_owned(),
         ))?;
         Ok(GeoPoint::new(lat, lon, value.ele)?)
@@ -100,10 +100,10 @@ impl TryFrom<&NextPtFields> for Waypoint {
     type Error = GpxError;
 
     fn try_from(value: &NextPtFields) -> Result<Self> {
-        let lat = value.lat.ok_or(GpxError::GpxSchemaError(
+        let lat = value.lat.ok_or(GpxError::GpxSchema(
             "waypoint missing lat attribute".to_owned(),
         ))?;
-        let lon = value.lon.ok_or(GpxError::GpxSchemaError(
+        let lon = value.lon.ok_or(GpxError::GpxSchema(
             "waypoint missing lon attribute".to_owned(),
         ))?;
 
@@ -112,7 +112,7 @@ impl TryFrom<&NextPtFields> for Waypoint {
         let name = value
             .name
             .clone()
-            .ok_or(GpxError::GpxSchemaError("waypoint missing name".to_owned()))?;
+            .ok_or(GpxError::GpxSchema("waypoint missing name".to_owned()))?;
 
         Ok(Self {
             name,
@@ -271,7 +271,7 @@ where
                 Ok(Event::Text(text)) => match self.tag_path.as_slice() {
                     [Tag::Gpx, Tag::Trk, Tag::Name] => {
                         return Some(match str::from_utf8(text.as_ref()) {
-                            Err(err) => Err(GpxError::Utf8Error(err)),
+                            Err(err) => Err(GpxError::Utf8(err)),
                             Ok(s) => Ok(GpxItem::TrackName(s.to_owned())),
                         });
                     }

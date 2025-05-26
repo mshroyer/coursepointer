@@ -1,8 +1,9 @@
 """Test the main coursepointer-cli binary"""
 
 from itertools import pairwise
+import subprocess
 
-from pytest import approx
+from pytest import approx, raises
 
 from integration import garmin_sdk_read_fit_messages, garmin_sdk_read_fit_header, assert_all_coords_approx_equal, \
     garmin_sdk_get_lap_distance_meters
@@ -11,6 +12,13 @@ from integration.fixtures import cargo, data, coursepointer_cli
 
 def test_help(coursepointer_cli):
     assert "Print help" in coursepointer_cli("--help")
+
+
+def test_missing_input(tmpdir, coursepointer_cli):
+    with raises(subprocess.CalledProcessError):
+        output = coursepointer_cli("convert-gpx", tmpdir / "nonexistent.gpx", tmpdir / "out.fit")
+        assert "Unable to convert the GPX file" in output
+        assert "I/O error" in output
 
 
 def test_conversion_valid(tmpdir, data, coursepointer_cli):

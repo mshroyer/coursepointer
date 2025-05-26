@@ -64,7 +64,7 @@ class Profile(NamedEnum):
 
 
 class RustBinFunc:
-    """A function interface to a rust binary
+    """A functional interface to a rust binary
 
     The binary is invoked with the supplied arguments, and the function returns
     the binary's standard output.  Nonzero exit codes are represented by a thrown
@@ -79,7 +79,7 @@ class RustBinFunc:
     def __call__(self, *args: str | Path) -> str:
         print("Calling subprocess: {}".format(self.bin))
         return str(
-            subprocess.check_output([str(self.bin)] + list(args), universal_newlines=True))
+            subprocess.check_output([str(self.bin)] + list(args), stderr=subprocess.STDOUT, universal_newlines=True))
 
 
 class Cargo:

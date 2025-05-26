@@ -18,18 +18,18 @@ use crate::course::{CourseError, CourseSet};
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {
-    #[error("I/O error: {0}")]
+    #[error("I/O error")]
     Io(#[from] std::io::Error),
-    #[error("GPX error: {0}")]
+    #[error("GPX processing error")]
     Gpx(#[from] gpx::GpxError),
     #[error(transparent)]
     Course(#[from] CourseError),
-    #[error("unexpected number of courses: {0}")]
+    #[error("Unexpected number of courses (tracks or routes) in input: {0}")]
     CourseCount(usize),
-    #[error("FIT encode error: {0}")]
+    #[error("FIT encoding error")]
     FitEncode(#[from] fit::FitEncodeError),
-    #[error("type invariant error: {0}")]
-    TypeError(#[from] TypeError),
+    #[error("Core type error")]
+    Type(#[from] TypeError),
 }
 
 type Result<T> = std::result::Result<T, CoursePointerError>;
