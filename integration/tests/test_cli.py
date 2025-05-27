@@ -3,7 +3,6 @@
 from itertools import pairwise
 import subprocess
 
-from pint import UnitRegistry
 from pytest import approx, raises
 
 from integration import garmin_read_messages
@@ -90,7 +89,7 @@ def test_lap_distance(tmpdir, data, coursepointer_cli):
     assert conversion_lap_distance == approx(expected_lap_distance)
 
 
-def test_lap_speed(tmpdir, data, ureg, coursepointer_cli):
+def test_lap_duration(tmpdir, data, ureg, coursepointer_cli):
     coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
 
     speed = 20 * ureg.kilometer / ureg.hour
@@ -122,3 +121,35 @@ def test_record_distances(tmpdir, data, coursepointer_cli):
     # The final record's distance should be equal to the course file's lap
     # distance
     assert record_mesgs[-1]["distance"] == lap_mesgs[0]["total_distance"]
+
+
+def test_record_timestamps(tmpdir, data, ureg, coursepointer_cli):
+    coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
+
+    speed = 20 * ureg.kilometer / ureg.hour
+    mesgs = garmin_read_messages(tmpdir / "out.fit")
+    record_mesgs = mesgs["record_mesgs"]
+
+    start_timestamp = record_mesgs[0]["timestamp"]
+    for record in record_mesgs:
+        expected_duration = (record["distance"] * ureg.meter / speed).to(ureg.second)
+        actual_duration = record["timestamp"] - start_timestamp
+        assert actual_duration.seconds == approx(expected_duration.magnitude, abs=1)
+
+
+def test_timer_event_spacing(tmpdir, data, coursepointer_cli):
+    coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
+    mesgs = garmin_read_messages(tmpdir / "out.fit")
+
+    event_mesgs = mesgs["event_mesgs"]
+    assert len(event_mesgs) == 2
+    assert event_mesgs[0]["event"] == "timer"
+    assert event_mesgs[0]["event_type"] == "start"
+    assert event_mesgs[1]["event"] == "timer"
+    assert event_mesgs[1]["event_type"] == "stop"
+
+    lap_mesgs = mesgs["lap_mesgs"]
+    lap_elapsed = lap_mesgs[0]["total_timer_time"]
+
+    event_spacing = event_mesgs[1]["timestamp"] - event_mesgs[0]["timestamp"]
+    assert event_spacing.seconds == lap_elapsed
