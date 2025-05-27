@@ -22,6 +22,21 @@ from integration import CourseSpec, garmin_read_messages, garmin_read_file_heade
 from integration.fixtures import cargo, integration_stub
 
 
+# TODO: Add and test for remaining FIT course fields
+# - file_id
+#   - Manufacturer
+#   - Serial number
+# - course
+#   - Sport
+#   - Sub-sport
+# - record
+#   - altitude
+#   - speed?
+# - event
+#   - event_group (Garmin Connect sets this to zero)
+# - file_creator
+
+
 def test_empty_course(tmpdir, integration_stub):
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")

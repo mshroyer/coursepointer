@@ -30,6 +30,11 @@ def show_frames(path: str) -> None:
                     lon = get_semicircle_degrees(frame.get_field("position_long").value)
                     dist = get_semicircle_degrees(frame.get_field("distance").value)
                     print(f"Course point: lat={lat}, lon={lon}, dist={dist}")
+                elif frame.name == "event":
+                    event = frame.get_field("event").value
+                    event_group = frame.get_field("event_group").value
+                    event_type = frame.get_field("event_type").value
+                    print(f"Event: {event} type={event_type}, group={event_group}")
                 else:
                     print(f"Data message: {frame.name}")
             elif frame.frame_type == fitdecode.FIT_FRAME_DEFINITION:
