@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from integration import garmin_read_messages
-from integration.fixtures import data
 
 
 def test_validate(data: Path):

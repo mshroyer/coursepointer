@@ -9,7 +9,3 @@ members = ["integration", "tools"]
 
 [tool.ruff]
 exclude = ["geographic/geographiclib/**"]
-
-[tool.ruff.lint.extend-per-file-ignores]
-# Pytest fixtures confuse ruff
-"integration/tests/test_*.py" = ["F401", "F811"]

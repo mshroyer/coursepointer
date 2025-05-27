@@ -10,7 +10,6 @@ from itertools import pairwise
 from pytest import approx
 
 from integration import fitdecode_get_definition_frames, garmin_read_messages, garmin_read_file_header
-from integration.fixtures import data, ureg
 
 
 def test_lap_messages(data):

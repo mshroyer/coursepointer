@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 from integration import CourseSpec, garmin_read_messages, garmin_read_file_header, garmin_sdk_record_coords, \
     semicircles_to_degrees, \
     assert_all_coords_approx_equal, assert_coords_approx_equal
-from integration.fixtures import cargo, integration_stub
 
 
 # TODO: Add and test for remaining FIT course fields

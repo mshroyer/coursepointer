@@ -6,7 +6,6 @@ import subprocess
 from pytest import approx, raises
 
 from integration import garmin_read_messages
-from integration.fixtures import cargo, coursepointer_cli, data, ureg
 
 
 def test_help(coursepointer_cli):
