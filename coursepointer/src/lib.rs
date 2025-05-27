@@ -22,7 +22,7 @@ pub enum CoursePointerError {
     Io(#[from] std::io::Error),
     #[error("GPX processing error")]
     Gpx(#[from] gpx::GpxError),
-    #[error(transparent)]
+    #[error("Course error")]
     Course(#[from] CourseError),
     #[error("Unexpected number of courses (tracks or routes) in input: {0}")]
     CourseCount(usize),
@@ -32,7 +32,7 @@ pub enum CoursePointerError {
     Type(#[from] TypeError),
 }
 
-type Result<T> = std::result::Result<T, CoursePointerError>;
+pub type Result<T> = std::result::Result<T, CoursePointerError>;
 
 pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
     let mut course_set = CourseSet::new();

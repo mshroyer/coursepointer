@@ -15,10 +15,25 @@ def test_help(coursepointer_cli):
 
 
 def test_missing_input(tmpdir, coursepointer_cli):
-    with raises(subprocess.CalledProcessError):
-        output = coursepointer_cli("convert-gpx", tmpdir / "nonexistent.gpx", tmpdir / "out.fit")
-        assert "Unable to convert the GPX file" in output
-        assert "I/O error" in output
+    with raises(subprocess.CalledProcessError) as einfo:
+        coursepointer_cli("convert-gpx", tmpdir / "nonexistent.gpx", tmpdir / "out.fit")
+
+    assert "Reading the GPX <INPUT> file" in einfo.value.output
+    assert "I/O error" in einfo.value.output
+
+
+def test_no_courses(tmpdir, data, coursepointer_cli):
+    with raises(subprocess.CalledProcessError) as einfo:
+        coursepointer_cli("convert-gpx", data / "invalid_empty.gpx", tmpdir / "out.fit")
+
+    assert "No course was found" in einfo.value.output
+
+
+def test_bad_xml(tmpdir, data, coursepointer_cli):
+    with raises(subprocess.CalledProcessError) as einfo:
+        coursepointer_cli("convert-gpx", data / "invalid_bad_xml.gpx", tmpdir / "out.fit")
+
+    assert "<INPUT> is not a valid GPX file" in einfo.value.output
 
 
 def test_conversion_valid(tmpdir, data, coursepointer_cli):
