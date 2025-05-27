@@ -15,7 +15,7 @@ pub mod gpx;
 pub use fit::{CourseFile, PROFILE_VERSION};
 pub use gpx::GpxReader;
 
-use crate::course::{CourseError, CourseSet};
+use crate::course::{CourseError, CourseSetBuilder};
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {
@@ -36,7 +36,7 @@ pub enum CoursePointerError {
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
 
 pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut BufWriter<W>) -> Result<()> {
-    let mut course_set = CourseSet::new();
+    let mut course_set = CourseSetBuilder::new();
     let gpx_reader = GpxReader::from_path(gpx_input)?;
     for item in gpx_reader {
         let item = item?;
@@ -61,8 +61,9 @@ pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut BufWriter<W>) ->
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
 
+    let course = course_set.current()?.build();
     let course_file = CourseFile::new(
-        course_set.current()?,
+        &course,
         Utc::now(),
         KilometersPerHour(20.0).into(),
     );

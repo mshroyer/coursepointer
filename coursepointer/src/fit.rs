@@ -14,7 +14,7 @@ use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
 
-use crate::course::Course;
+use crate::course::{Course, CourseBuilder};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///
@@ -557,18 +557,26 @@ impl<'a> CourseFile<'a> {
             CourseMessage::field_definitions(),
         )
         .encode(&mut dw)?;
-        CourseMessage::new(self.course.get_name().to_string(), Sport::Cycling)
-            .encode(1u8, &mut dw)?;
+        CourseMessage::new(
+            self.course
+                .name
+                .clone()
+                .unwrap_or("Untitled course".to_owned()),
+            Sport::Cycling,
+        )
+        .encode(1u8, &mut dw)?;
 
         let start_pos = self
             .course
-            .iter_records()
+            .records
+            .iter()
             .next()
             .map(|r| r.point.try_into())
             .transpose()?;
         let end_pos = self
             .course
-            .iter_records()
+            .records
+            .iter()
             .last()
             .map(|r| r.point.try_into())
             .transpose()?;
@@ -598,7 +606,7 @@ impl<'a> CourseFile<'a> {
             RecordMessage::field_definitions(),
         )
         .encode(&mut dw)?;
-        for record in self.course.iter_records() {
+        for record in &self.course.records {
             let distance: Centimeters<f64> = record.distance.into();
             let timedelta: Seconds<f64> = record.distance / self.speed;
             let timestamp = self
@@ -625,7 +633,8 @@ impl<'a> CourseFile<'a> {
 
     fn total_distance(&self) -> Meters<f64> {
         self.course
-            .iter_records()
+            .records
+            .iter()
             .last()
             .map(|r| r.distance)
             .unwrap_or(Meters(0.0))
@@ -660,7 +669,7 @@ impl<'a> CourseFile<'a> {
         sz += 2 * CourseFile::get_data_message_size(EventMessage::field_definitions());
 
         sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
-        sz += self.course.records_len()
+        sz += self.course.records.len()
             * CourseFile::get_data_message_size(RecordMessage::field_definitions());
 
         sz
