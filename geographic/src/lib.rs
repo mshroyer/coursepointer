@@ -16,6 +16,7 @@ mod ffi {
 
         type Geodesic;
 
+        #[allow(clippy::too_many_arguments)]
         fn Inverse(
             &self,
             lat1: f64,

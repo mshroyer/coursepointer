@@ -151,7 +151,7 @@ where
 }
 
 impl GpxReader<&[u8]> {
-    pub fn from_str(s: &str) -> GpxReader<&[u8]> {
+    pub fn from_literal(s: &str) -> GpxReader<&[u8]> {
         GpxReader::new(Reader::from_reader(s.as_bytes()))
     }
 }
@@ -380,7 +380,7 @@ mod tests {
             (37.39888, -122.13498),
         ];
 
-        let reader = GpxReader::from_str(xml);
+        let reader = GpxReader::from_literal(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
@@ -425,7 +425,7 @@ mod tests {
             (37.39888, -122.13498, 31.8),
         ];
 
-        let reader = GpxReader::from_str(xml);
+        let reader = GpxReader::from_literal(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
@@ -457,7 +457,7 @@ mod tests {
 </gpx>
 "#;
 
-        let reader = GpxReader::from_str(xml);
+        let reader = GpxReader::from_literal(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()
@@ -489,7 +489,7 @@ mod tests {
 </gpx>
 "#;
 
-        let reader = GpxReader::from_str(xml);
+        let reader = GpxReader::from_literal(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
 
         assert_eq!(
@@ -583,7 +583,7 @@ mod tests {
             ),
         ];
 
-        let reader = GpxReader::from_str(xml);
+        let reader = GpxReader::from_literal(xml);
         let elements = reader.collect::<Result<Vec<_>>>()?;
         let result = elements
             .iter()

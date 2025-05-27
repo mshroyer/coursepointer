@@ -45,6 +45,12 @@ impl CourseSet {
     }
 }
 
+impl Default for CourseSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub struct Course {
     records: Vec<Record>,
     name: Option<String>,
@@ -102,6 +108,12 @@ impl Course {
             Some(name) => name.as_ref(),
             None => "Untitled course",
         }
+    }
+}
+
+impl Default for Course {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
