@@ -10,7 +10,7 @@ from itertools import pairwise
 from pytest import approx
 
 from integration import fitdecode_get_definition_frames, garmin_read_messages, garmin_read_file_header
-from integration.fixtures import data
+from integration.fixtures import data, ureg
 
 
 def test_lap_messages(data):
@@ -43,3 +43,14 @@ def test_record_distances(data):
     lap_mesgs = mesgs["lap_mesgs"]
     assert len(lap_mesgs) == 1
     assert record_mesgs[-1]["distance"] == approx(lap_mesgs[0]["total_distance"])
+
+
+def test_speed_scale(data, ureg):
+    mesgs = garmin_read_messages(data / "cptr003_connect.fit")
+    record_speeds = list(map(lambda msg: msg["speed"], mesgs["record_mesgs"]))
+    avg_speed = ((sum(record_speeds) / len(record_speeds)) * ureg("m/s")).to("km/h")
+
+    # The record messages' speed fields should be returned by the SDK as
+    # unscaled meters per second:
+    assert avg_speed > 15 * ureg("km/h")
+    assert avg_speed < 30 * ureg("km/h")
