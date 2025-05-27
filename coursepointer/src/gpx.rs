@@ -332,7 +332,7 @@ mod tests {
     use coretypes::measure::{Degrees, Meters};
     use coretypes::{GeoPoint, geo_points};
 
-    use super::{GpxItem, GpxReader, Result, Waypoint};
+    use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
 
     macro_rules! waypoint {
         ( $name:expr, $type_:expr, $lat:expr, $lon:expr ) => {
@@ -381,8 +381,8 @@ mod tests {
         ];
 
         let reader = GpxReader::from_literal(xml);
-        let elements = reader.collect::<Result<Vec<_>>>()?;
-        let result = elements
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let result = items
             .iter()
             .filter_map(|ele| match ele {
                 GpxItem::TrackPoint(p) => Some(*p),
@@ -426,8 +426,8 @@ mod tests {
         ];
 
         let reader = GpxReader::from_literal(xml);
-        let elements = reader.collect::<Result<Vec<_>>>()?;
-        let result = elements
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let result = items
             .iter()
             .filter_map(|ele| match ele {
                 GpxItem::TrackPoint(p) => Some(*p),
@@ -436,6 +436,33 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(result, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn test_invalid_trackpoint() -> Result<()> {
+        let xml = r#"
+<gpx>
+  <trk>
+    <name>Foo</name>
+    <trkseg>
+      <trkpt lat="37.39987" lon="-122.13737">
+        <ele>30.5</ele>
+      </trkpt>
+      <trkpt lat="37.39958">
+        <ele>29.9</ele>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+"#;
+
+        let reader = GpxReader::from_literal(xml);
+        let result = reader.collect::<Result<Vec<_>>>();
+        assert!(
+            matches!(result, Err(GpxError::GpxSchema(mesg)) if mesg == "trackpoint missing lon attribute".to_owned())
+        );
+
         Ok(())
     }
 
@@ -458,8 +485,8 @@ mod tests {
 "#;
 
         let reader = GpxReader::from_literal(xml);
-        let elements = reader.collect::<Result<Vec<_>>>()?;
-        let result = elements
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let result = items
             .iter()
             .filter_map(|ele| match ele {
                 GpxItem::TrackName(n) => Some(n),
@@ -490,10 +517,10 @@ mod tests {
 "#;
 
         let reader = GpxReader::from_literal(xml);
-        let elements = reader.collect::<Result<Vec<_>>>()?;
+        let items = reader.collect::<Result<Vec<_>>>()?;
 
         assert_eq!(
-            elements
+            items
                 .iter()
                 .filter(|e| match e {
                     GpxItem::Track => true,
@@ -505,7 +532,7 @@ mod tests {
         );
 
         assert_eq!(
-            elements
+            items
                 .iter()
                 .filter(|e| match e {
                     GpxItem::TrackSegment => true,
@@ -584,8 +611,8 @@ mod tests {
         ];
 
         let reader = GpxReader::from_literal(xml);
-        let elements = reader.collect::<Result<Vec<_>>>()?;
-        let result = elements
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let result = items
             .iter()
             .filter_map(|ele| match ele {
                 GpxItem::Waypoint(p) => Some(p.clone()),
