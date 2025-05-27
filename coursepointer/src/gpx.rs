@@ -265,7 +265,6 @@ where
                         | [Tag::Gpx, Tag::Rte, Tag::Rtept]
                         | [Tag::Gpx, Tag::Wpt] => {
                             if let Err(e) = (|| {
-                                self.next_pt_fields = NextPtFields::default();
                                 for attr in elt.attributes() {
                                     let a = attr?;
                                     if a.key == QName(b"lat") {
