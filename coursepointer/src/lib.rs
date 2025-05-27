@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::io::Write;
 use std::path::Path;
 use chrono::Utc;
 use thiserror::Error;
@@ -34,7 +34,7 @@ pub enum CoursePointerError {
 
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
 
-pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
+pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut W) -> Result<()> {
     let mut course_set = CourseSet::new();
     let gpx_reader = GpxReader::from_path(gpx_input)?;
     for item in gpx_reader {
@@ -60,13 +60,12 @@ pub fn convert_gpx(gpx_input: &Path, fit_output: &Path) -> Result<()> {
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
 
-    let mut fit_file = File::create(fit_output)?;
     let course_file = CourseFile::new(
         course_set.current()?,
         Utc::now(),
         KilometersPerHour(20.0).into(),
     );
-    course_file.encode(&mut fit_file)?;
+    course_file.encode(fit_output)?;
 
     Ok(())
 }

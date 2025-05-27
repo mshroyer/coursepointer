@@ -14,12 +14,36 @@ def test_help(coursepointer_cli):
     assert "Print help" in coursepointer_cli("--help")
 
 
+def test_no_subcommand(coursepointer_cli):
+    with raises(subprocess.CalledProcessError) as einfo:
+        coursepointer_cli()
+
+    assert "Usage:" in einfo.value.output
+
+
 def test_missing_input(tmpdir, coursepointer_cli):
     with raises(subprocess.CalledProcessError) as einfo:
         coursepointer_cli("convert-gpx", tmpdir / "nonexistent.gpx", tmpdir / "out.fit")
 
     assert "Reading the GPX <INPUT> file" in einfo.value.output
     assert "I/O error" in einfo.value.output
+
+
+def test_output_file_exists(tmpdir, data, coursepointer_cli):
+    with open(tmpdir / "out.fit", "w") as f:
+        print("Hello", file=f)
+
+    with raises(subprocess.CalledProcessError) as einfo:
+        coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
+
+    assert "The file exists" in einfo.value.output
+
+
+def test_output_file_force(tmpdir, data, coursepointer_cli):
+    with open(tmpdir / "out.fit", "w") as f:
+        print("Hello", file=f)
+
+    coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit", "--force")
 
 
 def test_no_courses(tmpdir, data, coursepointer_cli):

@@ -1,7 +1,10 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use coursepointer::CoursePointerError;
+use coursepointer::fit::FitEncodeError;
 use coursepointer::gpx::GpxError;
+use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -22,33 +25,61 @@ enum Commands {
 
         /// Path where to write FIT output
         output: PathBuf,
+
+        /// Force overwrite of any existing file at <OUTPUT>
+        #[clap(long, short, action)]
+        force: bool,
     },
 }
 
+fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
+    let mut fit_file = BufWriter::new(
+        if force {
+            File::create(output)
+        } else {
+            File::create_new(output)
+        }
+        .context("Creating <OUTPUT> file")?,
+    );
+
+    let res = coursepointer::convert_gpx(input.as_ref(), &mut fit_file);
+    match &res {
+        Ok(_) => {
+            fit_file.flush()?;
+            Ok(())
+        }
+
+        Err(CoursePointerError::Gpx(GpxError::Io(_))) => {
+            res.context("Reading the GPX <INPUT> file. Check that it exists and can be accessed.")
+        }
+
+        Err(CoursePointerError::Gpx(_)) => {
+            res.context("The <INPUT> is not a valid GPX file. Check that it is correct.")
+        }
+
+        Err(CoursePointerError::CourseCount(0)) => res.context(concat!(
+            "No course was found in the <INPUT> file. Ensure it is a valid GPX ",
+            "file containing at least one track or route."
+        )),
+
+        Err(CoursePointerError::FitEncode(FitEncodeError::Io(_))) => res.context(concat!(
+            "Writing the FIT output to the filesystem. Ensure the output path exists and ",
+            "that you have access permissions to write there."
+        )),
+
+        _ => res.map_err(anyhow::Error::from),
+    }
+}
+
 fn main() -> Result<()> {
+    // Don't wrap in anyhow::Result so we preserve Clap's pretty formatting of usage info.
     let args = Args::parse();
 
     match args.cmd {
-        Commands::ConvertGpx { input, output } => {
-            let res = coursepointer::convert_gpx(input.as_ref(), output.as_ref());
-            match &res {
-                Err(CoursePointerError::Gpx(GpxError::Io(_))) => res.context(
-                    "Reading the GPX <INPUT> file. Check that it exists and can be accessed.",
-                ),
-
-                Err(CoursePointerError::Gpx(_)) => {
-                    res.context("The <INPUT> is not a valid GPX file. Check that it is correct.")
-                }
-
-                Err(CoursePointerError::CourseCount(0usize)) => res.context(concat!(
-                    "No course was found in the <INPUT> file. Ensure it is a valid GPX ",
-                    "file containing at least one track or route."
-                )),
-
-                _ => res.map_err(anyhow::Error::from),
-            }?
-        }
+        Commands::ConvertGpx {
+            input,
+            output,
+            force,
+        } => convert_gpx_cmd(input, output, force),
     }
-
-    Ok(())
 }

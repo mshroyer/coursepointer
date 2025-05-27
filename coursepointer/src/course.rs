@@ -45,8 +45,6 @@ impl CourseSet {
     }
 }
 
-const DEFAULT_COURSE_NAME : &str = "Untitled course";
-
 pub struct Course {
     records: Vec<Record>,
     name: Option<String>,
@@ -98,7 +96,7 @@ impl Course {
     pub fn get_name(&self) -> &str {
         match &self.name {
             Some(name) => name.as_ref(),
-            None => DEFAULT_COURSE_NAME,
+            None => "Untitled course",
         }
     }
 }
