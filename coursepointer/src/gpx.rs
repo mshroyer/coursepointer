@@ -86,6 +86,12 @@ pub struct Waypoint {
     /// Waypoint name.
     pub name: String,
 
+    /// Comment, if specified.
+    pub cmt: Option<String>,
+
+    /// Symbol, if specified.
+    pub sym: Option<String>,
+
     /// Waypoint type, if specified.
     pub type_: Option<String>,
 
@@ -113,6 +119,8 @@ impl TryFrom<&NextPtFields> for Waypoint {
 
         Ok(Self {
             name,
+            cmt: value.cmt.clone(),
+            sym: value.sym.clone(),
             type_: value.type_.clone(),
             point: GeoPoint::new(lat, lon, None)?,
         })
@@ -165,6 +173,8 @@ impl GpxReader<BufReader<File>> {
 
 struct NextPtFields {
     name: Option<String>,
+    cmt: Option<String>,
+    sym: Option<String>,
     type_: Option<String>,
     lat: Option<Degrees<f64>>,
     lon: Option<Degrees<f64>>,
@@ -175,6 +185,8 @@ impl NextPtFields {
     fn new() -> Self {
         Self {
             name: None,
+            cmt: None,
+            sym: None,
             type_: None,
             lat: None,
             lon: None,
@@ -194,6 +206,8 @@ enum Tag {
     Rtept,
     Ele,
     Wpt,
+    Cmt,
+    Sym,
     Type,
     Unknown,
 }
@@ -209,6 +223,8 @@ fn get_tag(name: &[u8]) -> Tag {
         b"ele" => Tag::Ele,
         b"name" => Tag::Name,
         b"wpt" => Tag::Wpt,
+        b"cmt" => Tag::Cmt,
+        b"sym" => Tag::Sym,
         b"type" => Tag::Type,
         _ => Tag::Unknown,
     }
@@ -296,6 +312,16 @@ where
                         Err(err) => return Some(Err(err.into())),
                     },
 
+                    [Tag::Gpx, Tag::Wpt, Tag::Cmt] => match str::from_utf8(text.as_ref()) {
+                        Ok(type_) => self.next_pt_fields.cmt = Some(type_.to_owned()),
+                        Err(err) => return Some(Err(err.into())),
+                    },
+
+                    [Tag::Gpx, Tag::Wpt, Tag::Sym] => match str::from_utf8(text.as_ref()) {
+                        Ok(type_) => self.next_pt_fields.sym = Some(type_.to_owned()),
+                        Err(err) => return Some(Err(err.into())),
+                    },
+
                     [Tag::Gpx, Tag::Wpt, Tag::Type] => match str::from_utf8(text.as_ref()) {
                         Ok(type_) => self.next_pt_fields.type_ = Some(type_.to_owned()),
                         Err(err) => return Some(Err(err.into())),
@@ -342,16 +368,20 @@ mod tests {
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
 
     macro_rules! waypoint {
-        ( $name:expr, $type_:expr, $lat:expr, $lon:expr ) => {
+        ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr ) => {
             Waypoint {
                 name: $name.to_owned(),
+                cmt: $cmt.map(|s| s.to_owned()),
+                sym: $sym.map(|s| s.to_owned()),
                 type_: $type_.map(|s| s.to_owned()),
                 point: GeoPoint::new(Degrees($lat), Degrees($lon), None)?,
             }
         };
-        ( $name:expr, $type_:expr, $lat:expr, $lon:expr, $ele:expr ) => {
+        ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr, $ele:expr ) => {
             Waypoint {
                 name: $name.to_owned(),
+                cmt: $cmt.map(|s| s.to_owned()),
+                sym: $sym.map(|s| s.to_owned()),
                 type_: $type_.map(|s| s.to_owned()),
                 point: GeoPoint::new(Degrees($lat), Degrees($lon), Some(Meters($ele)))?,
             }
@@ -359,8 +389,8 @@ mod tests {
     }
 
     macro_rules! waypoints {
-        ( $( ( $name:expr, $type_:expr, $lat:expr, $lon:expr $( , $ele:expr )? $(,)? ) ),* $(,)? ) => {
-            vec![ $( waypoint!($name, $type_, $lat, $lon $( , $ele )? ) ),* ]
+        ( $( ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr $( , $ele:expr )? $(,)? ) ),* $(,)? ) => {
+            vec![ $( waypoint!($name, $cmt, $sym, $type_, $lat, $lon $( , $ele )? ) ),* ]
         };
     }
 
@@ -677,18 +707,24 @@ mod tests {
         let expected = waypoints![
             (
                 "Hetch Hetchy Trail",
+                Some("trailhead"),
+                Some("Dot"),
                 Some("info"),
                 37.40147999999951,
                 -122.12117999999951,
             ),
             (
                 "Trail Turn-off",
+                Some("trailhead"),
+                Some("Dot"),
                 Some("info"),
                 37.39866999999887,
                 -122.13531999999954,
             ),
             (
                 "Trail ends",
+                Some("generic"),
+                Some("Dot"),
                 Some("generic"),
                 37.38693915264021,
                 -122.15257150642014,
