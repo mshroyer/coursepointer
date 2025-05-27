@@ -36,7 +36,8 @@ def test_output_file_exists(tmpdir, data, coursepointer_cli):
     with raises(subprocess.CalledProcessError) as einfo:
         coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
 
-    assert "The file exists" in einfo.value.output
+    # Error message can vary slightly by platform
+    assert "file exists" in einfo.value.output.lower()
 
 
 def test_output_file_force(tmpdir, data, coursepointer_cli):
