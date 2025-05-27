@@ -63,6 +63,7 @@ def test_start_time(tmpdir, integration_stub):
     # The course's start time should be encoded correctly as the lap message's
     # start time.
     assert messages["lap_mesgs"][0]["start_time"] == start_time
+    assert messages["lap_mesgs"][0]["timestamp"] == start_time
 
     # ...and also as the timestamp of the start event message.
     first_event = messages["event_mesgs"][0]

@@ -396,6 +396,7 @@ impl LapMessage {
     fn field_definitions() -> Vec<FieldDefinition> {
         vec![
             FieldDefinition::new(2, 4, 134), // start_time
+            FieldDefinition::new(253, 4, 134), // timestamp
             FieldDefinition::new(7, 4, 134), // total_elapsed_time
             FieldDefinition::new(8, 4, 134), // total_timer_time
             FieldDefinition::new(9, 4, 134), // total_distance
@@ -408,6 +409,7 @@ impl LapMessage {
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
+        w.write_u32::<BigEndian>(self.start_time.value)?;
         w.write_u32::<BigEndian>(self.start_time.value)?;
         w.write_u32::<BigEndian>(self.duration_ms)?;
         w.write_u32::<BigEndian>(self.duration_ms)?;
