@@ -100,6 +100,21 @@ def garmin_sdk_get_lap_distance_meters(path: Path) -> float:
     return lap_mesgs[0]["total_distance"]
 
 
+def garmin_sdk_get_lap_time_seconds(path: Path) -> float:
+    """Get the total duration of the lap in the course file
+
+    Result is in seconds.
+
+    """
+    messages = garmin_sdk_read_fit_messages(path)
+    lap_mesgs = messages["lap_mesgs"]
+    assert len(lap_mesgs) == 1
+    timer_seconds = lap_mesgs[0]["total_timer_time"]
+    elapsed_seconds = lap_mesgs[0]["total_elapsed_time"]
+    assert timer_seconds == elapsed_seconds
+    return timer_seconds
+
+
 def semicircles_to_degrees(coords: Tuple[float, float]) -> Tuple[float, float]:
     lat = 180 * coords[0] / 2 ** 31
     lon = 180 * coords[1] / 2 ** 31

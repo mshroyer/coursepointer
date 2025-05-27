@@ -5,8 +5,8 @@ import subprocess
 
 from pytest import approx, raises
 
-from integration import garmin_sdk_read_fit_messages, garmin_sdk_read_fit_header, assert_all_coords_approx_equal, \
-    garmin_sdk_get_lap_distance_meters
+from integration import garmin_sdk_read_fit_messages, garmin_sdk_get_lap_distance_meters, \
+    garmin_sdk_get_lap_time_seconds
 from integration.fixtures import cargo, data, coursepointer_cli
 
 
@@ -66,7 +66,7 @@ def test_conversion_valid(tmpdir, data, coursepointer_cli):
     garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
 
-def test_conversion_course_name(tmpdir, data, coursepointer_cli):
+def test_course_name(tmpdir, data, coursepointer_cli):
     coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
     messages = garmin_sdk_read_fit_messages(tmpdir / "out.fit")
 
@@ -77,7 +77,7 @@ def test_conversion_course_name(tmpdir, data, coursepointer_cli):
     assert course_mesgs[0]["name"] == "cptr002"
 
 
-def test_conversion_total_distance(tmpdir, data, coursepointer_cli):
+def test_lap_distance(tmpdir, data, coursepointer_cli):
     coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
 
     # Make sure the converted FIT file's lap distance is about equal to that of
@@ -90,7 +90,17 @@ def test_conversion_total_distance(tmpdir, data, coursepointer_cli):
     assert conversion_lap_distance == approx(expected_lap_distance)
 
 
-def test_conversion_record_distances(tmpdir, data, coursepointer_cli):
+def test_lap_speed(tmpdir, data, coursepointer_cli):
+    coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
+
+    speed_kmph = 20.0
+    speed_mps = (5.0 / 18.0) * speed_kmph
+    lap_meters = garmin_sdk_get_lap_distance_meters(tmpdir / "out.fit")
+    lap_seconds = garmin_sdk_get_lap_time_seconds(tmpdir / "out.fit")
+    assert lap_seconds == approx(lap_meters / speed_mps, rel=0.000_100)
+
+
+def test_record_distances(tmpdir, data, coursepointer_cli):
     coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
 
     records = garmin_sdk_read_fit_messages(tmpdir / "out.fit")["record_mesgs"]
