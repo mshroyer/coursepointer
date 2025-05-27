@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{BufWriter, Write};
 use std::path::Path;
 use chrono::Utc;
 use thiserror::Error;
@@ -34,7 +34,7 @@ pub enum CoursePointerError {
 
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
 
-pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut W) -> Result<()> {
+pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut BufWriter<W>) -> Result<()> {
     let mut course_set = CourseSet::new();
     let gpx_reader = GpxReader::from_path(gpx_input)?;
     for item in gpx_reader {

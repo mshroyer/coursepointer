@@ -39,7 +39,7 @@ fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
         } else {
             File::create_new(output)
         }
-        .context("Creating <OUTPUT> file")?,
+        .context("Creating the <OUTPUT> file")?,
     );
 
     let res = coursepointer::convert_gpx(input.as_ref(), &mut fit_file);
