@@ -47,21 +47,20 @@ pub enum GpxError {
 type Result<T> = std::result::Result<T, GpxError>;
 
 /// An item parsed from a GPX document.
-///
-/// TODO: Also support rte/rtept, as in Gaia GPS exports.
 #[derive(Clone, PartialEq, Debug)]
 pub enum GpxItem {
-    /// Indicates the start of a GPX track.  Subsequent TrackName, TrackSegment,
-    /// and TrackPoint items belong to this track.
-    Track,
-    /// Optionally provides the name of a GPX track.
-    TrackName(String),
-    /// Indicates the start of a GPX track segment.  Subsequent TrackPoints
-    /// belong to this segment.
+    /// Indicates the start of a GPX track or route.  Subsequent
+    /// `TrackOrRouteName`, `TrackSegment`, and `TrackOrRoutePoint` items belong
+    /// to this track.
+    TrackOrRoute,
+    /// Optionally provides the name of a GPX track or route.
+    TrackOrRouteName(String),
+    /// Indicates the start of a GPX track segment.  Subsequent
+    /// `TrackOrRoutePoint` items belong to this segment.
     TrackSegment,
-    /// A point along a track segment, returned in order of its position along
-    /// the track.
-    TrackPoint(GeoPoint),
+    /// A point along a track segment or a route, returned in order of its
+    /// position along the track.
+    TrackOrRoutePoint(GeoPoint),
     /// A waypoint.  Global to the GPX document; not specifically associated
     /// with any track.
     Waypoint(Waypoint),
@@ -191,6 +190,8 @@ enum Tag {
     Name,
     Trkseg,
     Trkpt,
+    Rte,
+    Rtept,
     Ele,
     Wpt,
     Type,
@@ -203,6 +204,8 @@ fn get_tag(name: &[u8]) -> Tag {
         b"trk" => Tag::Trk,
         b"trkseg" => Tag::Trkseg,
         b"trkpt" => Tag::Trkpt,
+        b"rte" => Tag::Rte,
+        b"rtept" => Tag::Rtept,
         b"ele" => Tag::Ele,
         b"name" => Tag::Name,
         b"wpt" => Tag::Wpt,
@@ -231,19 +234,21 @@ where
                 Ok(Event::Eof) => return None,
 
                 Ok(Event::Start(elt)) => {
-                    let name = get_tag(elt.name().as_ref());
-                    self.tag_path.push(name);
+                    let tag = get_tag(elt.name().as_ref());
+                    self.tag_path.push(tag);
 
                     match self.tag_path.as_slice() {
-                        [Tag::Gpx, Tag::Trk] => {
-                            return Some(Ok(GpxItem::Track));
+                        [Tag::Gpx, Tag::Trk] | [Tag::Gpx, Tag::Rte] => {
+                            return Some(Ok(GpxItem::TrackOrRoute));
                         }
 
                         [Tag::Gpx, Tag::Trk, Tag::Trkseg] => {
                             return Some(Ok(GpxItem::TrackSegment));
                         }
 
-                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] | [Tag::Gpx, Tag::Wpt] => {
+                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt]
+                        | [Tag::Gpx, Tag::Rte, Tag::Rtept]
+                        | [Tag::Gpx, Tag::Wpt] => {
                             if let Err(e) = (|| {
                                 self.next_pt_fields = NextPtFields::new();
                                 for attr in elt.attributes() {
@@ -267,14 +272,15 @@ where
                 }
 
                 Ok(Event::Text(text)) => match self.tag_path.as_slice() {
-                    [Tag::Gpx, Tag::Trk, Tag::Name] => {
+                    [Tag::Gpx, Tag::Trk, Tag::Name] | [Tag::Gpx, Tag::Rte, Tag::Name] => {
                         return Some(match str::from_utf8(text.as_ref()) {
                             Err(err) => Err(GpxError::Utf8(err)),
-                            Ok(s) => Ok(GpxItem::TrackName(s.to_owned())),
+                            Ok(s) => Ok(GpxItem::TrackOrRouteName(s.to_owned())),
                         });
                     }
 
                     [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt, Tag::Ele]
+                    | [Tag::Gpx, Tag::Rte, Tag::Rtept, Tag::Ele]
                     | [Tag::Gpx, Tag::Wpt, Tag::Ele] => {
                         if let Err(e) = (|| {
                             self.next_pt_fields.ele =
@@ -303,9 +309,10 @@ where
                     self.tag_path.pop();
 
                     match tag_path.as_slice() {
-                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt] => {
+                        [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt]
+                        | [Tag::Gpx, Tag::Rte, Tag::Rtept] => {
                             return Some(match GeoPoint::try_from(&self.next_pt_fields) {
-                                Ok(p) => Ok(GpxItem::TrackPoint(p)),
+                                Ok(p) => Ok(GpxItem::TrackOrRoutePoint(p)),
                                 Err(e) => Err(e),
                             });
                         }
@@ -385,7 +392,42 @@ mod tests {
         let result = items
             .iter()
             .filter_map(|ele| match ele {
-                GpxItem::TrackPoint(p) => Some(*p),
+                GpxItem::TrackOrRoutePoint(p) => Some(*p),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(result, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn test_routepoints() -> Result<()> {
+        let xml = r#"
+<gpx>
+  <rte>
+    <name>Coyote</name>
+    <rtept lat="37.39987" lon="-122.13737" />
+    <rtept lat="37.39958" lon="-122.13684" />
+    <rtept lat="37.39923" lon="-122.13591" />
+    <rtept lat="37.39888" lon="-122.13498" />
+  </rte>
+</gpx>
+"#;
+
+        let expected = geo_points![
+            (37.39987, -122.13737),
+            (37.39958, -122.13684),
+            (37.39923, -122.13591),
+            (37.39888, -122.13498),
+        ];
+
+        let reader = GpxReader::from_literal(xml);
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let result = items
+            .iter()
+            .filter_map(|ele| match ele {
+                GpxItem::TrackOrRoutePoint(p) => Some(*p),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -430,7 +472,50 @@ mod tests {
         let result = items
             .iter()
             .filter_map(|ele| match ele {
-                GpxItem::TrackPoint(p) => Some(*p),
+                GpxItem::TrackOrRoutePoint(p) => Some(*p),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(result, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn test_routepoints_with_elevation() -> Result<()> {
+        let xml = r#"
+<gpx>
+  <rte>
+    <name>Coyote</name>
+    <rtept lat="37.39987" lon="-122.13737">
+      <ele>30.5</ele>
+    </rtept>
+    <rtept lat="37.39958" lon="-122.13684">
+      <ele>29.9</ele>
+    </rtept>
+    <rtept lat="37.39923" lon="-122.13591">
+      <ele>29.8</ele>
+    </rtept>
+    <rtept lat="37.39888" lon="-122.13498">
+      <ele>31.8</ele>
+    </rtept>
+  </rte>
+</gpx>
+"#;
+
+        let expected = geo_points![
+            (37.39987, -122.13737, 30.5),
+            (37.39958, -122.13684, 29.9),
+            (37.39923, -122.13591, 29.8),
+            (37.39888, -122.13498, 31.8),
+        ];
+
+        let reader = GpxReader::from_literal(xml);
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let result = items
+            .iter()
+            .filter_map(|ele| match ele {
+                GpxItem::TrackOrRoutePoint(p) => Some(*p),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -489,7 +574,7 @@ mod tests {
         let result = items
             .iter()
             .filter_map(|ele| match ele {
-                GpxItem::TrackName(n) => Some(n),
+                GpxItem::TrackOrRouteName(n) => Some(n),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -523,7 +608,7 @@ mod tests {
             items
                 .iter()
                 .filter(|e| match e {
-                    GpxItem::Track => true,
+                    GpxItem::TrackOrRoute => true,
                     _ => false,
                 })
                 .collect::<Vec<_>>()

@@ -152,3 +152,10 @@ def test_timer_event_spacing(tmpdir, data, coursepointer_cli):
 
     event_spacing = event_mesgs[1]["timestamp"] - event_mesgs[0]["timestamp"]
     assert event_spacing.seconds == lap_elapsed
+
+
+def test_gpx_rte_conversion(tmpdir, data, ureg, coursepointer_cli):
+    coursepointer_cli("convert-gpx", data / "cptr004.gpx", tmpdir / "out.fit")
+    mesgs = garmin_read_messages(tmpdir / "out.fit")
+    distance = mesgs["record_mesgs"][-1]["distance"] * ureg.meter
+    assert distance.to(ureg.mile).magnitude == approx(4.48, abs=0.01)

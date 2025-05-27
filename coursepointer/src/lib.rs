@@ -41,15 +41,15 @@ pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut BufWriter<W>) ->
     for item in gpx_reader {
         let item = item?;
         match item {
-            GpxItem::Track => {
+            GpxItem::TrackOrRoute => {
                 course_set.create_course();
             }
 
-            GpxItem::TrackName(name) => {
+            GpxItem::TrackOrRouteName(name) => {
                 course_set.current_mut()?.set_name(name);
             }
 
-            GpxItem::TrackPoint(p) => {
+            GpxItem::TrackOrRoutePoint(p) => {
                 course_set.current_mut()?.add_record(p)?;
             }
 
