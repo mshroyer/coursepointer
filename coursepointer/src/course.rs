@@ -116,29 +116,6 @@ impl CourseBuilder {
         Ok(())
     }
 
-    pub fn records_len(&self) -> usize {
-        self.records.len()
-    }
-
-    pub fn iter_records(&self) -> impl Iterator<Item = &Record> {
-        self.records.iter()
-    }
-
-    pub fn total_distance(&self) -> Meters<f64> {
-        self.records
-            .iter()
-            .last()
-            .map(|x| x.distance)
-            .unwrap_or(Meters(0.0))
-    }
-
-    pub fn get_name(&self) -> &str {
-        match &self.name {
-            Some(name) => name.as_ref(),
-            None => "Untitled course",
-        }
-    }
-
     pub fn build(&self) -> Course {
         Course {
             records: self.records.clone(),
