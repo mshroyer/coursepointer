@@ -1,11 +1,12 @@
+use std::fs::File;
+use std::io::{BufWriter, Write};
+use std::path::PathBuf;
+
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use coursepointer::CoursePointerError;
 use coursepointer::fit::FitEncodeError;
 use coursepointer::gpx::GpxError;
-use std::fs::File;
-use std::io::{BufWriter, Write};
-use std::path::PathBuf;
 
 #[derive(Parser)]
 struct Args {

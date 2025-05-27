@@ -1,20 +1,21 @@
-use chrono::Utc;
 use std::io::{BufWriter, Write};
 use std::path::Path;
+
+use chrono::Utc;
+use coretypes::TypeError;
+use coretypes::measure::KilometersPerHour;
 use thiserror::Error;
 
 use crate::gpx::GpxItem;
-use coretypes::TypeError;
-use coretypes::measure::KilometersPerHour;
 
 pub mod course;
 pub mod fit;
 pub mod gpx;
 
-use crate::course::{CourseError, CourseSet};
-pub use fit::CourseFile;
-pub use fit::PROFILE_VERSION;
+pub use fit::{CourseFile, PROFILE_VERSION};
 pub use gpx::GpxReader;
+
+use crate::course::{CourseError, CourseSet};
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {

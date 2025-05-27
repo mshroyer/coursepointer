@@ -1,7 +1,6 @@
-use thiserror::Error;
-
 use coretypes::GeoPoint;
 use coretypes::measure::{Degrees, Meters};
+use thiserror::Error;
 
 #[cxx::bridge(namespace = "GeographicLib")]
 mod ffi {
@@ -82,10 +81,8 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
 #[cfg(test)]
 mod tests {
     use approx::assert_relative_eq;
-
-    use coretypes::GeoPoint;
-    use coretypes::TypeError;
     use coretypes::measure::Degrees;
+    use coretypes::{GeoPoint, TypeError};
 
     use super::solve_inverse;
 

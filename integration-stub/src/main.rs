@@ -5,12 +5,11 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
-use serde::Deserialize;
-
 use coretypes::GeoPoint;
 use coretypes::measure::{Degrees, KilometersPerHour};
 use coursepointer::CourseFile;
 use coursepointer::course::Course;
+use serde::Deserialize;
 
 #[derive(Parser)]
 struct Args {

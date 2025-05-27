@@ -1,9 +1,7 @@
 pub mod measure;
 
+use measure::{Degrees, Meters};
 use thiserror::Error;
-
-use measure::Degrees;
-use measure::Meters;
 
 #[derive(Error, Debug)]
 pub enum TypeError {
