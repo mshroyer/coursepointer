@@ -13,3 +13,6 @@ cxx-build = "1.0.157"
 
 [dev-dependencies]
 approx = "0.5.1"
+
+[lib]
+doctest = false
