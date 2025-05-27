@@ -52,14 +52,14 @@ impl Default for CourseSetBuilder {
 }
 
 /// An abstract course.
-/// 
+///
 /// Contains records defining the segments of the course on the WGS84 ellipsoid,
 /// as well as each record's geodesic distance along the entire course. May
 /// optionally contain elevation data.
 pub struct Course {
     /// The records that define the course, in order of physical traversal.
     pub records: Vec<Record>,
-    
+
     /// The name of the course, if given.
     pub name: Option<String>,
 }
@@ -138,7 +138,7 @@ impl CourseBuilder {
             None => "Untitled course",
         }
     }
-    
+
     pub fn build(&self) -> Course {
         Course {
             records: self.records.clone(),

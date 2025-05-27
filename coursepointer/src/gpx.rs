@@ -14,7 +14,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::num::ParseFloatError;
 use std::path::Path;
-use std::str;
+use std::{mem, str};
 
 use coretypes::measure::{Degrees, Meters};
 use coretypes::{GeoPoint, TypeError};
@@ -66,14 +66,14 @@ pub enum GpxItem {
     Waypoint(Waypoint),
 }
 
-impl TryFrom<&NextPtFields> for GeoPoint {
+impl TryFrom<NextPtFields> for GeoPoint {
     type Error = GpxError;
 
-    fn try_from(value: &NextPtFields) -> Result<Self> {
-        let lat = value.lat.ok_or(GpxError::GpxSchema(
+    fn try_from(mut value: NextPtFields) -> Result<Self> {
+        let lat = value.lat.take().ok_or(GpxError::GpxSchema(
             "trackpoint missing lat attribute".to_owned(),
         ))?;
-        let lon = value.lon.ok_or(GpxError::GpxSchema(
+        let lon = value.lon.take().ok_or(GpxError::GpxSchema(
             "trackpoint missing lon attribute".to_owned(),
         ))?;
         Ok(GeoPoint::new(lat, lon, value.ele)?)
@@ -99,10 +99,10 @@ pub struct Waypoint {
     pub point: GeoPoint,
 }
 
-impl TryFrom<&NextPtFields> for Waypoint {
+impl TryFrom<NextPtFields> for Waypoint {
     type Error = GpxError;
 
-    fn try_from(value: &NextPtFields) -> Result<Self> {
+    fn try_from(value: NextPtFields) -> Result<Self> {
         let lat = value.lat.ok_or(GpxError::GpxSchema(
             "waypoint missing lat attribute".to_owned(),
         ))?;
@@ -114,14 +114,13 @@ impl TryFrom<&NextPtFields> for Waypoint {
         // but for our purposes this is a requirement.
         let name = value
             .name
-            .clone()
             .ok_or(GpxError::GpxSchema("waypoint missing name".to_owned()))?;
 
         Ok(Self {
             name,
-            cmt: value.cmt.clone(),
-            sym: value.sym.clone(),
-            type_: value.type_.clone(),
+            cmt: value.cmt,
+            sym: value.sym,
+            type_: value.type_,
             point: GeoPoint::new(lat, lon, None)?,
         })
     }
@@ -152,7 +151,7 @@ where
         Self {
             reader,
             tag_path: vec![],
-            next_pt_fields: NextPtFields::new(),
+            next_pt_fields: NextPtFields::default(),
         }
     }
 }
@@ -181,8 +180,8 @@ struct NextPtFields {
     ele: Option<Meters<f64>>,
 }
 
-impl NextPtFields {
-    fn new() -> Self {
+impl Default for NextPtFields {
+    fn default() -> Self {
         Self {
             name: None,
             cmt: None,
@@ -266,7 +265,7 @@ where
                         | [Tag::Gpx, Tag::Rte, Tag::Rtept]
                         | [Tag::Gpx, Tag::Wpt] => {
                             if let Err(e) = (|| {
-                                self.next_pt_fields = NextPtFields::new();
+                                self.next_pt_fields = NextPtFields::default();
                                 for attr in elt.attributes() {
                                     let a = attr?;
                                     if a.key == QName(b"lat") {
@@ -337,17 +336,21 @@ where
                     match tag_path.as_slice() {
                         [Tag::Gpx, Tag::Trk, Tag::Trkseg, Tag::Trkpt]
                         | [Tag::Gpx, Tag::Rte, Tag::Rtept] => {
-                            return Some(match GeoPoint::try_from(&self.next_pt_fields) {
-                                Ok(p) => Ok(GpxItem::TrackOrRoutePoint(p)),
-                                Err(e) => Err(e),
-                            });
+                            return Some(
+                                match GeoPoint::try_from(mem::take(&mut self.next_pt_fields)) {
+                                    Ok(p) => Ok(GpxItem::TrackOrRoutePoint(p)),
+                                    Err(e) => Err(e),
+                                },
+                            );
                         }
 
                         [Tag::Gpx, Tag::Wpt] => {
-                            return Some(match Waypoint::try_from(&self.next_pt_fields) {
-                                Ok(p) => Ok(GpxItem::Waypoint(p)),
-                                Err(e) => Err(e),
-                            });
+                            return Some(
+                                match Waypoint::try_from(mem::take(&mut self.next_pt_fields)) {
+                                    Ok(p) => Ok(GpxItem::Waypoint(p)),
+                                    Err(e) => Err(e),
+                                },
+                            );
                         }
 
                         _ => (),

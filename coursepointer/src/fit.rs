@@ -14,7 +14,7 @@ use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
 
-use crate::course::{Course, CourseBuilder};
+use crate::course::Course;
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///

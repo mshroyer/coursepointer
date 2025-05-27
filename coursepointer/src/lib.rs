@@ -62,11 +62,7 @@ pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut BufWriter<W>) ->
     }
 
     let course = course_set.current()?.build();
-    let course_file = CourseFile::new(
-        &course,
-        Utc::now(),
-        KilometersPerHour(20.0).into(),
-    );
+    let course_file = CourseFile::new(&course, Utc::now(), KilometersPerHour(20.0).into());
     course_file.encode(fit_output)?;
 
     Ok(())
