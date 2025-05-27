@@ -1,7 +1,14 @@
 from pathlib import Path
+
+import pint
 import pytest
 
 from integration.cargo import Cargo, Profile, RustBinFunc
+
+
+@pytest.fixture
+def ureg() -> pint.UnitRegistry:
+    return pint.UnitRegistry()
 
 
 @pytest.fixture

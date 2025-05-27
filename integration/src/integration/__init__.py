@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple
+from typing import Any, Iterator, List, Optional, Tuple
 
 from pytest import approx
 import garmin_fit_sdk
@@ -60,7 +60,7 @@ class CourseSpec:
             json.dump(self.to_dict(), f)
 
 
-def garmin_sdk_read_fit_header(path: Path):
+def garmin_read_file_header(path: Path):
     """Read the FIT file header using the Garmin SDK
 
     Returns a FileHeader object, whose class is only locally defined in the SDK.
@@ -72,7 +72,7 @@ def garmin_sdk_read_fit_header(path: Path):
     return decoder.read_file_header(True)
 
 
-def garmin_sdk_read_fit_messages(path: Path) -> dict:
+def garmin_read_messages(path: Path) -> dict[str, Any]:
     """Read messages from the FIT file using the Garmin SDK
 
     Raises a ValueError if the file is invalid.
@@ -88,40 +88,13 @@ def garmin_sdk_read_fit_messages(path: Path) -> dict:
     return messages
 
 
-def garmin_sdk_get_lap_distance_meters(path: Path) -> float:
-    """Get the total distance of the lap in the course file
-
-    Result is in meters.
-
-    """
-    messages = garmin_sdk_read_fit_messages(path)
-    lap_mesgs = messages["lap_mesgs"]
-    assert len(lap_mesgs) == 1
-    return lap_mesgs[0]["total_distance"]
-
-
-def garmin_sdk_get_lap_time_seconds(path: Path) -> float:
-    """Get the total duration of the lap in the course file
-
-    Result is in seconds.
-
-    """
-    messages = garmin_sdk_read_fit_messages(path)
-    lap_mesgs = messages["lap_mesgs"]
-    assert len(lap_mesgs) == 1
-    timer_seconds = lap_mesgs[0]["total_timer_time"]
-    elapsed_seconds = lap_mesgs[0]["total_elapsed_time"]
-    assert timer_seconds == elapsed_seconds
-    return timer_seconds
-
-
 def semicircles_to_degrees(coords: Tuple[float, float]) -> Tuple[float, float]:
     lat = 180 * coords[0] / 2 ** 31
     lon = 180 * coords[1] / 2 ** 31
     return lat, lon
 
 
-def garmin_sdk_record_coords(record: dict) -> Tuple[float, float]:
+def garmin_sdk_record_coords(record: dict[str, Any]) -> Tuple[float, float]:
     """Get coordinate tuple for a record message
 
     Returns a (lat, lon) tuple in decimal degrees for the given FIT record

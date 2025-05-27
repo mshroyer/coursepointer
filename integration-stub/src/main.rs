@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io::BufWriter;
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -64,7 +65,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let spec_file = File::open(&spec)?;
     let spec: CourseSpec = serde_json::from_reader(spec_file)?;
 
-    let mut fit_file = File::create(&out)?;
+    let mut fit_file = BufWriter::new(File::create(&out)?);
     let mut course = Course::new();
     course.set_name(spec.name);
     for point in &spec.records {

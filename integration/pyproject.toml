@@ -5,6 +5,7 @@ description = "Integration tests for coursepointer"
 dependencies = [
     "fitdecode>=0.10.0",
     "garmin-fit-sdk>=21.158.0",
+    "pint>=0.24.4",
 ]
 
 [dependency-groups]
