@@ -1,20 +1,20 @@
+use chrono::Utc;
 use std::io::{BufWriter, Write};
 use std::path::Path;
-use chrono::Utc;
 use thiserror::Error;
 
+use crate::gpx::GpxItem;
 use coretypes::TypeError;
 use coretypes::measure::KilometersPerHour;
-use crate::gpx::GpxItem;
 
+pub mod course;
 pub mod fit;
 pub mod gpx;
-pub mod course;
 
-pub use gpx::GpxReader;
+use crate::course::{CourseError, CourseSet};
 pub use fit::CourseFile;
 pub use fit::PROFILE_VERSION;
-use crate::course::{CourseError, CourseSet};
+pub use gpx::GpxReader;
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {
@@ -51,9 +51,9 @@ pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut BufWriter<W>) ->
             GpxItem::TrackPoint(p) => {
                 course_set.current_mut()?.add_record(p)?;
             }
-            
+
             _ => (),
-        }       
+        }
     }
 
     if course_set.courses.len() != 1usize {

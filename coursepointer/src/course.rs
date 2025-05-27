@@ -25,18 +25,18 @@ impl CourseSet {
             courses: Vec::new(),
         }
     }
-    
+
     pub fn create_course(&mut self) {
         self.courses.push(Course::new());
     }
-    
+
     pub fn current(&self) -> Result<&Course> {
         match self.courses.last() {
             Some(course) => Ok(course),
             None => Err(CourseError::MissingCourse),
         }
     }
-    
+
     pub fn current_mut(&mut self) -> Result<&mut Course> {
         match self.courses.last_mut() {
             Some(course) => Ok(course),
@@ -90,7 +90,11 @@ impl Course {
     }
 
     pub fn total_distance(&self) -> Meters<f64> {
-        self.records.iter().last().map(|x| x.distance).unwrap_or(Meters(0.0))
+        self.records
+            .iter()
+            .last()
+            .map(|x| x.distance)
+            .unwrap_or(Meters(0.0))
     }
 
     pub fn get_name(&self) -> &str {

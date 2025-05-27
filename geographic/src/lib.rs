@@ -10,7 +10,7 @@ mod ffi {
         include!("geographic/include/shim.h");
 
         /// Get the static GeographicLib WGS84 geodesic.
-        /// 
+        ///
         /// We rely on C++11's guarantee of thread safety for the static local
         /// variable's initialization.
         fn GetWGS84() -> &'static Geodesic;
@@ -54,7 +54,7 @@ pub struct InverseSolution {
 }
 
 /// Calculate a solution to the inverse geodesic problem.
-/// 
+///
 /// Finds the shortest geodesic between two points on the surface of WGS84,
 /// ignoring any elevation data.
 pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
@@ -70,7 +70,7 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
         &mut azimuth1_deg,
         &mut azimuth2_deg,
     )?;
-    
+
     Ok(InverseSolution {
         arc_distance: Degrees(arc_distance_deg),
         geo_distance: Meters(geo_distance_m),
@@ -82,10 +82,10 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
 #[cfg(test)]
 mod tests {
     use approx::assert_relative_eq;
-    
-    use coretypes::measure::Degrees;
+
     use coretypes::GeoPoint;
     use coretypes::TypeError;
+    use coretypes::measure::Degrees;
 
     use super::solve_inverse;
 

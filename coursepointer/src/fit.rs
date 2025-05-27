@@ -395,15 +395,15 @@ impl LapMessage {
 
     fn field_definitions() -> Vec<FieldDefinition> {
         vec![
-            FieldDefinition::new(2, 4, 134), // start_time
+            FieldDefinition::new(2, 4, 134),   // start_time
             FieldDefinition::new(253, 4, 134), // timestamp
-            FieldDefinition::new(7, 4, 134), // total_elapsed_time
-            FieldDefinition::new(8, 4, 134), // total_timer_time
-            FieldDefinition::new(9, 4, 134), // total_distance
-            FieldDefinition::new(3, 4, 133), // start_position_lat
-            FieldDefinition::new(4, 4, 133), // start_position_long
-            FieldDefinition::new(5, 4, 133), // end_position_lat
-            FieldDefinition::new(6, 4, 133), // end_position_long
+            FieldDefinition::new(7, 4, 134),   // total_elapsed_time
+            FieldDefinition::new(8, 4, 134),   // total_timer_time
+            FieldDefinition::new(9, 4, 134),   // total_distance
+            FieldDefinition::new(3, 4, 133),   // start_position_lat
+            FieldDefinition::new(4, 4, 133),   // start_position_long
+            FieldDefinition::new(5, 4, 133),   // end_position_lat
+            FieldDefinition::new(6, 4, 133),   // end_position_long
         ]
     }
 
@@ -524,11 +524,7 @@ pub struct CourseFile<'a> {
 }
 
 impl<'a> CourseFile<'a> {
-    pub fn new(
-        course: &'a Course,
-        start_time: DateTime<Utc>,
-        speed: MetersPerSecond<f64>,
-    ) -> Self {
+    pub fn new(course: &'a Course, start_time: DateTime<Utc>, speed: MetersPerSecond<f64>) -> Self {
         Self {
             course,
             start_time,
