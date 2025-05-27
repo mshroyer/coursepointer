@@ -569,8 +569,7 @@ impl<'a> CourseFile<'a> {
         let start_pos = self
             .course
             .records
-            .iter()
-            .next()
+            .first()
             .map(|r| r.point.try_into())
             .transpose()?;
         let end_pos = self

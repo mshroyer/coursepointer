@@ -170,6 +170,7 @@ impl GpxReader<BufReader<File>> {
     }
 }
 
+#[derive(Default)]
 struct NextPtFields {
     name: Option<String>,
     cmt: Option<String>,
@@ -178,20 +179,6 @@ struct NextPtFields {
     lat: Option<Degrees<f64>>,
     lon: Option<Degrees<f64>>,
     ele: Option<Meters<f64>>,
-}
-
-impl Default for NextPtFields {
-    fn default() -> Self {
-        Self {
-            name: None,
-            cmt: None,
-            sym: None,
-            type_: None,
-            lat: None,
-            lon: None,
-            ele: None,
-        }
-    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
