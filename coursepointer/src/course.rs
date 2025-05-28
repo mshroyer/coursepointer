@@ -23,6 +23,7 @@ pub struct CourseSetBuilder {
     courses: Vec<CourseBuilder>,
 }
 
+#[allow(clippy::new_without_default)]
 impl CourseSetBuilder {
     pub fn new() -> Self {
         Self {
@@ -52,12 +53,6 @@ impl CourseSetBuilder {
     }
 }
 
-impl Default for CourseSetBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// An abstract course.
 ///
 /// Contains records defining the segments of the course on the WGS84 ellipsoid,
@@ -76,7 +71,7 @@ impl Course {
     pub fn total_distance(&self) -> Meters<f64> {
         self.records
             .last()
-            .map(|x| x.distance)
+            .map(|x| x.cumulative_distance)
             .unwrap_or(Meters(0.0))
     }
 
@@ -91,6 +86,7 @@ pub struct CourseBuilder {
     name: Option<String>,
 }
 
+#[allow(clippy::new_without_default)]
 impl CourseBuilder {
     pub fn new() -> Self {
         Self {
@@ -110,13 +106,13 @@ impl CourseBuilder {
                 let distance_increment = solve_inverse(&last.point, &point)?.geo_distance;
                 self.records.push(Record {
                     point,
-                    distance: last.distance + distance_increment,
+                    cumulative_distance: last.cumulative_distance + distance_increment,
                 })
             }
 
             None => self.records.push(Record {
                 point,
-                distance: Meters(0.0),
+                cumulative_distance: Meters(0.0),
             }),
         }
         Ok(())
@@ -130,14 +126,12 @@ impl CourseBuilder {
     }
 }
 
-impl Default for CourseBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
+/// A course record.
 #[derive(Clone)]
 pub struct Record {
+    /// Position including optional elevation.
     pub point: GeoPoint,
-    pub distance: Meters<f64>,
+
+    /// Cumulative distance along the course.
+    pub cumulative_distance: Meters<f64>,
 }

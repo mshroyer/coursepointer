@@ -605,8 +605,8 @@ impl<'a> CourseFile<'a> {
         )
         .encode(&mut dw)?;
         for record in &self.course.records {
-            let distance: Centimeters<f64> = record.distance.into();
-            let timedelta: Seconds<f64> = record.distance / self.speed;
+            let distance: Centimeters<f64> = record.cumulative_distance.into();
+            let timedelta: Seconds<f64> = record.cumulative_distance / self.speed;
             let timestamp = self
                 .start_time
                 .add(TimeDelta::seconds(truncate_float(timedelta.0)?));
@@ -634,7 +634,7 @@ impl<'a> CourseFile<'a> {
             .records
             .iter()
             .last()
-            .map(|r| r.distance)
+            .map(|r| r.cumulative_distance)
             .unwrap_or(Meters(0.0))
     }
 
