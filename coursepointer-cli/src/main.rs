@@ -6,7 +6,6 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use coursepointer::CoursePointerError;
 use coursepointer::fit::FitEncodeError;
-use coursepointer::gpx::GpxError;
 
 #[derive(Parser)]
 struct Args {

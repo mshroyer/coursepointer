@@ -40,7 +40,7 @@ pub type Result<T> = std::result::Result<T, CoursePointerError>;
 /// this doesn't imply by contrast this function will construct its own
 /// `BufWrite` for the output. `fit_output` should probably also be given as a
 /// buffered `Write`.
-pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: &mut W) -> Result<()> {
+pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: W) -> Result<()> {
     let mut builder = CourseSetBuilder::new();
     let gpx_reader = GpxReader::from_reader(gpx_input);
     for item in gpx_reader {

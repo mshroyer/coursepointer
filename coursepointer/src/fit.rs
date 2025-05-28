@@ -532,15 +532,15 @@ impl<'a> CourseFile<'a> {
         }
     }
 
-    pub fn encode<W: Write>(&self, w: &mut W) -> Result<()> {
+    pub fn encode<W: Write>(&self, mut w: W) -> Result<()> {
         // File header
-        let mut hw = CheckSummingWrite::new(w);
+        let mut hw = CheckSummingWrite::new(&mut w);
         let h = FileHeader::new(self.get_data_size())?;
         h.encode(&mut hw)?;
         hw.finish()?;
 
         // File data
-        let mut dw = CheckSummingWrite::new(w);
+        let mut dw = CheckSummingWrite::new(&mut w);
 
         // TODO: Add software info to file_id, maybe file_creator messages
         DefinitionFrame::new(
