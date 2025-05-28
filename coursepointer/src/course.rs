@@ -15,8 +15,12 @@ pub enum CourseError {
 
 type Result<T> = std::result::Result<T, CourseError>;
 
+pub struct CourseSet {
+    pub courses: Vec<Course>,
+}
+
 pub struct CourseSetBuilder {
-    pub courses: Vec<CourseBuilder>,
+    courses: Vec<CourseBuilder>,
 }
 
 impl CourseSetBuilder {
@@ -30,17 +34,20 @@ impl CourseSetBuilder {
         self.courses.push(CourseBuilder::new());
     }
 
-    pub fn current(&self) -> Result<&CourseBuilder> {
-        match self.courses.last() {
+    pub fn current_mut(&mut self) -> Result<&mut CourseBuilder> {
+        match self.courses.last_mut() {
             Some(course) => Ok(course),
             None => Err(CourseError::MissingCourse),
         }
     }
 
-    pub fn current_mut(&mut self) -> Result<&mut CourseBuilder> {
-        match self.courses.last_mut() {
-            Some(course) => Ok(course),
-            None => Err(CourseError::MissingCourse),
+    pub fn build(self) -> CourseSet {
+        let mut courses = vec![];
+        for course_builder in self.courses {
+            courses.push(course_builder.build());
+        }
+        CourseSet {
+            courses,
         }
     }
 }
@@ -68,7 +75,6 @@ impl Course {
     /// The total distance of the course.
     pub fn total_distance(&self) -> Meters<f64> {
         self.records
-            .iter()
             .last()
             .map(|x| x.distance)
             .unwrap_or(Meters(0.0))
@@ -116,10 +122,10 @@ impl CourseBuilder {
         Ok(())
     }
 
-    pub fn build(&self) -> Course {
+    pub fn build(self) -> Course {
         Course {
-            records: self.records.clone(),
-            name: self.name.clone(),
+            records: self.records,
+            name: self.name,
         }
     }
 }
