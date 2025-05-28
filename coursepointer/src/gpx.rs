@@ -1,17 +1,19 @@
-//! GPX track/route and waypoint reader
-//!
-//! # Usage
-//!
-//! Provides an iterator that reads in sequence the trackpoints/routepoints,
-//! waypoints, and other relevant items from a GPX track file.
-//!
-//! This module treats GPX routes and tracks synonymously, except that tracks
-//! may also contain segments.
-//!
-//! To use module, instantiate a [`GpxReader`] by calling
-//! [`GpxReader::from_text`] or [`GpxReader::from_reader`]. Iterating over the
-//! [`GpxReader`] will produce a sequence of [`GpxItem`] describing the
-//! contents of the input.
+/*!
+GPX track/route and waypoint reader
+
+# Usage
+
+Provides an iterator that reads in sequence the trackpoints/routepoints,
+waypoints, and other relevant items from a GPX track file.
+
+This module treats GPX routes and tracks synonymously, except that tracks may
+also contain segments.
+
+To use module, instantiate a [`GpxReader`] by calling
+[`GpxReader::from_text`] or [`GpxReader::from_reader`]. Iterating over the
+[`GpxReader`] will produce a sequence of [`GpxItem`] describing the
+contents of the input.
+*/
 
 use std::io::BufRead;
 use std::num::ParseFloatError;
@@ -20,8 +22,8 @@ use std::{mem, str};
 use coretypes::measure::{Degrees, Meters};
 use coretypes::{GeoPoint, TypeError};
 use quick_xml;
-use quick_xml::events::attributes::AttrError;
 use quick_xml::events::Event;
+use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
@@ -352,7 +354,7 @@ where
 #[cfg(test)]
 mod tests {
     use coretypes::measure::{Degrees, Meters};
-    use coretypes::{geo_points, GeoPoint};
+    use coretypes::{GeoPoint, geo_points};
 
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
 

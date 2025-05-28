@@ -1,4 +1,6 @@
-//! Abstract course elements
+/*!
+Abstract course elements
+*/
 
 use coretypes::GeoPoint;
 use coretypes::measure::Meters;
@@ -47,9 +49,7 @@ impl CourseSetBuilder {
         for course_builder in self.courses {
             courses.push(course_builder.build());
         }
-        CourseSet {
-            courses,
-        }
+        CourseSet { courses }
     }
 }
 

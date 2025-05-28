@@ -1,9 +1,10 @@
-//! Simple zero-overhead unit of measure types
-//!
-//! A poor man's version of F#'s units of measure, in order to keep units
-//! correct by construction.  I wrote these rather than use the popular `uom`
-//! crate because the latter obscures the actual storage unit and numeric
-//! type.
+/*!
+Simple zero-overhead unit of measure types
+
+A poor man's version of F#'s units of measure, in order to keep units correct by
+construction.  I wrote these rather than use the popular `uom` crate because the
+latter obscures the actual storage unit and numeric type.
+*/
 
 use std::ops::{Add, AddAssign, Div};
 
