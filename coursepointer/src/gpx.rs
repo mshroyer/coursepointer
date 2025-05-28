@@ -1,26 +1,27 @@
-//! GPX track and waypoint reader
+//! GPX track/route and waypoint reader
 //!
 //! # Usage
 //!
-//! Provides an iterator that reads in sequence the trackpoints, waypoints,
-//! and other relevant items from a GPX track file.
+//! Provides an iterator that reads in sequence the trackpoints/routepoints,
+//! waypoints, and other relevant items from a GPX track file.
 //!
-//! To use this module, instantiate a [`GpxReader`] by invoking
-//! [`GpxReader::from_str`] or [`GpxReader::from_path`]. Iterating over the
-//! [`GpxReader`] will produce a sequence of [`GpxItem`] describing the contents
-//! of the input.
+//! This module treats GPX routes and tracks synonymously, except that tracks
+//! may also contain segments.
 //!
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+//! To use module, instantiate a [`GpxReader`] by calling
+//! [`GpxReader::from_text`] or [`GpxReader::from_reader`]. Iterating over the
+//! [`GpxReader`] will produce a sequence of [`GpxItem`] describing the
+//! contents of the input.
+
+use std::io::BufRead;
 use std::num::ParseFloatError;
-use std::path::Path;
 use std::{mem, str};
 
 use coretypes::measure::{Degrees, Meters};
 use coretypes::{GeoPoint, TypeError};
 use quick_xml;
-use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
+use quick_xml::events::Event;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
@@ -51,18 +52,19 @@ type Result<T> = std::result::Result<T, GpxError>;
 pub enum GpxItem {
     /// Indicates the start of a GPX track or route.  Subsequent
     /// `TrackOrRouteName`, `TrackSegment`, and `TrackOrRoutePoint` items belong
-    /// to this track.
+    /// to this track or route.
     TrackOrRoute,
     /// Optionally provides the name of a GPX track or route.
     TrackOrRouteName(String),
     /// Indicates the start of a GPX track segment.  Subsequent
-    /// `TrackOrRoutePoint` items belong to this segment.
+    /// `TrackOrRoutePoint` items belong to this segment, until the next
+    /// `TrackOrRoute` or `TrackSegment` is encountered.
     TrackSegment,
     /// A point along a track segment or a route, returned in order of its
-    /// position along the track.
+    /// position along the track or route.
     TrackOrRoutePoint(GeoPoint),
     /// A waypoint.  Global to the GPX document; not specifically associated
-    /// with any track.
+    /// with any track or route.
     Waypoint(Waypoint),
 }
 
@@ -157,7 +159,7 @@ where
 }
 
 impl GpxReader<&[u8]> {
-    pub fn from_literal(s: &str) -> GpxReader<&[u8]> {
+    pub fn from_text(s: &str) -> GpxReader<&[u8]> {
         GpxReader::new(Reader::from_reader(s.as_bytes()))
     }
 }
@@ -165,14 +167,6 @@ impl GpxReader<&[u8]> {
 impl<R: BufRead> GpxReader<R> {
     pub fn from_reader(reader: R) -> GpxReader<R> {
         GpxReader::new(Reader::from_reader(reader))
-    }
-}
-
-impl GpxReader<BufReader<File>> {
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<GpxReader<BufReader<File>>> {
-        let file = File::open(path)?;
-        let buf_reader = BufReader::new(file);
-        Ok(GpxReader::new(Reader::from_reader(buf_reader)))
     }
 }
 
@@ -358,7 +352,7 @@ where
 #[cfg(test)]
 mod tests {
     use coretypes::measure::{Degrees, Meters};
-    use coretypes::{GeoPoint, geo_points};
+    use coretypes::{geo_points, GeoPoint};
 
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
 
@@ -412,7 +406,7 @@ mod tests {
             (37.39888, -122.13498),
         ];
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
         let result = items
             .iter()
@@ -447,7 +441,7 @@ mod tests {
             (37.39888, -122.13498),
         ];
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
         let result = items
             .iter()
@@ -492,7 +486,7 @@ mod tests {
             (37.39888, -122.13498, 31.8),
         ];
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
         let result = items
             .iter()
@@ -535,7 +529,7 @@ mod tests {
             (37.39888, -122.13498, 31.8),
         ];
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
         let result = items
             .iter()
@@ -567,7 +561,7 @@ mod tests {
 </gpx>
 "#;
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let result = reader.collect::<Result<Vec<_>>>();
         assert!(
             matches!(result, Err(GpxError::GpxSchema(mesg)) if mesg == "trackpoint missing lon attribute".to_owned())
@@ -594,7 +588,7 @@ mod tests {
 </gpx>
 "#;
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
         let result = items
             .iter()
@@ -626,7 +620,7 @@ mod tests {
 </gpx>
 "#;
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
 
         assert_eq!(
@@ -726,7 +720,7 @@ mod tests {
             ),
         ];
 
-        let reader = GpxReader::from_literal(xml);
+        let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
         let result = items
             .iter()
