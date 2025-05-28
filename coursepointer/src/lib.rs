@@ -1,5 +1,4 @@
-use std::io::{BufWriter, Write};
-use std::path::Path;
+use std::io::{BufRead, Write};
 
 use chrono::Utc;
 use coretypes::TypeError;
@@ -35,9 +34,15 @@ pub enum CoursePointerError {
 
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
 
-pub fn convert_gpx<W: Write>(gpx_input: &Path, fit_output: &mut BufWriter<W>) -> Result<()> {
+/// Convert GPX into a FIT course file.
+///
+/// The `BufRead` bound on `gpx_input` is required internally by quick_xml, but
+/// this doesn't imply by contrast this function will construct its own
+/// `BufWrite` for the output. `fit_output` should probably also be given as a
+/// buffered `Write`.
+pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: &mut W) -> Result<()> {
     let mut builder = CourseSetBuilder::new();
-    let gpx_reader = GpxReader::from_path(gpx_input)?;
+    let gpx_reader = GpxReader::from_reader(gpx_input);
     for item in gpx_reader {
         let item = item?;
         match item {

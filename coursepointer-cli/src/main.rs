@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::{BufReader, BufWriter, Write};
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -34,6 +34,11 @@ enum Commands {
 }
 
 fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
+    let gpx_file = BufReader::new(
+        File::open(&input)
+            .context("Opening the GPX <INPUT> file. Check that it exists and can be accessed.")?,
+    );
+
     let mut fit_file = BufWriter::new(
         if force {
             File::create(output)
@@ -43,15 +48,11 @@ fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
         .context("Creating the <OUTPUT> file")?,
     );
 
-    let res = coursepointer::convert_gpx(input.as_ref(), &mut fit_file);
+    let res = coursepointer::convert_gpx(gpx_file, &mut fit_file);
     match &res {
         Ok(_) => {
             fit_file.flush()?;
             Ok(())
-        }
-
-        Err(CoursePointerError::Gpx(GpxError::Io(_))) => {
-            res.context("Reading the GPX <INPUT> file. Check that it exists and can be accessed.")
         }
 
         Err(CoursePointerError::Gpx(_)) => {

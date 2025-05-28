@@ -23,8 +23,7 @@ def test_missing_input(tmpdir, coursepointer_cli):
     with raises(subprocess.CalledProcessError) as einfo:
         coursepointer_cli("convert-gpx", tmpdir / "nonexistent.gpx", tmpdir / "out.fit")
 
-    assert "Reading the GPX <INPUT> file" in einfo.value.output
-    assert "I/O error" in einfo.value.output
+    assert "Opening the GPX <INPUT> file" in einfo.value.output
 
 
 def test_output_file_exists(tmpdir, data, coursepointer_cli):

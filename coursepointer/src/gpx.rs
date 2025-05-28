@@ -162,6 +162,12 @@ impl GpxReader<&[u8]> {
     }
 }
 
+impl<R: BufRead> GpxReader<R> {
+    pub fn from_reader(reader: R) -> GpxReader<R> {
+        GpxReader::new(Reader::from_reader(reader))
+    }
+}
+
 impl GpxReader<BufReader<File>> {
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<GpxReader<BufReader<File>>> {
         let file = File::open(path)?;
