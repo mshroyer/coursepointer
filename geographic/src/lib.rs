@@ -2,23 +2,13 @@ use coretypes::GeoPoint;
 use coretypes::measure::{Degrees, Meters};
 use thiserror::Error;
 
-#[cxx::bridge(namespace = "GeographicLib")]
+#[cxx::bridge(namespace = "CoursePointer")]
 mod ffi {
     unsafe extern "C++" {
-        include!("geographic/geographiclib/include/GeographicLib/Geodesic.hpp");
         include!("geographic/include/shim.h");
 
-        /// Get the static GeographicLib WGS84 geodesic.
-        ///
-        /// We rely on C++11's guarantee of thread safety for the static local
-        /// variable's initialization.
-        fn GetWGS84() -> &'static Geodesic;
-
-        type Geodesic;
-
         #[allow(clippy::too_many_arguments)]
-        fn Inverse(
-            &self,
+        fn wgs84_inverse_length_azimuth(
             lat1: f64,
             lon1: f64,
             lat2: f64,
@@ -61,7 +51,7 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
     let mut geo_distance_m = 0.0;
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
-    let arc_distance_deg = ffi::GetWGS84().Inverse(
+    let arc_distance_deg = ffi::wgs84_inverse_length_azimuth(
         point1.lat().0,
         point1.lon().0,
         point2.lat().0,

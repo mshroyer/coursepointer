@@ -18,7 +18,8 @@ use crate::course::Course;
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///
-/// Represented in base 10 as two digits for the major version, followed by three for the minor.
+/// Represented in base 10 as two digits for the major version, followed by
+/// three for the minor.
 pub const PROFILE_VERSION: u16 = 21158;
 
 #[derive(Error, Debug)]
@@ -57,15 +58,16 @@ fn write_string_field<W: Write>(s: &str, field_size: usize, w: &mut W) -> Result
 static GARMIN_EPOCH: LazyLock<DateTime<Utc>> =
     LazyLock::new(|| "1989-12-31T00:00:00Z".parse::<DateTime<Utc>>().unwrap());
 
-// The minimum value of a date_time as per the FIT global profile.  Values lower than this are to
-// be interpreted as relative offsets rather than absolute times since the Garmin epoch.
+// The minimum value of a date_time as per the FIT global profile.  Values lower
+// than this are to be interpreted as relative offsets rather than absolute
+// times since the Garmin epoch.
 const GARMIN_DATE_TIME_MIN: u32 = 0x10000000;
 
 /// A date_time value as represented in a FIT file.
 #[derive(Debug, Clone, Copy)]
 struct FitDateTime {
-    /// A timestamp as measured from the Garmin epoch of 1981-12-31T00:00:00Z, or a relative time
-    /// in seconds if below 0x10000000.
+    /// A timestamp as measured from the Garmin epoch of 1981-12-31T00:00:00Z,
+    /// or a relative time in seconds if below 0x10000000.
     value: u32,
 }
 
@@ -106,8 +108,8 @@ struct FitSurfacePoint {
 
 /// Lossily converts a float to an integer type
 ///
-/// Accepts lossy conversion, but still returns an error if the value to be converted lies outside
-/// the expressible range of the target integer type.
+/// Accepts lossy conversion, but still returns an error if the value to be
+/// converted lies outside the expressible range of the target integer type.
 fn truncate_float<F, I>(f: F) -> Result<I>
 where
     F: Float + NumCast,
@@ -183,7 +185,8 @@ impl Crc {
     }
 }
 
-/// A Write implementation that wraps another Write and computes a checksum over data written.
+/// A Write implementation that wraps another Write and computes a checksum over
+/// data written.
 struct CheckSummingWrite<'a, W: Write> {
     crc: Crc,
     base: &'a mut W,
@@ -639,7 +642,8 @@ impl<'a> CourseFile<'a> {
             .unwrap_or(Meters(0.0))
     }
 
-    /// Returns the timestamp corresponding to the course's speed and total distance.
+    /// Returns the timestamp corresponding to the course's speed and total
+    /// distance.
     fn total_duration(&self) -> Result<TimeDelta> {
         self.total_duration_at_distance(self.total_distance())
     }
@@ -649,8 +653,8 @@ impl<'a> CourseFile<'a> {
         Ok(TimeDelta::seconds(total_duration_seconds))
     }
 
-    /// Computes the total size of the data segment of this file, including definition messages
-    /// and data messages.
+    /// Computes the total size of the data segment of this file, including
+    /// definition messages and data messages.
     fn get_data_size(&self) -> usize {
         let mut sz = 0usize;
 
@@ -674,13 +678,14 @@ impl<'a> CourseFile<'a> {
         sz
     }
 
-    /// Computes the size of a definition message based on the number of field definitions, assuming
-    /// no developer data fields.
+    /// Computes the size of a definition message based on the number of field
+    /// definitions, assuming no developer data fields.
     fn get_definition_message_size(num_defs: usize) -> usize {
         6usize + 3 * num_defs
     }
 
-    /// Computes the size of a single instance of a data message, given its field definitions.
+    /// Computes the size of a single instance of a data message, given its
+    /// field definitions.
     fn get_data_message_size<I>(defs: I) -> usize
     where
         I: IntoIterator<Item = FieldDefinition>,
@@ -700,7 +705,8 @@ mod tests {
         crc.add_bytes(&[
             0x0e, 0x10, 0xb2, 0x52, 0x88, 0x42, 0x00, 0x00, 0x2e, 0x46, 0x49, 0x54,
         ]);
-        // The CRC value from the last two bytes of the header, interpreted as little endian.
+        // The CRC value from the last two bytes of the header, interpreted as little
+        // endian.
         assert_eq!(crc.sum, 0xf94b);
     }
 

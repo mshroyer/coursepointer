@@ -25,12 +25,13 @@ fn list_cpp_files<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, String> {
 }
 
 fn main() {
-    // Thankfully GeographicLib has a pretty simple build, so we can just compile all the source
-    // files here rather than go through CMake.
+    // Thankfully GeographicLib has a pretty simple build, so we can just compile
+    // all the source files here rather than go through CMake.
     //
-    // We could in principle identify the smallest set of .cpp files needed to build the functions
-    // we need, which would slightly speed up the build, but that's a pain and the linker will
-    // strip out what we don't need anyway.  It would be faster to build though.
+    // We could in principle identify the smallest set of .cpp files needed to build
+    // the functions we need, which would slightly speed up the build, but
+    // that's a pain and the linker will strip out what we don't need anyway.
+    // It would be faster to build though.
     //
     // TODO: Compile minimal set of GeographicLib C++ sources
     cxx_build::bridge("src/lib.rs")

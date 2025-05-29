@@ -1,19 +1,14 @@
 #ifndef COURSEPOINTER_GEO_SHIM_H
 #define COURSEPOINTER_GEO_SHIM_H
 
-namespace GeographicLib {
+#include <GeographicLib/Geodesic.hpp>
 
-class Geodesic;
+namespace CoursePointer {
 
-/**
- * Get the global instance of the WGS84 ellipsoid.
- *
- * This is a shim to invoke GeographicLib::Geodesic::WGS84(), since at the time
- * of writing the cxx binding generator seemingly can't invoke static member
- * functions.
- */
-const Geodesic& GetWGS84();
+double wgs84_inverse_length_azimuth(
+    double lat1, double lon1, double lat2, double lon2,
+    double& s12, double& azi1, double& azi2);
 
-}  // namespace GeographicLib
+}  // namespace CoursePointer
 
 #endif  // !defined COURSEPOINTER_GEO_SHIM_H
