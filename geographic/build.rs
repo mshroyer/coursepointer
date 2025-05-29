@@ -40,4 +40,10 @@ fn main() {
         .flag("-I../geographic/include")
         .flag("-I../geographic/geographiclib/include")
         .compile("geocxx");
+
+    for file in list_cpp_files("geographiclib/src").unwrap() {
+        println!("cargo:rerun-if-changed={}", file.display());
+        println!("cargo:rerun-if-changed=src/shim.cc");
+        println!("cargo:rerun-if-changed=include/shim.h");
+    }
 }
