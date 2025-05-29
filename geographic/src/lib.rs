@@ -45,6 +45,15 @@ mod ffi {
             x: &mut f64,
             y: &mut f64,
         ) -> Result<()>;
+
+        fn gnomonic_reverse(
+            lat1: f64,
+            lon1: f64,
+            x: f64,
+            y: f64,
+            lat: &mut f64,
+            lon: &mut f64,
+        ) -> Result<()>;
     }
 }
 
@@ -123,7 +132,7 @@ pub fn geodesic_direct(
     })
 }
 
-/// Calculate the forward gnomonic project of a point.
+/// Calculate the forward gnomonic projection of a point.
 ///
 /// Given a projection centerpoint `point0` and a point `point`, finds the
 /// cartesian position of `point` in the gnomonic projection centered on
@@ -141,6 +150,25 @@ pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XYPoint> 
     Ok(result)
 }
 
+/// Calculate the reverse gnomonic projection of a point.
+///
+/// Given a projection centerpoint `point0` and a projected (cartesian) point
+/// `xypoint`, finds the latitude and longitude corresponding to `xypoint` given
+/// the gnomonic projection centered on `point0`.
+pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint> {
+    let mut lat_deg = 0.0;
+    let mut lon_deg = 0.0;
+    ffi::gnomonic_reverse(
+        point0.lat().0,
+        point0.lon().0,
+        xypoint.x.0,
+        xypoint.y.0,
+        &mut lat_deg,
+        &mut lon_deg,
+    )?;
+    Ok(GeoPoint::new(Degrees(lat_deg), Degrees(lon_deg), None)?)
+}
+
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
@@ -148,7 +176,7 @@ mod tests {
     use coretypes::GeoPoint;
     use coretypes::measure::Degrees;
 
-    use super::{geodesic_direct, geodesic_inverse, gnomonic_forward};
+    use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
 
     #[test]
     fn test_geodesic_inverse() -> Result<()> {
@@ -180,10 +208,22 @@ mod tests {
         let point = GeoPoint::new(Degrees(17.0), Degrees(-35.0), None)?;
 
         let result = gnomonic_forward(&point0, &point)?;
-        // point longitude is east of point0's
+        // point's longitude is east of point0's
         assert!(result.x.0 > 0.0);
-        // point latitude is south of point0's
+        // point's latitude is south of point0's
         assert!(result.y.0 < 0.0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_gnomonic_reverse() -> Result<()> {
+        let point0 = GeoPoint::new(Degrees(20.0), Degrees(-40.0), None)?;
+        let point = GeoPoint::new(Degrees(17.0), Degrees(-35.0), None)?;
+
+        let xypoint = gnomonic_forward(&point0, &point)?;
+        let result = gnomonic_reverse(&point0, &xypoint)?;
+        assert_relative_eq!(result.lat().0, point.lat().0, epsilon = f64::EPSILON);
+        assert_relative_eq!(result.lon().0, point.lon().0, epsilon = f64::EPSILON);
         Ok(())
     }
 }

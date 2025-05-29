@@ -19,8 +19,12 @@ double geodesic_direct(
     double& lat2, double& lon2);
 
 void gnomonic_forward(
-    double lat0, double lon0, double lat,
-    double lon, double& x, double& y);
+    double lat0, double lon0, double lat, double lon,
+    double& x, double& y);
+
+void gnomonic_reverse(
+    double lat0, double lon0, double x, double y,
+    double& lat, double& lon);
 
 }  // namespace CoursePointer
 

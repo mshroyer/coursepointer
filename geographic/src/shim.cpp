@@ -24,10 +24,17 @@ double geodesic_direct(
 }
 
 void gnomonic_forward(
-    double lat0, double lon0, double lat,
-    double lon, double& x, double& y) {
+    double lat0, double lon0, double lat, double lon,
+    double& x, double& y) {
   static auto gnomonic = Gnomonic(Geodesic::WGS84());
   gnomonic.Forward(lat0, lon0, lat, lon, x, y);
+}
+
+void gnomonic_reverse(
+    double lat0, double lon0, double x, double y,
+    double& lat, double& lon) {
+  static auto gnomonic = Gnomonic(Geodesic::WGS84());
+  gnomonic.Reverse(lat0, lon0, x, y, lat, lon);
 }
 
 }  // namespace CoursePointer
