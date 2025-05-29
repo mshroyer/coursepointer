@@ -625,6 +625,7 @@ impl<'a> CourseFile<'a> {
         )
         .encode(3u8, &mut dw)?;
         dw.finish()?;
+        w.flush()?;
 
         Ok(())
     }

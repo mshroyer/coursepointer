@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Write};
+use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -38,7 +38,7 @@ fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
             .context("Opening the GPX <INPUT> file. Check that it exists and can be accessed.")?,
     );
 
-    let mut fit_file = BufWriter::new(
+    let fit_file = BufWriter::new(
         if force {
             File::create(output)
         } else {
@@ -47,13 +47,8 @@ fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
         .context("Creating the <OUTPUT> file")?,
     );
 
-    let res = coursepointer::convert_gpx(gpx_file, &mut fit_file);
+    let res = coursepointer::convert_gpx(gpx_file, fit_file);
     match &res {
-        Ok(_) => {
-            fit_file.flush()?;
-            Ok(())
-        }
-
         Err(CoursePointerError::Gpx(_)) => {
             res.context("The <INPUT> is not a valid GPX file. Check that it is correct.")
         }
@@ -73,7 +68,8 @@ fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    // Don't wrap in anyhow::Result so we preserve Clap's pretty formatting of usage info.
+    // Don't wrap in anyhow::Result so we preserve Clap's pretty formatting of usage
+    // info.
     let args = Args::parse();
 
     match args.cmd {
