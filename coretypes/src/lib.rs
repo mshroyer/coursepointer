@@ -61,6 +61,19 @@ impl GeoPoint {
     }
 }
 
+/// A point on a 2D projection.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct XYPoint {
+    pub x: Meters<f64>,
+    pub y: Meters<f64>,
+}
+
+impl Default for XYPoint {
+    fn default() -> Self {
+        Self { x: Meters(0.0), y: Meters(0.0) }
+    }
+}
+
 /// Instantiate a `GeoPoint` with a tuple-like syntax, optionally including an
 /// elevation in meters.
 #[macro_export]

@@ -1,4 +1,5 @@
 use coretypes::GeoPoint;
+use coretypes::XYPoint;
 use coretypes::measure::{Degrees, Meters};
 use thiserror::Error;
 
@@ -17,6 +18,16 @@ mod ffi {
             azi1: &mut f64,
             azi2: &mut f64,
         ) -> Result<f64>;
+
+        #[allow(clippy::too_many_arguments)]
+        fn wgs84_gnomonic_forward(
+            lat1: f64,
+            lon1: f64,
+            lat: f64,
+            lon: f64,
+            x: &mut f64,
+            y: &mut f64,
+        ) -> Result<()>;
     }
 }
 
@@ -67,6 +78,22 @@ pub fn solve_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolu
         azimuth1: Degrees(azimuth1_deg),
         azimuth2: Degrees(azimuth2_deg),
     })
+}
+
+pub fn gnomonic_forward(
+    point0: &GeoPoint,
+    point: &GeoPoint,
+) -> Result<XYPoint> {
+    let mut result = XYPoint::default();
+    ffi::wgs84_gnomonic_forward(
+        point0.lat().0,
+        point0.lon().0,
+        point.lat().0,
+        point.lon().0,
+        &mut result.x.0,
+        &mut result.y.0,
+    )?;
+    Ok(result)
 }
 
 #[cfg(test)]
