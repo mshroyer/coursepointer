@@ -2,7 +2,7 @@
 
 use coretypes::GeoPoint;
 use coretypes::measure::Meters;
-use geographic::{GeographicError, solve_inverse};
+use geographic::{GeographicError, geodesic_inverse};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -101,7 +101,7 @@ impl CourseBuilder {
         match self.records.iter().last() {
             Some(last) => {
                 // TODO: Investigate using elevation-corrected distances
-                let distance_increment = solve_inverse(&last.point, &point)?.geo_distance;
+                let distance_increment = geodesic_inverse(&last.point, &point)?.geo_distance;
                 self.records.push(Record {
                     point,
                     cumulative_distance: last.cumulative_distance + distance_increment,
