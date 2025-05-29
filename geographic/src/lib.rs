@@ -1,11 +1,13 @@
 use coretypes::measure::{Degrees, Meters};
-use coretypes::{GeoPoint, XYPoint};
+use coretypes::{GeoPoint, TypeError, XYPoint};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum GeographicError {
     #[error("C++ exception from GeographicLib: {0}")]
     Exception(#[from] cxx::Exception),
+    #[error("Core type error")]
+    Type(#[from] TypeError),
 }
 
 type Result<T> = std::result::Result<T, GeographicError>;
@@ -14,7 +16,7 @@ type Result<T> = std::result::Result<T, GeographicError>;
 #[cxx::bridge(namespace = "CoursePointer")]
 mod ffi {
     unsafe extern "C++" {
-        include!("geographic/include/shim.h");
+        include!("geographic/include/shim.hpp");
 
         fn geodesic_inverse_with_azimuth(
             lat1: f64,
@@ -24,6 +26,15 @@ mod ffi {
             s12: &mut f64,
             azi1: &mut f64,
             azi2: &mut f64,
+        ) -> Result<f64>;
+
+        fn geodesic_direct(
+            lat1: f64,
+            lon1: f64,
+            az1: f64,
+            s12: f64,
+            lat2: &mut f64,
+            lon2: &mut f64,
         ) -> Result<f64>;
 
         fn gnomonic_forward(
@@ -78,6 +89,40 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     })
 }
 
+/// A solution to the direct problem in geodesy.
+pub struct DirectSolution {
+    /// Arc distance between the points.
+    pub arc_distance: Degrees<f64>,
+
+    /// Destination point.
+    pub point2: GeoPoint,
+}
+
+/// Calculate a solution to the direct geodesic problem.
+///
+/// Given a start point, azimuth, and a geodesic distance, computes the point
+/// where we end up and its arc distance from the start point.
+pub fn geodesic_direct(
+    point1: &GeoPoint,
+    azimuth: Degrees<f64>,
+    distance: Meters<f64>,
+) -> Result<DirectSolution> {
+    let mut lat2_deg = 0.0;
+    let mut lon2_deg = 0.0;
+    let arc_distance_deg = ffi::geodesic_direct(
+        point1.lat().0,
+        point1.lon().0,
+        azimuth.0,
+        distance.0,
+        &mut lat2_deg,
+        &mut lon2_deg,
+    )?;
+    Ok(DirectSolution {
+        arc_distance: Degrees(arc_distance_deg),
+        point2: GeoPoint::new(Degrees(lat2_deg), Degrees(lon2_deg), None)?,
+    })
+}
+
 /// Calculate the forward gnomonic project of a point.
 ///
 /// Given a projection centerpoint `point0` and a point `point`, finds the
@@ -103,7 +148,7 @@ mod tests {
     use coretypes::GeoPoint;
     use coretypes::measure::Degrees;
 
-    use super::{geodesic_inverse, gnomonic_forward};
+    use super::{geodesic_direct, geodesic_inverse, gnomonic_forward};
 
     #[test]
     fn test_geodesic_inverse() -> Result<()> {
@@ -112,6 +157,20 @@ mod tests {
 
         let result = geodesic_inverse(&point1, &point2).unwrap();
         assert_relative_eq!(result.geo_distance.0, 784029.0, epsilon = 1.0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_geodesic_direct() -> Result<()> {
+        let point1 = GeoPoint::new(Degrees(10.0), Degrees(-20.0), None)?;
+        let point2 = GeoPoint::new(Degrees(30.0), Degrees(40.0), None)?;
+
+        let inverse = geodesic_inverse(&point1, &point2)?;
+        let result = geodesic_direct(&point1, inverse.azimuth1, inverse.geo_distance)?;
+        // The direct result should reproduce the target point used to obtain
+        // the inverse solution.
+        assert_relative_eq!(result.point2.lat().0, point2.lat().0, epsilon = 0.000000001);
+        assert_relative_eq!(result.point2.lon().0, point2.lon().0, epsilon = 0.000000001);
         Ok(())
     }
 

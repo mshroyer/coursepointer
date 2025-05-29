@@ -16,6 +16,13 @@ double geodesic_inverse_with_azimuth(
   return geodesic.Inverse(lat1, lon1, lat2, lon2, s12, azi1, azi2);
 }
 
+double geodesic_direct(
+    double lat1, double lon1, double az1, double s12,
+    double& lat2, double& lon2) {
+  static auto geodesic = Geodesic::WGS84();
+  return geodesic.Direct(lat1, lon1, az1, s12, lat2, lon2);
+}
+
 void gnomonic_forward(
     double lat0, double lon0, double lat,
     double lon, double& x, double& y) {

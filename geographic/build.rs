@@ -35,7 +35,7 @@ fn main() {
     //
     // TODO: Compile minimal set of GeographicLib C++ sources
     cxx_build::bridge("src/lib.rs")
-        .file("src/shim.cc")
+        .file("src/shim.cpp")
         .files(list_cpp_files("geographiclib/src").unwrap())
         .flag("-I../geographic/include")
         .flag("-I../geographic/geographiclib/include")
@@ -43,7 +43,7 @@ fn main() {
 
     for file in list_cpp_files("geographiclib/src").unwrap() {
         println!("cargo:rerun-if-changed={}", file.display());
-        println!("cargo:rerun-if-changed=src/shim.cc");
-        println!("cargo:rerun-if-changed=include/shim.h");
+        println!("cargo:rerun-if-changed=src/shim.cpp");
+        println!("cargo:rerun-if-changed=include/shim.hpp");
     }
 }
