@@ -1,19 +1,17 @@
-/*!
-GPX track/route and waypoint reader
-
-# Usage
-
-Provides an iterator that reads in sequence the trackpoints/routepoints,
-waypoints, and other relevant items from a GPX track file.
-
-This module treats GPX routes and tracks synonymously, except that tracks may
-also contain segments.
-
-To use module, instantiate a [`GpxReader`] by calling
-[`GpxReader::from_text`] or [`GpxReader::from_reader`]. Iterating over the
-[`GpxReader`] will produce a sequence of [`GpxItem`] describing the
-contents of the input.
-*/
+//! GPX track/route and waypoint reader
+//!
+//! # Usage
+//!
+//! Provides an iterator that reads in sequence the trackpoints/routepoints,
+//! waypoints, and other relevant items from a GPX track file.
+//!
+//! This module treats GPX routes and tracks synonymously, except that tracks
+//! may also contain segments.
+//!
+//! To use this module, instantiate a [`GpxReader`] by calling
+//! [`GpxReader::from_text`] or [`GpxReader::from_reader`]. Iterating over the
+//! [`GpxReader`] will produce a sequence of [`GpxItem`] describing the
+//! contents of the input.
 
 use std::io::BufRead;
 use std::num::ParseFloatError;

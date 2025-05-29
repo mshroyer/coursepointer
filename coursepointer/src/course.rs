@@ -1,6 +1,4 @@
-/*!
-Abstract course elements
-*/
+//! Abstract course elements
 
 use coretypes::GeoPoint;
 use coretypes::measure::Meters;
