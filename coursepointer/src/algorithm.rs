@@ -39,14 +39,17 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 /// 2. Uses a gnomonic projection centered on the guess to put the geodesic
 ///    segment and the other point on a 2D plane.
 /// 3. Uses 2D geometry to get a better guess at the interception point.
-/// 4. Repeats a few times, each time re-centering the gnomonic projection on
-///    the updated guess.
+/// 4. Repeats a few times, each time re-centering the projection on the updated
+///    guess.
 ///
 /// Karney described this approach in a post here:
 /// https://sourceforge.net/p/geographiclib/discussion/1026621/thread/21aaff9f/#8a93
 ///
 /// (However, here I use different linear algebra to find the interception than
 /// in his example code.)
+///
+/// Note that because of this function's reliance on the gnomonic projection, it
+/// can give incorrect results for points very far away from each other.
 ///
 /// For a more detailed description, see: http://arxiv.org/abs/1102.1215
 pub fn karney_interception(geodesic: &GeoSegment, point: &GeoPoint) -> Result<GeoPoint> {
