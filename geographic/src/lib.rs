@@ -183,8 +183,8 @@ mod tests {
         let point1 = GeoPoint::new(Degrees(0.0), Degrees(0.0), None)?;
         let point2 = GeoPoint::new(Degrees(5.0), Degrees(5.0), None)?;
 
-        let result = geodesic_inverse(&point1, &point2).unwrap();
-        assert_relative_eq!(result.geo_distance.0, 784029.0, epsilon = 1.0);
+        let result = geodesic_inverse(&point1, &point2)?;
+        assert_relative_eq!(result.geo_distance.0, 784029.0, max_relative = 0.000_001);
         Ok(())
     }
 
@@ -197,8 +197,7 @@ mod tests {
         let result = geodesic_direct(&point1, inverse.azimuth1, inverse.geo_distance)?;
         // The direct result should reproduce the target point used to obtain
         // the inverse solution.
-        assert_relative_eq!(result.point2.lat().0, point2.lat().0, epsilon = 0.000000001);
-        assert_relative_eq!(result.point2.lon().0, point2.lon().0, epsilon = 0.000000001);
+        assert_relative_eq!(result.point2, point2);
         Ok(())
     }
 
@@ -222,8 +221,7 @@ mod tests {
 
         let xypoint = gnomonic_forward(&point0, &point)?;
         let result = gnomonic_reverse(&point0, &xypoint)?;
-        assert_relative_eq!(result.lat().0, point.lat().0, epsilon = f64::EPSILON);
-        assert_relative_eq!(result.lon().0, point.lon().0, epsilon = f64::EPSILON);
+        assert_relative_eq!(result, point);
         Ok(())
     }
 }

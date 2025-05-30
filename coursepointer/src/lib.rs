@@ -10,6 +10,7 @@ use crate::gpx::GpxItem;
 pub mod course;
 pub mod fit;
 pub mod gpx;
+mod algorithm;
 
 pub use fit::{CourseFile, PROFILE_VERSION};
 pub use gpx::GpxReader;

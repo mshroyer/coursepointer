@@ -1,5 +1,6 @@
 pub mod measure;
 
+use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
 use measure::{Degrees, Meters};
 use thiserror::Error;
 
@@ -61,6 +62,60 @@ impl GeoPoint {
     }
 }
 
+impl Default for GeoPoint {
+    fn default() -> GeoPoint {
+        GeoPoint {
+            lat: Degrees(0.0),
+            lon: Degrees(0.0),
+            ele: None,
+        }
+    }
+}
+
+impl AbsDiffEq for GeoPoint {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f64::EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        abs_diff_eq!(self.lat.0, other.lat.0, epsilon = epsilon)
+            && abs_diff_eq!(self.lon.0, other.lon.0, epsilon = epsilon)
+    }
+}
+
+impl RelativeEq for GeoPoint {
+    fn default_max_relative() -> Self::Epsilon {
+        0.000_000_000_000_001
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        relative_eq!(
+            self.lat().0,
+            other.lat().0,
+            epsilon = epsilon,
+            max_relative = max_relative
+        ) && relative_eq!(
+            self.lon().0,
+            other.lon().0,
+            epsilon = epsilon,
+            max_relative = max_relative
+        )
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct GeoSegment {
+    pub point1: GeoPoint,
+    pub point2: GeoPoint,
+}
+
 /// A point on a 2D projection.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct XYPoint {
@@ -70,7 +125,10 @@ pub struct XYPoint {
 
 impl Default for XYPoint {
     fn default() -> Self {
-        Self { x: Meters(0.0), y: Meters(0.0) }
+        Self {
+            x: Meters(0.0),
+            y: Meters(0.0),
+        }
     }
 }
 

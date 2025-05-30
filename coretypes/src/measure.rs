@@ -48,6 +48,17 @@ macro_rules! unit_of_measure {
                 self.0 += rhs.0;
             }
         }
+
+        impl<N> Div<N> for $u<N>
+        where
+            N: Num + Copy + Div,
+        {
+            type Output = Self;
+
+            fn div(self, rhs: N) -> Self {
+                Self(self.0 / rhs)
+            }
+        }
     };
 }
 
