@@ -181,4 +181,28 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_karney_interception_zero_length_segment() -> Result<()> {
+        let seg_point = GeoPoint::new(Degrees(3.0), Degrees(4.0), None)?;
+        let seg = GeoSegment { point1: seg_point, point2: seg_point };
+        let p = GeoPoint::new(Degrees(3.5), Degrees(4.5), None)?;
+        let intercept = karney_interception(&seg, &p)?;
+
+        // For a zero-length segment, the intercept should be the segment's
+        // start and end point.
+        assert_relative_eq!(intercept, seg_point);
+        Ok(())
+    }
+
+    #[test]
+    fn test_karney_interception_point_on_segment() -> Result<()> {
+        let point1 = GeoPoint::new(Degrees(3.0), Degrees(4.0), None)?;
+        let point2 = GeoPoint::new(Degrees(3.5), Degrees(4.5), None)?;
+        let seg = GeoSegment { point1, point2 };
+        let intercept = karney_interception(&seg, &point1)?;
+
+        assert_relative_eq!(intercept, point1);
+        Ok(())
+    }
 }
