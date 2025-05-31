@@ -7,17 +7,17 @@
 //! crates to know about:
 //!
 //! - [`geographic`] builds the C++ version of GeographicLib and provides FFI.
-//! - [`coretypes`] provides simple units of measure and other types used by
-//!   both this crate and [`geographic`] to avoid a circular dependency.
+//! - [`types`] provides simple units of measure and other types used by both
+//!   this crate and [`geographic`] to avoid a circular dependency.
 
 mod algorithm;
-mod coretypes;
 mod course;
 mod fit;
 mod geographic;
 mod gpx;
 mod measure;
 pub mod testonly;
+mod types;
 
 use std::io::{BufRead, Write};
 
@@ -25,11 +25,11 @@ use chrono::Utc;
 pub use fit::FitEncodeError;
 use thiserror::Error;
 
-use crate::coretypes::TypeError;
 use crate::course::{CourseError, CourseSetBuilder};
 use crate::fit::CourseFile;
 use crate::gpx::{GpxItem, GpxReader};
 use crate::measure::KilometersPerHour;
+use crate::types::TypeError;
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {

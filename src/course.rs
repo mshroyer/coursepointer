@@ -13,11 +13,11 @@ use thiserror::Error;
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception,
 };
-use crate::coretypes::{GeoPoint, GeoSegment};
 use crate::fit::CoursePointType;
 use crate::geographic::{GeographicError, geodesic_inverse};
 use crate::gpx::Waypoint;
 use crate::measure::Meters;
+use crate::types::{GeoPoint, GeoSegment};
 
 #[derive(Error, Debug)]
 pub enum CourseError {

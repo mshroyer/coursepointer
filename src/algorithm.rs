@@ -10,11 +10,11 @@ use std::ops::Mul;
 
 use thiserror::Error;
 
-use crate::coretypes::{GeoPoint, GeoSegment, XYPoint};
 use crate::geographic::{
     GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
 };
 use crate::measure::Meters;
+use crate::types::{GeoPoint, GeoSegment, XYPoint};
 
 #[derive(Error, Debug)]
 pub enum AlgorithmError {
@@ -230,8 +230,8 @@ mod tests {
     use serde::Deserialize;
 
     use super::{FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception};
-    use crate::coretypes::{GeoPoint, GeoSegment};
     use crate::measure::Degrees;
+    use crate::types::{GeoPoint, GeoSegment};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {

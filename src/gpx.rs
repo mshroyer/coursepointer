@@ -23,8 +23,8 @@ use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
 
-use crate::coretypes::{GeoPoint, TypeError};
 use crate::measure::{Degrees, Meters};
+use crate::types::{GeoPoint, TypeError};
 
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]
@@ -348,9 +348,9 @@ mod tests {
     use quick_xml::Reader;
 
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
-    use crate::coretypes::GeoPoint;
     use crate::geo_points;
     use crate::measure::{Degrees, Meters};
+    use crate::types::GeoPoint;
 
     macro_rules! waypoint {
         ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr ) => {

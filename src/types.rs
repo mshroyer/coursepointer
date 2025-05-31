@@ -138,14 +138,14 @@ impl Default for XYPoint {
 #[macro_export]
 macro_rules! geo_point {
     ( $lat:expr, $lon:expr ) => {
-        $crate::coretypes::GeoPoint::new(
+        $crate::types::GeoPoint::new(
             $crate::measure::Degrees($lat),
             $crate::measure::Degrees($lon),
             None,
         )?
     };
     ( $lat:expr, $lon:expr, $ele:expr ) => {
-        $crate::coretypes::GeoPoint::new(
+        $crate::types::GeoPoint::new(
             $crate::measure::Degrees($lat),
             $crate::measure::Degrees($lon),
             Some(Meters($ele)),

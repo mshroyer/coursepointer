@@ -12,9 +12,9 @@ use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
 
-use crate::coretypes::{GeoPoint, TypeError};
 use crate::course::Course;
 use crate::measure::{Centimeters, Degrees, Meters, MetersPerSecond, Seconds};
+use crate::types::{GeoPoint, TypeError};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///

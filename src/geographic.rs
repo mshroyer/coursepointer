@@ -1,7 +1,7 @@
 use thiserror::Error;
 
-use crate::coretypes::{GeoPoint, TypeError, XYPoint};
 use crate::measure::{Degrees, Meters};
+use crate::types::{GeoPoint, TypeError, XYPoint};
 
 #[derive(Error, Debug)]
 pub enum GeographicError {
@@ -119,8 +119,8 @@ mod tests {
     use approx::assert_relative_eq;
 
     use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
-    use crate::coretypes::GeoPoint;
     use crate::measure::Degrees;
+    use crate::types::GeoPoint;
 
     #[test]
     fn test_geodesic_inverse() -> Result<()> {
