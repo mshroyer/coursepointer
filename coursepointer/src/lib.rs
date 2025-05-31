@@ -1,3 +1,15 @@
+//! The main library crate for CoursePointer.
+//!
+//! See the [`convert_gpx`] function, which is used by the CLI, for the main
+//! entry point into the library.
+//!
+//! This contains the bulk of the application logic. But there are two other
+//! crates to know about:
+//!
+//! - [`geographic`] builds the C++ version of GeographicLib and provides FFI.
+//! - [`coretypes`] provides simple units of measure and other types used by
+//!   both this crate and [`geographic`] to avoid a circular dependency.
+
 use std::io::{BufRead, Write};
 
 use chrono::Utc;

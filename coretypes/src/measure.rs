@@ -4,7 +4,6 @@
 //! correct by construction.  I wrote these rather than use the popular `uom`
 //! crate because the latter obscures the actual storage unit and numeric type.
 
-use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div};
 

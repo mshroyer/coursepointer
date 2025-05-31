@@ -1,4 +1,11 @@
-//! Abstract course elements
+//! Abstract representation of courses and waypoints
+//!
+//! Provides [`Course`], an abstract representation of a course with its records
+//! and course points (if any). Courses are created by obtaining a
+//! [`CourseSetBuilder`] and adding data to it.
+//!
+//! Once all the data has been added (for example, by parsing it from a GPX
+//! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
 use coretypes::measure::Meters;
 use coretypes::{GeoPoint, GeoSegment};
@@ -7,7 +14,7 @@ use log::debug;
 use thiserror::Error;
 
 use crate::algorithm::{
-    AlgorithmError, FromGeoPoints, InterceptedSegment, intercepted_segments, karney_interception,
+    AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception,
 };
 use crate::fit::CoursePointType;
 use crate::gpx::Waypoint;
@@ -84,8 +91,12 @@ impl CourseSetBuilder {
                     course_distance += segment.geo_distance;
                 }
 
-                let near_segments = intercepted_segments(&slns, Meters(35.0));
-                debug!("Found {} segments near {}", near_segments.len(), waypoint.name);
+                let near_segments = find_nearby_segments(&slns, Meters(35.0));
+                debug!(
+                    "Found {} segments near {}",
+                    near_segments.len(),
+                    waypoint.name
+                );
 
                 if !near_segments.is_empty() {
                     // TODO: Handle multiple passbys
@@ -115,8 +126,8 @@ struct InterceptSolution {
     course_distance: Meters<f64>,
 }
 
-impl InterceptedSegment<Meters<f64>> for &InterceptSolution {
-    fn intercept_distance(&self) -> Meters<f64> {
+impl NearbySegment<Meters<f64>> for &InterceptSolution {
+    fn waypoint_distance(&self) -> Meters<f64> {
         self.intercept_distance
     }
 }

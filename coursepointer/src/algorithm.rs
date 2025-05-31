@@ -57,18 +57,18 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 /// in his example code.)
 ///
 /// For a more detailed description, see: <http://arxiv.org/abs/1102.1215>
-pub fn karney_interception(geodesic: &GeoSegment, point: &GeoPoint) -> Result<GeoPoint> {
+pub fn karney_interception(segment: &GeoSegment, point: &GeoPoint) -> Result<GeoPoint> {
     // Start with an initial guess of an intercept at the geodesic's midpoint:
     let mut intercept = geodesic_direct(
-        &geodesic.point1,
-        geodesic.azimuth1,
-        geodesic.geo_distance / 2.0,
+        &segment.point1,
+        segment.azimuth1,
+        segment.geo_distance / 2.0,
     )?
     .point2;
 
     for _ in 0..10 {
-        let start = gnomonic_forward(&intercept, &geodesic.point1)?;
-        let end = gnomonic_forward(&intercept, &geodesic.point2)?;
+        let start = gnomonic_forward(&intercept, &segment.point1)?;
+        let end = gnomonic_forward(&intercept, &segment.point2)?;
         let p = gnomonic_forward(&intercept, point)?;
         let b = subtract_xypoints(&end, &start);
         let a = subtract_xypoints(&p, &start);
@@ -96,61 +96,63 @@ pub fn karney_interception(geodesic: &GeoSegment, point: &GeoPoint) -> Result<Ge
     Ok(intercept)
 }
 
-/// A segment of a course whose distance from a point has been measured.
-pub trait InterceptedSegment<D>
+/// A segment of a course whose distance from a waypoint has been measured.
+pub trait NearbySegment<D>
 where
     D: Copy + PartialOrd,
 {
-    /// The segment's minimum geodesic distance from the point.
-    fn intercept_distance(&self) -> D;
+    /// The segment's minimum geodesic distance from the waypoint.
+    fn waypoint_distance(&self) -> D;
 }
 
-/// Finds the segments of a course intercepted within some threshold of distance
-/// from a point.
+/// Identifies the course segments within some threshold distance of a waypoint.
 ///
-/// Operates on a sequence of segments describing a course.  The
-/// [`InterceptedSegment`] trait is used to determine each segment's distance
-/// from the point.
+/// Operates on a sequence of segments that together describe a course. The
+/// [`NearbySegment`] trait is used to determine each segment's distance from
+/// the point.  After identifying spans of the segment collection that pass
+/// within `threshold` of whatever waypoint they've been measured against, we
+/// return the segment that passes the closest within each span.
 ///
 /// # Example
 ///
 /// ```
-/// use coursepointer::algorithm::InterceptedSegment;
-/// use coursepointer::algorithm::intercepted_segments;
+/// use coursepointer::algorithm::NearbySegment;
+/// use coursepointer::algorithm::find_nearby_segments;
 ///
 /// #[derive(PartialEq, Debug)]
 /// struct Seg(char, i32);
 ///
-/// impl InterceptedSegment<i32> for Seg {
-///     fn intercept_distance(&self) -> i32 {
+/// impl NearbySegment<i32> for Seg {
+///     fn waypoint_distance(&self) -> i32 {
 ///        self.1
 ///    }
 /// }
 ///
 /// let segments = vec![
-///     Seg('a', 11),
-///     Seg('b', 7),
-///     Seg('c', 5), // <-- Course passes within threshold starting here
-///     Seg('d', 2), // <-- Local minimum here
-///     Seg('e', 4),
-///     Seg('f', 7),
+///     Seg('a', 9),
+///     Seg('b', 5), // <-- Course passes within threshold starting here
+///     Seg('c', 2), // <-- Span minimum here
+///     Seg('d', 4), // <-- Still below threshold
+///     Seg('e', 7),
+///     Seg('f', 4), // <-- Minimum for a new span of segments below threshold
+///     Seg('g', 6),
 /// ];
-/// let result = intercepted_segments(segments, 5);
-/// assert_eq!(result, vec![Seg('d', 2)]);
+/// let result = find_nearby_segments(segments, 5);
+/// assert_eq!(result, vec![Seg('c', 2), Seg('f', 4)]);
 /// ```
-pub fn intercepted_segments<I, T, D>(segments: I, threshold: D) -> Vec<T>
+pub fn find_nearby_segments<I, T, D>(segments: I, threshold: D) -> Vec<T>
 where
-    T: InterceptedSegment<D>,
+    T: NearbySegment<D>,
     I: IntoIterator<Item = T>,
     D: Copy + PartialOrd,
 {
     let mut result: Vec<T> = Vec::new();
     let mut span_min: Option<T> = None;
     for segment in segments.into_iter() {
-        if segment.intercept_distance() <= threshold {
+        if segment.waypoint_distance() <= threshold {
             match &span_min {
                 Some(current_min) => {
-                    if segment.intercept_distance() < current_min.intercept_distance() {
+                    if segment.waypoint_distance() < current_min.waypoint_distance() {
                         span_min = Some(segment);
                     }
                 }
@@ -228,7 +230,7 @@ mod tests {
     use coretypes::{GeoPoint, GeoSegment};
     use serde::Deserialize;
 
-    use super::{FromGeoPoints, InterceptedSegment, intercepted_segments, karney_interception};
+    use super::{FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {
@@ -303,8 +305,8 @@ mod tests {
         Ok(())
     }
 
-    impl InterceptedSegment<i32> for (char, i32) {
-        fn intercept_distance(&self) -> i32 {
+    impl NearbySegment<i32> for (char, i32) {
+        fn waypoint_distance(&self) -> i32 {
             self.1
         }
     }
@@ -327,7 +329,7 @@ mod tests {
             ('m', 2),
             ('n', 1),
         ];
-        let result = intercepted_segments(segments, 5)
+        let result = find_nearby_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -337,7 +339,7 @@ mod tests {
     #[test]
     fn test_intercepted_segments_empty() {
         let segments: Vec<(char, i32)> = Vec::new();
-        let result = intercepted_segments(segments, 5)
+        let result = find_nearby_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -347,7 +349,7 @@ mod tests {
     #[test]
     fn test_intercepted_segments_single_match() {
         let segments = vec![('a', 10), ('b', 8), ('c', 5), ('d', 6)];
-        let result = intercepted_segments(segments, 5)
+        let result = find_nearby_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -357,7 +359,7 @@ mod tests {
     #[test]
     fn test_intercepted_segments_ending_match() {
         let segments = vec![('a', 10), ('b', 8), ('c', 6), ('d', 4)];
-        let result = intercepted_segments(segments, 5)
+        let result = find_nearby_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
