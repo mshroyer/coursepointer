@@ -1,9 +1,11 @@
 //! Abstract course elements
 
-use coretypes::GeoPoint;
 use coretypes::measure::Meters;
-use geographic::{GeographicError, geodesic_inverse};
+use coretypes::{GeoPoint, GeoSegment};
+use geographic::GeographicError;
 use thiserror::Error;
+
+use crate::algorithm::FromGeoPoints;
 
 #[derive(Error, Debug)]
 pub enum CourseError {
@@ -80,7 +82,8 @@ impl Course {
 }
 
 pub struct CourseBuilder {
-    records: Vec<Record>,
+    segments: Vec<GeoSegment>,
+    prev_point: Option<GeoPoint>,
     name: Option<String>,
 }
 
@@ -88,7 +91,8 @@ pub struct CourseBuilder {
 impl CourseBuilder {
     pub fn new() -> Self {
         Self {
-            records: Vec::new(),
+            segments: Vec::new(),
+            prev_point: None,
             name: None,
         }
     }
@@ -97,39 +101,104 @@ impl CourseBuilder {
         self.name = Some(name);
     }
 
-    pub fn add_record(&mut self, point: GeoPoint) -> Result<()> {
-        match self.records.iter().last() {
-            Some(last) => {
+    pub fn add_point(&mut self, point: GeoPoint) -> Result<()> {
+        match self.prev_point {
+            Some(prev) => {
                 // TODO: Investigate using elevation-corrected distances
-                let distance_increment = geodesic_inverse(&last.point, &point)?.geo_distance;
-                self.records.push(Record {
-                    point,
-                    cumulative_distance: last.cumulative_distance + distance_increment,
-                })
+                self.segments
+                    .push(GeoSegment::from_geo_points(prev, point)?);
+                self.prev_point = Some(point);
             }
 
-            None => self.records.push(Record {
-                point,
-                cumulative_distance: Meters(0.0),
-            }),
+            None => self.prev_point = Some(point),
         }
         Ok(())
     }
 
     pub fn build(self) -> Course {
+        let mut records = Vec::new();
+        let mut cumulative_distance = Meters(0.0);
+        match (self.segments.first(), self.prev_point) {
+            (Some(first), _) => records.push(Record {
+                point: first.point1,
+                cumulative_distance,
+            }),
+            (None, Some(point)) => records.push(Record {
+                point,
+                cumulative_distance,
+            }),
+            (None, None) => (),
+        }
+        for segment in self.segments {
+            cumulative_distance += segment.geo_distance;
+            records.push(Record {
+                point: segment.point2,
+                cumulative_distance,
+            });
+        }
         Course {
-            records: self.records,
+            records,
             name: self.name,
         }
     }
 }
 
 /// A course record.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Record {
     /// Position including optional elevation.
     pub point: GeoPoint,
 
     /// Cumulative distance along the course.
     pub cumulative_distance: Meters<f64>,
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+    use coretypes::{geo_point, geo_points};
+
+    use crate::course::CourseBuilder;
+
+    #[test]
+    fn test_course_builder_empty() -> Result<()> {
+        let course = CourseBuilder::new().build();
+        assert_eq!(course.records, vec![]);
+        Ok(())
+    }
+
+    #[test]
+    fn test_course_builder_single_point() -> Result<()> {
+        let mut builder = CourseBuilder::new();
+        builder.add_point(geo_point!(1.0, 2.0))?;
+        let record_points = builder
+            .build()
+            .records
+            .iter()
+            .map(|r| r.point)
+            .collect::<Vec<_>>();
+
+        let expected_points = geo_points![(1.0, 2.0)];
+
+        assert_eq!(record_points, expected_points);
+        Ok(())
+    }
+
+    #[test]
+    fn test_course_builder_two_points() -> Result<()> {
+        let mut builder = CourseBuilder::new();
+        builder.add_point(geo_point!(1.0, 2.0))?;
+        builder.add_point(geo_point!(1.1, 2.2))?;
+        let record_points = builder
+            .build()
+            .records
+            .iter()
+            .map(|r| r.point)
+            .collect::<Vec<_>>();
+
+        let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2)];
+
+        assert_eq!(record_points, expected_points);
+        Ok(())
+    }
 }

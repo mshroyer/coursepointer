@@ -114,6 +114,8 @@ impl RelativeEq for GeoPoint {
 pub struct GeoSegment {
     pub point1: GeoPoint,
     pub point2: GeoPoint,
+    pub geo_distance: Meters<f64>,
+    pub azimuth1: Degrees<f64>,
 }
 
 /// A point on a 2D projection.
@@ -137,10 +139,10 @@ impl Default for XYPoint {
 #[macro_export]
 macro_rules! geo_point {
     ( $lat:expr, $lon:expr ) => {
-        $crate::GeoPoint::new(Degrees($lat), Degrees($lon), None)?
+        $crate::GeoPoint::new($crate::measure::Degrees($lat), $crate::measure::Degrees($lon), None)?
     };
     ( $lat:expr, $lon:expr, $ele:expr ) => {
-        $crate::GeoPoint::new(Degrees($lat), Degrees($lon), Some(Meters($ele)))?
+        $crate::GeoPoint::new($crate::measure::Degrees($lat), $crate::measure::Degrees($lon), Some(Meters($ele)))?
     };
 }
 

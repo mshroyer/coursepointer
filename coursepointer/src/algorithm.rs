@@ -5,6 +5,7 @@
 //! of the route. This module implements algorithms to do that, building on the
 //! C++ version of GeographicLib.
 
+use std::error::Error;
 use std::ops::Mul;
 
 use coretypes::measure::Meters;
@@ -57,12 +58,13 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 ///
 /// For a more detailed description, see: <http://arxiv.org/abs/1102.1215>
 pub fn karney_interception(geodesic: &GeoSegment, point: &GeoPoint) -> Result<GeoPoint> {
-    // TODO: Remove duplicate solution of geodesic inverse
-    let seg = geodesic_inverse(&geodesic.point1, &geodesic.point2)?;
-
     // Start with an initial guess of an intercept at the geodesic's midpoint:
-    let mut intercept =
-        geodesic_direct(&geodesic.point1, seg.azimuth1, seg.geo_distance / 2.0)?.point2;
+    let mut intercept = geodesic_direct(
+        &geodesic.point1,
+        geodesic.azimuth1,
+        geodesic.geo_distance / 2.0,
+    )?
+    .point2;
 
     for _ in 0..10 {
         let start = gnomonic_forward(&intercept, &geodesic.point1)?;
@@ -164,6 +166,29 @@ where
     result
 }
 
+pub trait FromGeoPoints<E>
+where
+    Self: Sized,
+    E: Error,
+{
+    fn from_geo_points(point1: GeoPoint, point2: GeoPoint) -> std::result::Result<Self, E>;
+}
+
+impl FromGeoPoints<GeographicError> for GeoSegment {
+    fn from_geo_points(
+        point1: GeoPoint,
+        point2: GeoPoint,
+    ) -> std::result::Result<Self, GeographicError> {
+        let inverse = geodesic_inverse(&point1, &point2)?;
+        Ok(GeoSegment {
+            point1,
+            point2,
+            geo_distance: inverse.geo_distance,
+            azimuth1: inverse.azimuth1,
+        })
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct Vec2 {
     pub x: f64,
@@ -202,7 +227,7 @@ mod tests {
     use coretypes::{GeoPoint, GeoSegment};
     use serde::Deserialize;
 
-    use crate::algorithm::{MeasuredSegment, intercepted_segments, karney_interception};
+    use super::{FromGeoPoints, MeasuredSegment, intercepted_segments, karney_interception};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {
@@ -244,10 +269,7 @@ mod tests {
                 None,
             )?;
 
-            let seg = GeoSegment {
-                point1: geo_start,
-                point2: geo_end,
-            };
+            let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
             let result = karney_interception(&seg, &p)?;
 
             assert_relative_eq!(result, intercept, max_relative = 0.000_000_100);
@@ -259,10 +281,7 @@ mod tests {
     #[test]
     fn test_karney_interception_zero_length_segment() -> Result<()> {
         let seg_point = GeoPoint::new(Degrees(3.0), Degrees(4.0), None)?;
-        let seg = GeoSegment {
-            point1: seg_point,
-            point2: seg_point,
-        };
+        let seg = GeoSegment::from_geo_points(seg_point, seg_point)?;
         let p = GeoPoint::new(Degrees(3.5), Degrees(4.5), None)?;
         let intercept = karney_interception(&seg, &p)?;
 
@@ -276,7 +295,7 @@ mod tests {
     fn test_karney_interception_point_on_segment() -> Result<()> {
         let point1 = GeoPoint::new(Degrees(3.0), Degrees(4.0), None)?;
         let point2 = GeoPoint::new(Degrees(3.5), Degrees(4.5), None)?;
-        let seg = GeoSegment { point1, point2 };
+        let seg = GeoSegment::from_geo_points(point1, point2)?;
         let intercept = karney_interception(&seg, &point1)?;
 
         assert_relative_eq!(intercept, point1);

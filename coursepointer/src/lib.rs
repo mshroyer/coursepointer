@@ -56,7 +56,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: W) -> Result<
             }
 
             GpxItem::TrackOrRoutePoint(p) => {
-                builder.current_mut()?.add_record(p)?;
+                builder.current_mut()?.add_point(p)?;
             }
 
             _ => (),
