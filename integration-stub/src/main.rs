@@ -68,7 +68,11 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let mut course_builder = CourseBuilder::new();
     course_builder.set_name(spec.name);
     for point in &spec.records {
-        course_builder.add_point(GeoPoint::new(Degrees(point.lat), Degrees(point.lon), None)?)?;
+        course_builder.add_route_point(GeoPoint::new(
+            Degrees(point.lat),
+            Degrees(point.lon),
+            None,
+        )?)?;
     }
     let course = course_builder.build();
     let course_file = CourseFile::new(

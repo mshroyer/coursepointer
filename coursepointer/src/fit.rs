@@ -279,6 +279,7 @@ enum GlobalMessage {
     Record = 20u16,
     Event = 21u16,
     Course = 31u16,
+    CoursePoint = 32u16,
 }
 
 pub struct DefinitionFrame {
@@ -520,6 +521,60 @@ impl RecordMessage {
     }
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum CoursePointType {
+    Generic = 0u8,
+}
+
+struct CoursePointMessage {
+    timestamp: FitDateTime,
+    type_: CoursePointType,
+    position: FitSurfacePoint,
+    distance: Centimeters<u32>,
+    name: String,
+}
+
+impl CoursePointMessage {
+    fn new(
+        timestamp: FitDateTime,
+        type_: CoursePointType,
+        position: FitSurfacePoint,
+        distance: Centimeters<u32>,
+        name: String,
+    ) -> Self {
+        Self {
+            timestamp,
+            type_,
+            position,
+            distance,
+            name,
+        }
+    }
+
+    fn field_definitions() -> Vec<FieldDefinition> {
+        vec![
+            FieldDefinition::new(1, 4, 134), // timestamp
+            FieldDefinition::new(2, 4, 133), // lat
+            FieldDefinition::new(3, 4, 133), // lon
+            FieldDefinition::new(4, 4, 134), // distance
+            FieldDefinition::new(5, 1, 0),   // type
+            FieldDefinition::new(6, 16, 7),  // name
+        ]
+    }
+
+    fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
+        w.write_u8(local_message_id & 0x0F)?;
+        w.write_u32::<BigEndian>(self.timestamp.value)?;
+        w.write_i32::<BigEndian>(self.position.lat_semis)?;
+        w.write_i32::<BigEndian>(self.position.lon_semis)?;
+        w.write_u32::<BigEndian>(self.distance.0)?;
+        w.write_u8(self.type_ as u8)?;
+        write_string_field(self.name.as_str(), 16, w)?;
+        Ok(())
+    }
+}
+
 pub struct CourseFile<'a> {
     course: &'a Course,
     start_time: DateTime<Utc>,
@@ -621,6 +676,28 @@ impl<'a> CourseFile<'a> {
             record_message.encode(4u8, &mut dw)?;
         }
 
+        DefinitionFrame::new(
+            GlobalMessage::CoursePoint,
+            5u8,
+            CoursePointMessage::field_definitions(),
+        )
+        .encode(&mut dw)?;
+        for course_point in &self.course.course_points {
+            let distance: Centimeters<f64> = course_point.distance.into();
+            let timedelta: Seconds<f64> = course_point.distance / self.speed;
+            let timestamp = self
+                .start_time
+                .add(TimeDelta::seconds(truncate_float(timedelta.0)?));
+            let course_point_message = CoursePointMessage::new(
+                timestamp.try_into()?,
+                course_point.point_type,
+                course_point.point.try_into()?,
+                Centimeters(truncate_float(distance.0)?),
+                course_point.name.to_string(),
+            );
+            course_point_message.encode(5u8, &mut dw)?;
+        }
+
         EventMessage::new(
             Event::Timer,
             EventType::Stop,
@@ -674,6 +751,11 @@ impl<'a> CourseFile<'a> {
         sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
         sz += self.course.records.len()
             * CourseFile::get_data_message_size(RecordMessage::field_definitions());
+
+        sz +=
+            CourseFile::get_definition_message_size(CoursePointMessage::field_definitions().len());
+        sz += self.course.course_points.len()
+            * CourseFile::get_data_message_size(CoursePointMessage::field_definitions());
 
         sz
     }

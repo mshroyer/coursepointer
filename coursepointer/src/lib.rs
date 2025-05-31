@@ -56,7 +56,11 @@ pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: W) -> Result<
             }
 
             GpxItem::TrackOrRoutePoint(p) => {
-                builder.current_mut()?.add_point(p)?;
+                builder.current_mut()?.add_route_point(p)?;
+            }
+
+            GpxItem::Waypoint(wpt) => {
+                builder.add_waypoint(wpt);
             }
 
             _ => (),

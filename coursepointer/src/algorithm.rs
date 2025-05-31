@@ -122,7 +122,7 @@ where
 /// struct Seg(char, i32);
 ///
 /// impl InterceptedSegment<i32> for Seg {
-///     fn measure(&self) -> i32 {
+///     fn intercept_distance(&self) -> i32 {
 ///        self.1
 ///    }
 /// }

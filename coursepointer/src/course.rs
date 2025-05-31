@@ -6,6 +6,8 @@ use geographic::GeographicError;
 use thiserror::Error;
 
 use crate::algorithm::FromGeoPoints;
+use crate::fit::CoursePointType;
+use crate::gpx::Waypoint;
 
 #[derive(Error, Debug)]
 pub enum CourseError {
@@ -23,6 +25,7 @@ pub struct CourseSet {
 
 pub struct CourseSetBuilder {
     courses: Vec<CourseBuilder>,
+    waypoints: Vec<Waypoint>,
 }
 
 #[allow(clippy::new_without_default)]
@@ -30,6 +33,7 @@ impl CourseSetBuilder {
     pub fn new() -> Self {
         Self {
             courses: Vec::new(),
+            waypoints: Vec::new(),
         }
     }
 
@@ -42,6 +46,10 @@ impl CourseSetBuilder {
             Some(course) => Ok(course),
             None => Err(CourseError::MissingCourse),
         }
+    }
+
+    pub fn add_waypoint(&mut self, waypoint: Waypoint) {
+        self.waypoints.push(waypoint);
     }
 
     pub fn build(self) -> CourseSet {
@@ -61,6 +69,9 @@ impl CourseSetBuilder {
 pub struct Course {
     /// The records that define the course, in order of physical traversal.
     pub records: Vec<Record>,
+
+    /// The course points that have been located on the course.
+    pub course_points: Vec<CoursePoint>,
 
     /// The name of the course, if given.
     pub name: Option<String>,
@@ -106,7 +117,7 @@ impl CourseBuilder {
         self.name = Some(name);
     }
 
-    pub fn add_point(&mut self, point: GeoPoint) -> Result<()> {
+    pub fn add_route_point(&mut self, point: GeoPoint) -> Result<()> {
         match self.prev_point {
             Some(prev) => {
                 if prev == point {
@@ -147,6 +158,7 @@ impl CourseBuilder {
         }
         Course {
             records,
+            course_points: vec![],
             name: self.name,
             num_repeated_points_skipped: self.num_releated_points_skipped,
         }
@@ -161,6 +173,21 @@ pub struct Record {
 
     /// Cumulative distance along the course.
     pub cumulative_distance: Meters<f64>,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct CoursePoint {
+    /// Position of the point's interception with the course.
+    pub point: GeoPoint,
+
+    /// Distance at which the point appears along the total course.
+    pub distance: Meters<f64>,
+
+    /// Course point type.
+    pub point_type: CoursePointType,
+
+    /// Name.
+    pub name: String,
 }
 
 #[cfg(test)]
@@ -180,7 +207,7 @@ mod tests {
     #[test]
     fn test_course_builder_single_point() -> Result<()> {
         let mut builder = CourseBuilder::new();
-        builder.add_point(geo_point!(1.0, 2.0))?;
+        builder.add_route_point(geo_point!(1.0, 2.0))?;
         let record_points = builder
             .build()
             .records
@@ -197,8 +224,8 @@ mod tests {
     #[test]
     fn test_course_builder_two_points() -> Result<()> {
         let mut builder = CourseBuilder::new();
-        builder.add_point(geo_point!(1.0, 2.0))?;
-        builder.add_point(geo_point!(1.1, 2.2))?;
+        builder.add_route_point(geo_point!(1.0, 2.0))?;
+        builder.add_route_point(geo_point!(1.1, 2.2))?;
         let record_points = builder
             .build()
             .records
@@ -215,13 +242,13 @@ mod tests {
     #[test]
     fn test_repeated_points() -> Result<()> {
         let mut builder = CourseBuilder::new();
-        builder.add_point(geo_point!(1.0, 2.0))?;
-        builder.add_point(geo_point!(1.0, 2.0))?;
-        builder.add_point(geo_point!(1.1, 2.2))?;
-        builder.add_point(geo_point!(1.1, 2.2))?;
-        builder.add_point(geo_point!(1.2, 2.1))?;
-        builder.add_point(geo_point!(1.1, 2.2))?;
-        builder.add_point(geo_point!(1.1, 2.2))?;
+        builder.add_route_point(geo_point!(1.0, 2.0))?;
+        builder.add_route_point(geo_point!(1.0, 2.0))?;
+        builder.add_route_point(geo_point!(1.1, 2.2))?;
+        builder.add_route_point(geo_point!(1.1, 2.2))?;
+        builder.add_route_point(geo_point!(1.2, 2.1))?;
+        builder.add_route_point(geo_point!(1.1, 2.2))?;
+        builder.add_route_point(geo_point!(1.1, 2.2))?;
         let course = builder.build();
         let record_points = course.records.iter().map(|r| r.point).collect::<Vec<_>>();
 
