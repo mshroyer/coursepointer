@@ -7,7 +7,7 @@ default-run = "coursepointer"
 [lib]
 name = "coursepointer"
 path = "src/lib.rs"
-doctest = true
+doctest = false  # Fails on doc comments in private mods
 
 [[bin]]
 name = "coursepointer"

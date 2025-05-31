@@ -10,7 +10,7 @@
 //! - [`coretypes`] provides simple units of measure and other types used by
 //!   both this crate and [`geographic`] to avoid a circular dependency.
 
-pub mod algorithm;
+mod algorithm;
 mod coretypes;
 mod course;
 mod fit;
