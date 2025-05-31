@@ -97,30 +97,31 @@ pub fn karney_interception(geodesic: &GeoSegment, point: &GeoPoint) -> Result<Ge
 }
 
 /// A segment of a course whose distance from a point has been measured.
-pub trait MeasuredSegment<D>
+pub trait InterceptedSegment<D>
 where
     D: Copy + PartialOrd,
 {
-    fn measure(&self) -> D;
+    /// The segment's minimum geodesic distance from the point.
+    fn intercept_distance(&self) -> D;
 }
 
 /// Finds the segments of a course intercepted within some threshold of distance
 /// from a point.
 ///
 /// Operates on a sequence of segments describing a course.  The
-/// [`MeasuredSegment`] trait is used to determine each segment's distance from
-/// the point, which
+/// [`InterceptedSegment`] trait is used to determine each segment's distance
+/// from the point.
 ///
 /// # Example
 ///
 /// ```
-/// use coursepointer::algorithm::MeasuredSegment;
+/// use coursepointer::algorithm::InterceptedSegment;
 /// use coursepointer::algorithm::intercepted_segments;
 ///
 /// #[derive(PartialEq, Debug)]
 /// struct Seg(char, i32);
 ///
-/// impl MeasuredSegment<i32> for Seg {
+/// impl InterceptedSegment<i32> for Seg {
 ///     fn measure(&self) -> i32 {
 ///        self.1
 ///    }
@@ -139,17 +140,17 @@ where
 /// ```
 pub fn intercepted_segments<I, T, D>(segments: I, threshold: D) -> Vec<T>
 where
-    T: MeasuredSegment<D>,
+    T: InterceptedSegment<D>,
     I: IntoIterator<Item = T>,
     D: Copy + PartialOrd,
 {
     let mut result: Vec<T> = Vec::new();
     let mut span_min: Option<T> = None;
     for segment in segments.into_iter() {
-        if segment.measure() <= threshold {
+        if segment.intercept_distance() <= threshold {
             match &span_min {
                 Some(current_min) => {
-                    if segment.measure() < current_min.measure() {
+                    if segment.intercept_distance() < current_min.intercept_distance() {
                         span_min = Some(segment);
                     }
                 }
@@ -227,7 +228,7 @@ mod tests {
     use coretypes::{GeoPoint, GeoSegment};
     use serde::Deserialize;
 
-    use super::{FromGeoPoints, MeasuredSegment, intercepted_segments, karney_interception};
+    use super::{FromGeoPoints, InterceptedSegment, intercepted_segments, karney_interception};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {
@@ -302,8 +303,8 @@ mod tests {
         Ok(())
     }
 
-    impl MeasuredSegment<i32> for (char, i32) {
-        fn measure(&self) -> i32 {
+    impl InterceptedSegment<i32> for (char, i32) {
+        fn intercept_distance(&self) -> i32 {
             self.1
         }
     }
