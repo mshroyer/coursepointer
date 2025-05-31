@@ -14,23 +14,22 @@ pub mod algorithm;
 pub mod coretypes;
 pub mod course;
 mod fit;
-pub mod geographic;
+mod geographic;
 mod gpx;
 pub mod measure;
 pub mod testonly;
 
-pub use fit::FitEncodeError;
-
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
+pub use fit::FitEncodeError;
 use thiserror::Error;
 
 use crate::coretypes::TypeError;
-use crate::gpx::{GpxItem, GpxReader};
-use crate::measure::KilometersPerHour;
 use crate::course::{CourseError, CourseSetBuilder};
 use crate::fit::CourseFile;
+use crate::gpx::{GpxItem, GpxReader};
+use crate::measure::KilometersPerHour;
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {

@@ -17,7 +17,6 @@ use std::io::BufRead;
 use std::num::ParseFloatError;
 use std::{mem, str};
 
-use quick_xml;
 use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
@@ -347,6 +346,7 @@ where
 #[cfg(test)]
 mod tests {
     use quick_xml::Reader;
+
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
     use crate::coretypes::GeoPoint;
     use crate::geo_points;

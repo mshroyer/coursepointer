@@ -4,8 +4,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use coursepointer::CoursePointerError;
-use coursepointer::FitEncodeError;
+use coursepointer::{CoursePointerError, FitEncodeError};
 
 #[derive(Parser)]
 struct Args {
