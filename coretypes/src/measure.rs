@@ -4,6 +4,7 @@
 //! correct by construction.  I wrote these rather than use the popular `uom`
 //! crate because the latter obscures the actual storage unit and numeric type.
 
+use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div};
 
 use num_traits::Num;
@@ -84,6 +85,15 @@ where
 {
     fn from(value: Meters<N>) -> Centimeters<N> {
         Centimeters(N::from(100u8) * value.0)
+    }
+}
+
+impl<T> Display for Meters<T>
+where
+    T: Num + Copy + Display,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}m", self.0)
     }
 }
 

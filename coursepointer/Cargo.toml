@@ -11,6 +11,7 @@ geographic = { version = "0.1.0", path = "../geographic" }
 num-traits = "0.2.19"
 quick-xml = "0.37.5"
 thiserror = "2.0.12"
+log = "0.4.27"
 
 [lib]
 doctest = true

@@ -3,6 +3,7 @@
 use coretypes::measure::Meters;
 use coretypes::{GeoPoint, GeoSegment};
 use geographic::GeographicError;
+use log::debug;
 use thiserror::Error;
 
 use crate::algorithm::FromGeoPoints;
@@ -75,9 +76,6 @@ pub struct Course {
 
     /// The name of the course, if given.
     pub name: Option<String>,
-
-    /// The number of repeated points that were skipped.
-    num_repeated_points_skipped: usize,
 }
 
 impl Course {
@@ -136,6 +134,10 @@ impl CourseBuilder {
     }
 
     pub fn build(self) -> Course {
+        match &self.name {
+            Some(name) => debug!("Building course {}", name),
+            None => debug!("Building untitled course"),
+        }
         let mut records = Vec::new();
         let mut cumulative_distance = Meters(0.0);
         match (self.segments.first(), self.prev_point) {
@@ -156,11 +158,19 @@ impl CourseBuilder {
                 cumulative_distance,
             });
         }
+        debug!(
+            "Processed {} segments with a total distance of {}",
+            records.len(),
+            cumulative_distance
+        );
+        debug!(
+            "{} repeated adjacent points were excluded from the conversion",
+            self.num_releated_points_skipped
+        );
         Course {
             records,
             course_points: vec![],
             name: self.name,
-            num_repeated_points_skipped: self.num_releated_points_skipped,
         }
     }
 }
@@ -249,13 +259,13 @@ mod tests {
         builder.add_route_point(geo_point!(1.2, 2.1))?;
         builder.add_route_point(geo_point!(1.1, 2.2))?;
         builder.add_route_point(geo_point!(1.1, 2.2))?;
+
         let course = builder.build();
         let record_points = course.records.iter().map(|r| r.point).collect::<Vec<_>>();
 
         let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2), (1.2, 2.1), (1.1, 2.2)];
 
         assert_eq!(record_points, expected_points);
-        assert_eq!(course.num_repeated_points_skipped, 3);
         Ok(())
     }
 }

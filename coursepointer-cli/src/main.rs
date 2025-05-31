@@ -33,6 +33,7 @@ enum Commands {
 }
 
 fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
+    log::debug!("convert-gpx: {:?} -> {:?}", input, output);
     let gpx_file = BufReader::new(
         File::open(&input)
             .context("Opening the GPX <INPUT> file. Check that it exists and can be accessed.")?,
@@ -64,13 +65,19 @@ fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
         )),
 
         _ => res.map_err(anyhow::Error::from),
-    }
+    }?;
+
+    println!("Done.");
+
+    Ok(())
 }
 
 fn main() -> Result<()> {
     // Don't wrap in anyhow::Result so we preserve Clap's pretty formatting of usage
     // info.
     let args = Args::parse();
+
+    env_logger::init();
 
     match args.cmd {
         Commands::ConvertGpx {
