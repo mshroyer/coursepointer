@@ -64,6 +64,9 @@ pub struct Course {
 
     /// The name of the course, if given.
     pub name: Option<String>,
+
+    /// The number of repeated points that were skipped.
+    num_repeated_points_skipped: usize,
 }
 
 impl Course {
@@ -85,6 +88,7 @@ pub struct CourseBuilder {
     segments: Vec<GeoSegment>,
     prev_point: Option<GeoPoint>,
     name: Option<String>,
+    num_releated_points_skipped: usize,
 }
 
 #[allow(clippy::new_without_default)]
@@ -94,6 +98,7 @@ impl CourseBuilder {
             segments: Vec::new(),
             prev_point: None,
             name: None,
+            num_releated_points_skipped: 0,
         }
     }
 
@@ -104,10 +109,14 @@ impl CourseBuilder {
     pub fn add_point(&mut self, point: GeoPoint) -> Result<()> {
         match self.prev_point {
             Some(prev) => {
-                // TODO: Investigate using elevation-corrected distances
-                self.segments
-                    .push(GeoSegment::from_geo_points(prev, point)?);
-                self.prev_point = Some(point);
+                if prev == point {
+                    self.num_releated_points_skipped += 1
+                } else {
+                    // TODO: Investigate using elevation-corrected distances
+                    self.segments
+                        .push(GeoSegment::from_geo_points(prev, point)?);
+                    self.prev_point = Some(point);
+                }
             }
 
             None => self.prev_point = Some(point),
@@ -139,6 +148,7 @@ impl CourseBuilder {
         Course {
             records,
             name: self.name,
+            num_repeated_points_skipped: self.num_releated_points_skipped,
         }
     }
 }
@@ -199,6 +209,26 @@ mod tests {
         let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2)];
 
         assert_eq!(record_points, expected_points);
+        Ok(())
+    }
+
+    #[test]
+    fn test_repeated_points() -> Result<()> {
+        let mut builder = CourseBuilder::new();
+        builder.add_point(geo_point!(1.0, 2.0))?;
+        builder.add_point(geo_point!(1.0, 2.0))?;
+        builder.add_point(geo_point!(1.1, 2.2))?;
+        builder.add_point(geo_point!(1.1, 2.2))?;
+        builder.add_point(geo_point!(1.2, 2.1))?;
+        builder.add_point(geo_point!(1.1, 2.2))?;
+        builder.add_point(geo_point!(1.1, 2.2))?;
+        let course = builder.build();
+        let record_points = course.records.iter().map(|r| r.point).collect::<Vec<_>>();
+
+        let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2), (1.2, 2.1), (1.1, 2.2)];
+
+        assert_eq!(record_points, expected_points);
+        assert_eq!(course.num_repeated_points_skipped, 3);
         Ok(())
     }
 }
