@@ -12,7 +12,7 @@
 
 pub mod algorithm;
 pub mod coretypes;
-pub mod course;
+mod course;
 mod fit;
 mod geographic;
 mod gpx;
