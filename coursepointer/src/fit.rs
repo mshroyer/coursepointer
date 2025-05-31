@@ -5,8 +5,6 @@ use std::sync::LazyLock;
 
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
-use coretypes::measure::{Centimeters, Degrees, Meters, MetersPerSecond, Seconds};
-use coretypes::{GeoPoint, TypeError};
 use num_traits::Pow;
 use num_traits::bounds::Bounded;
 use num_traits::cast::NumCast;
@@ -14,7 +12,9 @@ use num_traits::float::Float;
 use num_traits::int::PrimInt;
 use thiserror::Error;
 
+use crate::coretypes::{GeoPoint, TypeError};
 use crate::course::Course;
+use crate::measure::{Centimeters, Degrees, Meters, MetersPerSecond, Seconds};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
 ///

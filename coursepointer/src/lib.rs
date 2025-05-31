@@ -13,18 +13,20 @@
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
-use coretypes::TypeError;
-use coretypes::measure::KilometersPerHour;
 use cxx;
 use thiserror::Error;
 
+use crate::coretypes::TypeError;
 use crate::gpx::GpxItem;
+use crate::measure::KilometersPerHour;
 
 pub mod algorithm;
+pub mod coretypes;
 pub mod course;
 pub mod fit;
 pub mod geographic;
 pub mod gpx;
+pub mod measure;
 
 pub use fit::{CourseFile, PROFILE_VERSION};
 pub use gpx::GpxReader;

@@ -17,14 +17,15 @@ use std::io::BufRead;
 use std::num::ParseFloatError;
 use std::{mem, str};
 
-use coretypes::measure::{Degrees, Meters};
-use coretypes::{GeoPoint, TypeError};
 use quick_xml;
 use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
+
+use crate::coretypes::{GeoPoint, TypeError};
+use crate::measure::{Degrees, Meters};
 
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]
@@ -351,10 +352,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use coretypes::measure::{Degrees, Meters};
-    use coretypes::{GeoPoint, geo_points};
-
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
+    use crate::coretypes::GeoPoint;
+    use crate::geo_points;
+    use crate::measure::{Degrees, Meters};
 
     macro_rules! waypoint {
         ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr ) => {

@@ -16,7 +16,6 @@ required-features = ["cli"]
 [dependencies]
 byteorder = "1.5.0"
 chrono = "0.4.41"
-coretypes = { version = "0.1.0", path = "../coretypes" }
 num-traits = "0.2.19"
 quick-xml = "0.37.5"
 thiserror = "2.0.12"
@@ -25,6 +24,7 @@ anyhow = { version = "1.0.98", optional = true }
 clap = { version = "4.5.39", optional = true, features = ["derive"] }
 env_logger = { version = "0.11.8", optional = true }
 cxx = "1.0.158"
+approx = "0.5.1"
 
 [dev-dependencies]
 anyhow = "1.0.98"

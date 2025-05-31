@@ -7,17 +7,17 @@
 //! Once all the data has been added (for example, by parsing it from a GPX
 //! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
-use coretypes::measure::Meters;
-use coretypes::{GeoPoint, GeoSegment};
 use log::debug;
 use thiserror::Error;
 
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception,
 };
+use crate::coretypes::{GeoPoint, GeoSegment};
 use crate::fit::CoursePointType;
 use crate::geographic::{GeographicError, geodesic_inverse};
 use crate::gpx::Waypoint;
+use crate::measure::Meters;
 
 #[derive(Error, Debug)]
 pub enum CourseError {
@@ -275,9 +275,9 @@ pub struct CoursePoint {
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use coretypes::{geo_point, geo_points};
 
     use crate::course::CourseBuilder;
+    use crate::{geo_point, geo_points};
 
     #[test]
     fn test_course_builder_empty() -> Result<()> {

@@ -1,8 +1,7 @@
-pub mod measure;
-
 use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
-use measure::{Degrees, Meters};
 use thiserror::Error;
+
+use crate::measure::{Degrees, Meters};
 
 #[derive(Error, Debug)]
 pub enum TypeError {
@@ -139,14 +138,14 @@ impl Default for XYPoint {
 #[macro_export]
 macro_rules! geo_point {
     ( $lat:expr, $lon:expr ) => {
-        $crate::GeoPoint::new(
+        $crate::coretypes::GeoPoint::new(
             $crate::measure::Degrees($lat),
             $crate::measure::Degrees($lon),
             None,
         )?
     };
     ( $lat:expr, $lon:expr, $ele:expr ) => {
-        $crate::GeoPoint::new(
+        $crate::coretypes::GeoPoint::new(
             $crate::measure::Degrees($lat),
             $crate::measure::Degrees($lon),
             Some(Meters($ele)),

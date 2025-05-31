@@ -1,6 +1,7 @@
-use coretypes::measure::{Degrees, Meters};
-use coretypes::{GeoPoint, TypeError, XYPoint};
 use thiserror::Error;
+
+use crate::coretypes::{GeoPoint, TypeError, XYPoint};
+use crate::measure::{Degrees, Meters};
 
 #[derive(Error, Debug)]
 pub enum GeographicError {
@@ -128,10 +129,10 @@ pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint
 mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
-    use coretypes::GeoPoint;
-    use coretypes::measure::Degrees;
 
     use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
+    use crate::coretypes::GeoPoint;
+    use crate::measure::Degrees;
 
     #[test]
     fn test_geodesic_inverse() -> Result<()> {
