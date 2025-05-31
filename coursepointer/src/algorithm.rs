@@ -90,6 +90,43 @@ pub fn karney_interception(geodesic: &GeoSegment, point: &GeoPoint) -> Result<Ge
     Ok(intercept)
 }
 
+/// A segment of a course whose distance from a point has been measured.
+pub trait MeasuredSegment<D>
+where
+    D: Copy + PartialOrd,
+{
+    fn measure(&self) -> D;
+}
+
+pub fn course_intercepts<I, T, D>(segments: I, threshold: D) -> Vec<T>
+where
+    T: MeasuredSegment<D>,
+    I: IntoIterator<Item = T>,
+    D: Copy + PartialOrd,
+{
+    let mut result: Vec<T> = Vec::new();
+    let mut span_min: Option<T> = None;
+    for segment in segments.into_iter() {
+        if segment.measure() <= threshold {
+            match &span_min {
+                Some(current_min) => {
+                    if segment.measure() < current_min.measure() {
+                        span_min = Some(segment);
+                    }
+                }
+                None => span_min = Some(segment),
+            }
+        } else if let Some(current_min) = span_min {
+            result.push(current_min);
+            span_min = None;
+        }
+    }
+    if let Some(current_min) = span_min {
+        result.push(current_min);
+    }
+    result
+}
+
 #[derive(Clone, Copy)]
 pub struct Vec2 {
     pub x: f64,
@@ -128,7 +165,7 @@ mod tests {
     use coretypes::{GeoPoint, GeoSegment};
     use serde::Deserialize;
 
-    use crate::algorithm::karney_interception;
+    use crate::algorithm::{MeasuredSegment, course_intercepts, karney_interception};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {
@@ -185,7 +222,10 @@ mod tests {
     #[test]
     fn test_karney_interception_zero_length_segment() -> Result<()> {
         let seg_point = GeoPoint::new(Degrees(3.0), Degrees(4.0), None)?;
-        let seg = GeoSegment { point1: seg_point, point2: seg_point };
+        let seg = GeoSegment {
+            point1: seg_point,
+            point2: seg_point,
+        };
         let p = GeoPoint::new(Degrees(3.5), Degrees(4.5), None)?;
         let intercept = karney_interception(&seg, &p)?;
 
@@ -204,5 +244,66 @@ mod tests {
 
         assert_relative_eq!(intercept, point1);
         Ok(())
+    }
+
+    impl MeasuredSegment<i32> for (char, i32) {
+        fn measure(&self) -> i32 {
+            self.1
+        }
+    }
+
+    #[test]
+    fn test_course_intercepts_multiple_matches() {
+        let segments = vec![
+            ('a', 10),
+            ('b', 8), // <-- Local minimum above threshold
+            ('c', 11),
+            ('d', 7),
+            ('e', 4),
+            ('f', 2), // <-- Local minimum below threshold
+            ('g', 5),
+            ('h', 7),
+            ('i', 7),
+            ('j', 8),
+            ('k', 2),
+            ('l', 1), // <-- Another minimum below the threshold
+            ('m', 2),
+            ('n', 1),
+        ];
+        let result = course_intercepts(segments, 5)
+            .into_iter()
+            .map(|(c, _)| c)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec!['f', 'l']);
+    }
+
+    #[test]
+    fn test_course_intercepts_empty() {
+        let segments: Vec<(char, i32)> = Vec::new();
+        let result = course_intercepts(segments, 5)
+            .into_iter()
+            .map(|(c, _)| c)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec![]);
+    }
+
+    #[test]
+    fn test_course_intercepts_single_match() {
+        let segments = vec![('a', 10), ('b', 8), ('c', 5), ('d', 6)];
+        let result = course_intercepts(segments, 5)
+            .into_iter()
+            .map(|(c, _)| c)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec!['c']);
+    }
+
+    #[test]
+    fn test_course_intercepts_ending_match() {
+        let segments = vec![('a', 10), ('b', 8), ('c', 6), ('d', 4)];
+        let result = course_intercepts(segments, 5)
+            .into_iter()
+            .map(|(c, _)| c)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec!['d']);
     }
 }
