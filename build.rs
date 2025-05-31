@@ -43,7 +43,7 @@ fn main() {
 
     for file in list_cpp_files("geographiclib/src").unwrap() {
         println!("cargo:rerun-if-changed={}", file.display());
-        println!("cargo:rerun-if-changed=src/shim.cpp");
-        println!("cargo:rerun-if-changed=include/shim.hpp");
     }
+    println!("cargo:rerun-if-changed=src/shim.cpp");
+    println!("cargo:rerun-if-changed=include/shim.hpp");
 }
