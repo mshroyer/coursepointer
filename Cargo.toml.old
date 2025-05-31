@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = [ "coretypes", "coursepointer-cli","geographic","integration-stub"]
+
+[profile.release]
+#lto = true
