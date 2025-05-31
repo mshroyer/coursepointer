@@ -24,7 +24,7 @@ def cargo() -> Cargo:
 
 @pytest.fixture(scope="session")
 def coursepointer_cli(cargo) -> RustBinFunc:
-    return cargo.make_bin_func(Path("coursepointer-cli"), "coursepointer-cli", Profile.TEST)
+    return cargo.make_bin_func(None, "coursepointer", Profile.TEST)
 
 
 @pytest.fixture(scope="session")

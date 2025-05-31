@@ -100,7 +100,7 @@ class Cargo:
 
         return Cargo(cargo_bin, workspace_dir())
 
-    def build_bin(self, package: Path, binary: str, profile: Profile) -> Path:
+    def build_bin(self, package: Optional[Path], binary: str, profile: Profile) -> Path:
         """Build a rust binary
 
         In a package relative to the project's root directory, uses cargo to
@@ -111,9 +111,12 @@ class Cargo:
 
         """
 
-        subprocess.check_call(
-            [self.cargo_bin, "build", "--package", package, "--bin", binary, "--profile", str(profile)],
-            cwd=self.workspace)
+        args = [self.cargo_bin, "build"]
+        if package:
+            args.extend(["--package", package])
+        args.extend(["--bin", binary, "--profile", str(profile)])
+
+        subprocess.check_call(args, cwd=self.workspace)
         binary_filename = binary + ".exe" if is_windows() else binary
 
         # This assumes the target directory is in the root of the project
@@ -121,5 +124,5 @@ class Cargo:
         # .cargo/config.toml and CARGO_TARGET_DIR.
         return self.workspace / "target" / profile.target_subdir() / binary_filename
 
-    def make_bin_func(self, package: Path, binary: str, profile: Profile) -> RustBinFunc:
+    def make_bin_func(self, package: Optional[Path], binary: str, profile: Profile) -> RustBinFunc:
         return RustBinFunc(self.build_bin(package, binary, profile))
