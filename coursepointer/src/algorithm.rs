@@ -29,6 +29,11 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 /// relative positions of the input segment and point, the point of interception
 /// may be located at one of the geodesic's endpoints.
 ///
+/// Note that because of this function's reliance on the gnomonic projection, it
+/// can give incorrect results for points very far away from each other.
+///
+/// # Algorithm description
+///
 /// Charles Karney gave an illustration of this problem as an anti-aircraft
 /// battery identifying the point along an enemy plane's trajectory at which it
 /// would be nearest to its missiles.
@@ -42,16 +47,15 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 /// 4. Repeats a few times, each time re-centering the projection on the updated
 ///    guess.
 ///
-/// Karney described this approach in a post here:
-/// https://sourceforge.net/p/geographiclib/discussion/1026621/thread/21aaff9f/#8a93
+/// # References
+///
+/// Karney described this approach in a forum post here:
+/// <https://sourceforge.net/p/geographiclib/discussion/1026621/thread/21aaff9f/#8a93>
 ///
 /// (However, here I use different linear algebra to find the interception than
 /// in his example code.)
 ///
-/// Note that because of this function's reliance on the gnomonic projection, it
-/// can give incorrect results for points very far away from each other.
-///
-/// For a more detailed description, see: http://arxiv.org/abs/1102.1215
+/// For a more detailed description, see: <http://arxiv.org/abs/1102.1215>
 pub fn karney_interception(geodesic: &GeoSegment, point: &GeoPoint) -> Result<GeoPoint> {
     // TODO: Remove duplicate solution of geodesic inverse
     let seg = geodesic_inverse(&geodesic.point1, &geodesic.point2)?;
@@ -98,9 +102,14 @@ where
     fn measure(&self) -> D;
 }
 
-/// Finds the segments of a course intercepted within some threshold distance.
+/// Finds the segments of a course intercepted within some threshold of distance
+/// from a point.
 ///
-/// # Examples
+/// Operates on a sequence of segments describing a course.  The
+/// [`MeasuredSegment`] trait is used to determine each segment's distance from
+/// the point, which
+///
+/// # Example
 ///
 /// ```
 /// use coursepointer::algorithm::MeasuredSegment;

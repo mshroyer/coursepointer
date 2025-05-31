@@ -26,7 +26,7 @@ enum Commands {
         /// Path where to write FIT output
         output: PathBuf,
 
-        /// Force overwrite of any existing file at <OUTPUT>
+        /// Force overwrite the output file, if it already exists
         #[clap(long, short, action)]
         force: bool,
     },
