@@ -5,10 +5,10 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
-use coursepointer::coretypes::GeoPoint;
-use coursepointer::measure::{Degrees, KilometersPerHour};
 use coursepointer::CourseFile;
+use coursepointer::coretypes::GeoPoint;
 use coursepointer::course::CourseBuilder;
+use coursepointer::measure::{Degrees, KilometersPerHour};
 use serde::Deserialize;
 
 #[derive(Parser)]
