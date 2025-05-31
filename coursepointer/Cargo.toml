@@ -2,6 +2,7 @@
 name = "coursepointer"
 version = "0.1.0"
 edition = "2024"
+default-run = "coursepointer"
 
 [lib]
 name = "coursepointer"
@@ -38,3 +39,8 @@ cli = ["dep:anyhow", "dep:clap", "dep:env_logger"]
 
 [build-dependencies]
 cxx-build = "1.0.158"
+#lto = true
+
+[workspace]
+resolver = "2"
+members = ["integration-stub"]
