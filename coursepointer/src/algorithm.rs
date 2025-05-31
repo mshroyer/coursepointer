@@ -98,7 +98,35 @@ where
     fn measure(&self) -> D;
 }
 
-pub fn course_intercepts<I, T, D>(segments: I, threshold: D) -> Vec<T>
+/// Finds the segments of a course intercepted within some threshold distance.
+///
+/// # Examples
+///
+/// ```
+/// use coursepointer::algorithm::MeasuredSegment;
+/// use coursepointer::algorithm::intercepted_segments;
+///
+/// #[derive(PartialEq, Debug)]
+/// struct Seg(char, i32);
+///
+/// impl MeasuredSegment<i32> for Seg {
+///     fn measure(&self) -> i32 {
+///        self.1
+///    }
+/// }
+///
+/// let segments = vec![
+///     Seg('a', 11),
+///     Seg('b', 7),
+///     Seg('c', 5), // <-- Course passes within threshold starting here
+///     Seg('d', 2), // <-- Local minimum here
+///     Seg('e', 4),
+///     Seg('f', 7),
+/// ];
+/// let result = intercepted_segments(segments, 5);
+/// assert_eq!(result, vec![Seg('d', 2)]);
+/// ```
+pub fn intercepted_segments<I, T, D>(segments: I, threshold: D) -> Vec<T>
 where
     T: MeasuredSegment<D>,
     I: IntoIterator<Item = T>,
@@ -165,7 +193,7 @@ mod tests {
     use coretypes::{GeoPoint, GeoSegment};
     use serde::Deserialize;
 
-    use crate::algorithm::{MeasuredSegment, course_intercepts, karney_interception};
+    use crate::algorithm::{MeasuredSegment, intercepted_segments, karney_interception};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {
@@ -253,7 +281,7 @@ mod tests {
     }
 
     #[test]
-    fn test_course_intercepts_multiple_matches() {
+    fn test_intercepted_segments_multiple_matches() {
         let segments = vec![
             ('a', 10),
             ('b', 8), // <-- Local minimum above threshold
@@ -270,7 +298,7 @@ mod tests {
             ('m', 2),
             ('n', 1),
         ];
-        let result = course_intercepts(segments, 5)
+        let result = intercepted_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -278,9 +306,9 @@ mod tests {
     }
 
     #[test]
-    fn test_course_intercepts_empty() {
+    fn test_intercepted_segments_empty() {
         let segments: Vec<(char, i32)> = Vec::new();
-        let result = course_intercepts(segments, 5)
+        let result = intercepted_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -288,9 +316,9 @@ mod tests {
     }
 
     #[test]
-    fn test_course_intercepts_single_match() {
+    fn test_intercepted_segments_single_match() {
         let segments = vec![('a', 10), ('b', 8), ('c', 5), ('d', 6)];
-        let result = course_intercepts(segments, 5)
+        let result = intercepted_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -298,9 +326,9 @@ mod tests {
     }
 
     #[test]
-    fn test_course_intercepts_ending_match() {
+    fn test_intercepted_segments_ending_match() {
         let segments = vec![('a', 10), ('b', 8), ('c', 6), ('d', 4)];
-        let result = course_intercepts(segments, 5)
+        let result = intercepted_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();

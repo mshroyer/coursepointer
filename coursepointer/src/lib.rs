@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::gpx::GpxItem;
 
-mod algorithm;
+pub mod algorithm;
 pub mod course;
 pub mod fit;
 pub mod gpx;
