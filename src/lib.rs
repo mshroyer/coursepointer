@@ -11,7 +11,7 @@
 //!   both this crate and [`geographic`] to avoid a circular dependency.
 
 pub mod algorithm;
-pub mod coretypes;
+mod coretypes;
 mod course;
 mod fit;
 mod geographic;
