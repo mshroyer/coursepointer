@@ -4,6 +4,7 @@
 //! correct by construction.  I wrote these rather than use the popular `uom`
 //! crate because the latter obscures the actual storage unit and numeric type.
 
+use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div};
 
@@ -18,7 +19,7 @@ where
 
 macro_rules! unit_of_measure {
     ($u:tt) => {
-        #[derive(Clone, Copy, PartialEq, Debug)]
+        #[derive(Clone, Copy, PartialEq, PartialOrd, Debug)]
         pub struct $u<N: Num + Copy>(pub N);
 
         impl<N> UnitOfMeasure<N> for $u<N>

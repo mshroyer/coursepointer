@@ -2,11 +2,13 @@
 
 use coretypes::measure::Meters;
 use coretypes::{GeoPoint, GeoSegment};
-use geographic::GeographicError;
+use geographic::{GeographicError, geodesic_inverse};
 use log::debug;
 use thiserror::Error;
 
-use crate::algorithm::FromGeoPoints;
+use crate::algorithm::{
+    AlgorithmError, FromGeoPoints, InterceptedSegment, intercepted_segments, karney_interception,
+};
 use crate::fit::CoursePointType;
 use crate::gpx::Waypoint;
 
@@ -16,6 +18,8 @@ pub enum CourseError {
     Geographic(#[from] GeographicError),
     #[error("Attempt to access a missing course")]
     MissingCourse,
+    #[error("Error in geographic calculation")]
+    Algorithm(#[from] AlgorithmError),
 }
 
 type Result<T> = std::result::Result<T, CourseError>;
@@ -53,12 +57,67 @@ impl CourseSetBuilder {
         self.waypoints.push(waypoint);
     }
 
-    pub fn build(self) -> CourseSet {
+    pub fn build(mut self) -> Result<CourseSet> {
         let mut courses = vec![];
+        self.process_waypoints()?;
         for course_builder in self.courses {
             courses.push(course_builder.build());
         }
-        CourseSet { courses }
+        Ok(CourseSet { courses })
+    }
+
+    fn process_waypoints(&mut self) -> Result<()> {
+        for waypoint in &self.waypoints {
+            for course in &mut self.courses {
+                let mut slns = Vec::new();
+                let mut course_distance = Meters(0.0);
+                for segment in &course.segments {
+                    let intercept = karney_interception(segment, &waypoint.point)?;
+                    let distance = geodesic_inverse(&waypoint.point, &intercept)?.geo_distance;
+                    let offset = geodesic_inverse(&segment.point1, &intercept)?.geo_distance;
+
+                    slns.push(InterceptSolution {
+                        intercept_point: intercept,
+                        intercept_distance: distance,
+                        course_distance: course_distance + offset,
+                    });
+                    course_distance += segment.geo_distance;
+                }
+
+                let near_segments = intercepted_segments(&slns, Meters(35.0));
+                debug!("Found {} segments near {}", near_segments.len(), waypoint.name);
+
+                if !near_segments.is_empty() {
+                    // TODO: Handle multiple passbys
+                    let sln = near_segments[0];
+                    course.course_points.push(CoursePoint {
+                        point: sln.intercept_point,
+                        distance: sln.course_distance,
+                        point_type: CoursePointType::Generic,
+                        name: waypoint.name.clone(),
+                    })
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+struct InterceptSolution {
+    /// The point of interception.
+    intercept_point: GeoPoint,
+
+    /// The geodesic distance between the intercept point and the waypoint.
+    intercept_distance: Meters<f64>,
+
+    /// The distance along the entire course at which this point of interception
+    /// appears.
+    course_distance: Meters<f64>,
+}
+
+impl InterceptedSegment<Meters<f64>> for &InterceptSolution {
+    fn intercept_distance(&self) -> Meters<f64> {
+        self.intercept_distance
     }
 }
 
@@ -97,6 +156,7 @@ pub struct CourseBuilder {
     segments: Vec<GeoSegment>,
     prev_point: Option<GeoPoint>,
     name: Option<String>,
+    course_points: Vec<CoursePoint>,
     num_releated_points_skipped: usize,
 }
 
@@ -107,6 +167,7 @@ impl CourseBuilder {
             segments: Vec::new(),
             prev_point: None,
             name: None,
+            course_points: Vec::new(),
             num_releated_points_skipped: 0,
         }
     }
@@ -169,7 +230,7 @@ impl CourseBuilder {
         );
         Course {
             records,
-            course_points: vec![],
+            course_points: self.course_points,
             name: self.name,
         }
     }

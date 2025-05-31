@@ -45,14 +45,24 @@ pub enum FitEncodeError {
 type Result<T> = std::result::Result<T, FitEncodeError>;
 
 fn write_string_field<W: Write>(s: &str, field_size: usize, w: &mut W) -> Result<()> {
-    if s.len() >= field_size - 1 {
-        return Err(FitEncodeError::StringEncoding);
-    }
-    w.write_all(s.as_bytes())?;
-    for _ in 0..(field_size - s.len()) {
+    let st = truncate_to_char_boundary(s, field_size - 1);
+    w.write_all(st.as_bytes())?;
+    for _ in 0..(field_size - st.len()) {
         w.write_u8(0)?;
     }
     Ok(())
+}
+
+fn truncate_to_char_boundary(s: &str, max_bytes: usize) -> &str {
+    if s.len() <= max_bytes {
+        return s;
+    }
+
+    let mut end = max_bytes;
+    while end > 0 && !s.is_char_boundary(end) {
+        end -= 1;
+    }
+    &s[..end]
 }
 
 static GARMIN_EPOCH: LazyLock<DateTime<Utc>> =

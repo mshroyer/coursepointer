@@ -67,7 +67,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: W) -> Result<
         }
     }
 
-    let course_set = builder.build();
+    let course_set = builder.build()?;
     if course_set.courses.len() != 1usize {
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
