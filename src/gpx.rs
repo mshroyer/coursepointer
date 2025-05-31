@@ -159,12 +159,6 @@ where
     }
 }
 
-impl GpxReader<&[u8]> {
-    pub fn from_text(s: &str) -> GpxReader<&[u8]> {
-        GpxReader::new(Reader::from_reader(s.as_bytes()))
-    }
-}
-
 impl<R: BufRead> GpxReader<R> {
     pub fn from_reader(reader: R) -> GpxReader<R> {
         GpxReader::new(Reader::from_reader(reader))
@@ -352,6 +346,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use quick_xml::Reader;
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
     use crate::coretypes::GeoPoint;
     use crate::geo_points;
@@ -382,6 +377,12 @@ mod tests {
         ( $( ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr $( , $ele:expr )? $(,)? ) ),* $(,)? ) => {
             vec![ $( waypoint!($name, $cmt, $sym, $type_, $lat, $lon $( , $ele )? ) ),* ]
         };
+    }
+
+    impl GpxReader<&[u8]> {
+        pub fn from_text(s: &str) -> GpxReader<&[u8]> {
+            GpxReader::new(Reader::from_reader(s.as_bytes()))
+        }
     }
 
     #[test]

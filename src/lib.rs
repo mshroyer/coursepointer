@@ -10,27 +10,24 @@
 //! - [`coretypes`] provides simple units of measure and other types used by
 //!   both this crate and [`geographic`] to avoid a circular dependency.
 
+pub mod algorithm;
+pub mod coretypes;
+pub mod course;
+pub mod fit;
+pub mod geographic;
+mod gpx;
+pub mod measure;
+
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
 use thiserror::Error;
 
 use crate::coretypes::TypeError;
-use crate::gpx::GpxItem;
+use crate::gpx::{GpxItem, GpxReader};
 use crate::measure::KilometersPerHour;
-
-pub mod algorithm;
-pub mod coretypes;
-pub mod course;
-pub mod fit;
-pub mod geographic;
-pub mod gpx;
-pub mod measure;
-
-pub use fit::{CourseFile, PROFILE_VERSION};
-pub use gpx::GpxReader;
-
 use crate::course::{CourseError, CourseSetBuilder};
+use crate::fit::CourseFile;
 
 #[derive(Error, Debug)]
 pub enum CoursePointerError {
