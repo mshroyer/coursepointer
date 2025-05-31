@@ -13,10 +13,13 @@
 pub mod algorithm;
 pub mod coretypes;
 pub mod course;
-pub mod fit;
+mod fit;
 pub mod geographic;
 mod gpx;
 pub mod measure;
+pub mod testonly;
+
+pub use fit::FitEncodeError;
 
 use std::io::{BufRead, Write};
 

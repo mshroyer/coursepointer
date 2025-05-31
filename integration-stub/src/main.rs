@@ -7,10 +7,9 @@ use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use coursepointer::coretypes::GeoPoint;
 use coursepointer::measure::{Degrees, KilometersPerHour};
-use coursepointer::CourseFile;
+use coursepointer::testonly::CourseFile;
 use coursepointer::course::CourseBuilder;
 use serde::Deserialize;
-use coursepointer::fit::CourseFile;
 
 #[derive(Parser)]
 struct Args {
@@ -86,7 +85,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
 }
 
 fn show_profile_version() -> Result<()> {
-    println!("{}", coursepointer::fit::PROFILE_VERSION);
+    println!("{}", coursepointer::testonly::PROFILE_VERSION);
     Ok(())
 }
 

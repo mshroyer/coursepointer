@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use coursepointer::CoursePointerError;
-use coursepointer::fit::FitEncodeError;
+use coursepointer::FitEncodeError;
 
 #[derive(Parser)]
 struct Args {
