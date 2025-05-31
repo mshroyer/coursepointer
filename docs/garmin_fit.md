@@ -97,6 +97,8 @@ Garmin Connect would only allow me to add course points with names up to 15 char
 
 When creating courses with really long names, Connect would only export the first 128 characters, making the field size 129 bytes including the null terminator.
 
+Connect's course point message include an incrementing `message_index` field starting at zero. This doesn't appear to reference record messages, but only represents the order of the course point message itself.
+
 ### Ride With GPS
 
 FIT files exported directly from Ride With GPS are formatted similarly to those created by Garmin Connect, although all course point messages are serialized before all the record messages, and the closing file creator message is missing.
@@ -104,6 +106,8 @@ FIT files exported directly from Ride With GPS are formatted similarly to those 
 Also big endian.
 
 Setting the "notify before turn" option when exporting makes the cues being exported as course points appear earlier on the course: The distance field is reduced by the specified amount, and the course point's latitude and longitude are also adjusted.
+
+In contrast with Garmin Connect, doesn't set `message_index` on course point messages.
 
 ## Device experiments
 
