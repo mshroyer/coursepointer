@@ -12,51 +12,6 @@ pub enum GeographicError {
 
 type Result<T> = std::result::Result<T, GeographicError>;
 
-#[allow(clippy::too_many_arguments)]
-#[cxx::bridge(namespace = "CoursePointer")]
-mod ffi {
-    unsafe extern "C++" {
-        include!("geographic/include/shim.hpp");
-
-        fn geodesic_inverse_with_azimuth(
-            lat1: f64,
-            lon1: f64,
-            lat2: f64,
-            lon2: f64,
-            s12: &mut f64,
-            azi1: &mut f64,
-            azi2: &mut f64,
-        ) -> Result<f64>;
-
-        fn geodesic_direct(
-            lat1: f64,
-            lon1: f64,
-            az1: f64,
-            s12: f64,
-            lat2: &mut f64,
-            lon2: &mut f64,
-        ) -> Result<f64>;
-
-        fn gnomonic_forward(
-            lat1: f64,
-            lon1: f64,
-            lat: f64,
-            lon: f64,
-            x: &mut f64,
-            y: &mut f64,
-        ) -> Result<()>;
-
-        fn gnomonic_reverse(
-            lat1: f64,
-            lon1: f64,
-            x: f64,
-            y: f64,
-            lat: &mut f64,
-            lon: &mut f64,
-        ) -> Result<()>;
-    }
-}
-
 /// A solution to the inverse problem in geodesy.
 pub struct InverseSolution {
     /// Arc distance between the points.
@@ -80,7 +35,7 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     let mut geo_distance_m = 0.0;
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
-    let arc_distance_deg = ffi::geodesic_inverse_with_azimuth(
+    let arc_distance_deg = crate::ffi::geodesic_inverse_with_azimuth(
         point1.lat().0,
         point1.lon().0,
         point2.lat().0,
@@ -118,7 +73,7 @@ pub fn geodesic_direct(
 ) -> Result<DirectSolution> {
     let mut lat2_deg = 0.0;
     let mut lon2_deg = 0.0;
-    let arc_distance_deg = ffi::geodesic_direct(
+    let arc_distance_deg = crate::ffi::geodesic_direct(
         point1.lat().0,
         point1.lon().0,
         azimuth.0,
@@ -139,7 +94,7 @@ pub fn geodesic_direct(
 /// `point0`.
 pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XYPoint> {
     let mut result = XYPoint::default();
-    ffi::gnomonic_forward(
+    crate::ffi::gnomonic_forward(
         point0.lat().0,
         point0.lon().0,
         point.lat().0,
@@ -158,7 +113,7 @@ pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XYPoint> 
 pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint> {
     let mut lat_deg = 0.0;
     let mut lon_deg = 0.0;
-    ffi::gnomonic_reverse(
+    crate::ffi::gnomonic_reverse(
         point0.lat().0,
         point0.lon().0,
         xypoint.x.0,

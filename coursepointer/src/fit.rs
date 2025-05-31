@@ -35,7 +35,7 @@ pub enum FitEncodeError {
     #[error("Error encoding date_time")]
     DateTimeEncoding,
     #[error("Geographic computation error")]
-    GeographicError(#[from] geographic::GeographicError),
+    GeographicError(#[from] crate::geographic::GeographicError),
     #[error("Infallible")]
     Infallible(#[from] Infallible),
     #[error("Type error")]

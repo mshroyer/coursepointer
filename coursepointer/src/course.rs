@@ -9,7 +9,6 @@
 
 use coretypes::measure::Meters;
 use coretypes::{GeoPoint, GeoSegment};
-use geographic::{GeographicError, geodesic_inverse};
 use log::debug;
 use thiserror::Error;
 
@@ -17,6 +16,7 @@ use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception,
 };
 use crate::fit::CoursePointType;
+use crate::geographic::{GeographicError, geodesic_inverse};
 use crate::gpx::Waypoint;
 
 #[derive(Error, Debug)]

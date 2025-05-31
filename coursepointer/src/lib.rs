@@ -15,6 +15,7 @@ use std::io::{BufRead, Write};
 use chrono::Utc;
 use coretypes::TypeError;
 use coretypes::measure::KilometersPerHour;
+use cxx;
 use thiserror::Error;
 
 use crate::gpx::GpxItem;
@@ -22,6 +23,7 @@ use crate::gpx::GpxItem;
 pub mod algorithm;
 pub mod course;
 pub mod fit;
+pub mod geographic;
 pub mod gpx;
 
 pub use fit::{CourseFile, PROFILE_VERSION};
@@ -88,4 +90,49 @@ pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: W) -> Result<
     course_file.encode(fit_output)?;
 
     Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+#[cxx::bridge(namespace = "CoursePointer")]
+mod ffi {
+    unsafe extern "C++" {
+        include!("coursepointer/include/shim.hpp");
+
+        fn geodesic_inverse_with_azimuth(
+            lat1: f64,
+            lon1: f64,
+            lat2: f64,
+            lon2: f64,
+            s12: &mut f64,
+            azi1: &mut f64,
+            azi2: &mut f64,
+        ) -> Result<f64>;
+
+        fn geodesic_direct(
+            lat1: f64,
+            lon1: f64,
+            az1: f64,
+            s12: f64,
+            lat2: &mut f64,
+            lon2: &mut f64,
+        ) -> Result<f64>;
+
+        fn gnomonic_forward(
+            lat1: f64,
+            lon1: f64,
+            lat: f64,
+            lon: f64,
+            x: &mut f64,
+            y: &mut f64,
+        ) -> Result<()>;
+
+        fn gnomonic_reverse(
+            lat1: f64,
+            lon1: f64,
+            x: f64,
+            y: f64,
+            lat: &mut f64,
+            lon: &mut f64,
+        ) -> Result<()>;
+    }
 }

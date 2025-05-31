@@ -10,10 +10,11 @@ use std::ops::Mul;
 
 use coretypes::measure::Meters;
 use coretypes::{GeoPoint, GeoSegment, XYPoint};
-use geographic::{
+use thiserror::Error;
+
+use crate::geographic::{
     GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
 };
-use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AlgorithmError {

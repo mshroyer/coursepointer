@@ -37,8 +37,8 @@ fn main() {
     cxx_build::bridge("src/lib.rs")
         .file("src/shim.cpp")
         .files(list_cpp_files("geographiclib/src").unwrap())
-        .flag("-I../geographic/include")
-        .flag("-I../geographic/geographiclib/include")
+        .flag("-I./include")
+        .flag("-I./geographiclib/include")
         .compile("geocxx");
 
     for file in list_cpp_files("geographiclib/src").unwrap() {
