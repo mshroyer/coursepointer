@@ -6,8 +6,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use coursepointer::coretypes::GeoPoint;
-use coursepointer::measure::{Degrees, KilometersPerHour};
-use coursepointer::testonly::{CourseBuilder, CourseFile};
+use coursepointer::testonly::{CourseBuilder, CourseFile, Degrees, KilometersPerHour};
 use serde::Deserialize;
 
 #[derive(Parser)]

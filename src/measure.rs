@@ -9,6 +9,7 @@ use std::ops::{Add, AddAssign, Div};
 
 use num_traits::Num;
 
+#[allow(dead_code)]
 pub trait UnitOfMeasure<N>
 where
     N: Num + Copy,

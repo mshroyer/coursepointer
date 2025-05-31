@@ -5,3 +5,4 @@
 
 pub use crate::course::CourseBuilder;
 pub use crate::fit::{CourseFile, PROFILE_VERSION};
+pub use crate::measure::{Degrees, KilometersPerHour};
