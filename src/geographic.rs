@@ -1,3 +1,7 @@
+//! Functions from GeographicLib
+//!
+//! Wraps the CXX FFI for GeographicLib in a friendlier interface.
+
 use thiserror::Error;
 
 use crate::measure::{Degrees, Meters};
@@ -14,12 +18,19 @@ pub enum GeographicError {
 type Result<T> = std::result::Result<T, GeographicError>;
 
 /// A solution to the inverse problem in geodesy.
+#[allow(dead_code)]
 pub struct InverseSolution {
+    /// Arc distance between the points.
+    pub arc_distance: Degrees<f64>,
+
     /// Geodesic distance between the points.
     pub geo_distance: Meters<f64>,
 
     /// Azimuth of the geodesic as measured at point1.
     pub azimuth1: Degrees<f64>,
+
+    /// Azimuth of the geodesic as measured at point1.
+    pub azimuth2: Degrees<f64>,
 }
 
 /// Calculate a solution to the inverse geodesic problem.
@@ -30,7 +41,7 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     let mut geo_distance_m = 0.0;
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
-    crate::ffi::geodesic_inverse_with_azimuth(
+    let arc_distance_deg = crate::ffi::geodesic_inverse_with_azimuth(
         point1.lat().0,
         point1.lon().0,
         point2.lat().0,
@@ -41,13 +52,19 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     )?;
 
     Ok(InverseSolution {
+        arc_distance: Degrees(arc_distance_deg),
         geo_distance: Meters(geo_distance_m),
         azimuth1: Degrees(azimuth1_deg),
+        azimuth2: Degrees(azimuth2_deg),
     })
 }
 
 /// A solution to the direct problem in geodesy.
+#[allow(dead_code)]
 pub struct DirectSolution {
+    /// Arc distance between the points.
+    pub arc_distance: Degrees<f64>,
+
     /// Destination point.
     pub point2: GeoPoint,
 }
@@ -63,7 +80,7 @@ pub fn geodesic_direct(
 ) -> Result<DirectSolution> {
     let mut lat2_deg = 0.0;
     let mut lon2_deg = 0.0;
-    crate::ffi::geodesic_direct(
+    let arc_distance_deg = crate::ffi::geodesic_direct(
         point1.lat().0,
         point1.lon().0,
         azimuth.0,
@@ -72,6 +89,7 @@ pub fn geodesic_direct(
         &mut lon2_deg,
     )?;
     Ok(DirectSolution {
+        arc_distance: Degrees(arc_distance_deg),
         point2: GeoPoint::new(Degrees(lat2_deg), Degrees(lon2_deg), None)?,
     })
 }
