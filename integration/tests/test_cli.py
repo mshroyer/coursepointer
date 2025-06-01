@@ -246,3 +246,24 @@ class TestConvert:
 
         distance = field(mesgs, "record", -1, "distance") * ureg.meter
         assert distance.to(ureg.mile).magnitude == approx(4.48, abs=0.01)
+
+
+class TestIntercept:
+    def test_waypoint_interception(self, data, ureg, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        # This route should have identified four course points
+        assert len(mesgs["course_point_mesgs"]) == 4
+
+        course_length = field(mesgs, "lap", 0, "total_distance") * ureg.meter
+        for course_point in mesgs["course_point_mesgs"]:
+            distance = course_point["distance"] * ureg.meter
+            assert distance > 0 * ureg.meter
+            assert distance <= course_length
+
+        names = list(map(lambda mesg: mesg["name"], mesgs["course_point_mesgs"]))
+        assert "Castle Rock Fal" in names
+        assert "Russell Point" in names
+        assert "Emily Smith Poi" in names
+        assert "Goat Point Over" in names
