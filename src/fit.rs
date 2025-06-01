@@ -480,30 +480,34 @@ struct EventMessage {
     event: Event,
     event_type: EventType,
     timestamp: FitDateTime,
+    event_group: u8,
 }
 
 impl EventMessage {
-    fn new(event: Event, event_type: EventType, timestamp: FitDateTime) -> Self {
+    fn new(event: Event, event_type: EventType, timestamp: FitDateTime, event_group: u8) -> Self {
         Self {
             event,
             event_type,
             timestamp,
+            event_group,
         }
     }
 
     fn field_definitions() -> Vec<FieldDefinition> {
         vec![
-            FieldDefinition::new(0, 1, 0),     // event
-            FieldDefinition::new(1, 1, 0),     // event_type
             FieldDefinition::new(253, 4, 134), // timestamp
+            FieldDefinition::new(0, 1, 0),     // event
+            FieldDefinition::new(4, 1, 2),     // event_group
+            FieldDefinition::new(1, 1, 0),     // event_type
         ]
     }
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        w.write_u8(self.event as u8)?;
-        w.write_u8(self.event_type as u8)?;
         w.write_u32::<BigEndian>(self.timestamp.value)?;
+        w.write_u8(self.event as u8)?;
+        w.write_u8(self.event_group)?;
+        w.write_u8(self.event_type as u8)?;
         Ok(())
     }
 }
@@ -710,6 +714,7 @@ impl<'a> CourseFile<'a> {
             Event::Timer,
             EventType::Start,
             FitDateTime::try_from(self.start_time)?,
+            0,
         )
         .encode(3u8, &mut dw)?;
 
@@ -759,6 +764,7 @@ impl<'a> CourseFile<'a> {
             Event::Timer,
             EventType::Stop,
             FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
+            0,
         )
         .encode(3u8, &mut dw)?;
 

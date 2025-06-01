@@ -231,6 +231,15 @@ class TestConvert:
         event_spacing = event_mesgs[1]["timestamp"] - event_mesgs[0]["timestamp"]
         assert event_spacing.seconds == lap_elapsed
 
+    def test_timer_event_group(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        # I don't know if this is needed for anything, but Garmin Connect sets a
+        # zero event group so we might as well do the same.
+        event_mesgs = mesgs["event_mesgs"]
+        assert event_mesgs[0]["event_group"] == event_mesgs[1]["event_group"] == 0
+
     def test_gpx_rte_conversion(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")
         mesgs = caching_mesgs(out_file)
