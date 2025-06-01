@@ -27,11 +27,8 @@ from integration import (
 
 
 # TODO: Add and test for remaining FIT course fields
-# - file_id
-#   - Manufacturer
 #   - Serial number
 # - course
-#   - Sport
 #   - Sub-sport
 # - record
 #   - altitude

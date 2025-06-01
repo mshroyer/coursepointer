@@ -1,5 +1,6 @@
 """Test the main coursepointer-cli binary"""
 
+from datetime import datetime, timedelta, timezone
 import subprocess
 from itertools import pairwise
 
@@ -66,19 +67,20 @@ class TestUI:
 class TestFIT:
     """Test FIT encoding in the CLI.
 
-    Tests that low-level details of FIT encoding are correct; the exact GPX used
-    as the input to the conversion isn't relative to these.
+    Tests that low-level details of FIT encoding and course file are correct.
+    The exact GPX used as the input to the conversion isn't relevant to these
+    tests.
 
     """
 
-    def test_protocol_verison(self, data, caching_convert):
+    def test_header_protocol_verison(self, data, caching_convert):
         out_file = caching_convert(data / "cptr004.gpx")
         header = garmin_read_file_header(out_file)
 
         # Protocol version 1 is represented as 0x10, 2 as 0x20.
         assert header.protocol_version == 0x10
 
-    def test_profile_version(self, data, integration_stub, caching_convert):
+    def test_header_profile_version(self, data, integration_stub, caching_convert):
         out_file = caching_convert(data / "cptr004.gpx")
         header = garmin_read_file_header(out_file)
 
@@ -88,11 +90,44 @@ class TestFIT:
         )
         assert header.profile_version == lib_profile_version
 
+    def test_course_sport(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        assert len(mesgs["course_mesgs"]) == 1
+        assert field(mesgs, "course", 0, "sport") == "cycling"
+
+    def test_file_id_type(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        assert len(mesgs["file_id_mesgs"]) == 1
+        assert field(mesgs, "file_id", 0, "type") == "course"
+
+    def test_file_id_manufacturer(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        assert field(mesgs, "file_id", 0, "manufacturer") == "development"
+
+    def test_file_id_time_created(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        time_created = field(mesgs, "file_id", 0, "time_created")
+        assert datetime.now(timezone.utc) - time_created < timedelta(days=1)
+
+    def test_file_id_product_name(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        assert field(mesgs, "file_id", 0, "product_name") == "CoursePointer"
+
 
 class TestConvert:
     """Tests that GPX routes and tracks are converted faithfully"""
 
-    def test_course_name(self, tmpdir, data, caching_convert, caching_mesgs):
+    def test_course_name(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr002.gpx")
         mesgs = caching_mesgs(out_file)
 
@@ -102,7 +137,7 @@ class TestConvert:
         assert len(course_mesgs) == 1
         assert course_mesgs[0]["name"] == "cptr002"
 
-    def test_lap_distance(self, tmpdir, data, ureg, caching_convert, caching_mesgs):
+    def test_lap_distance(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
         out = caching_mesgs(out_file)
 
@@ -120,7 +155,7 @@ class TestConvert:
         ref_distance = field(ref, "lap", 0, "total_distance") * ureg.meter
         assert out_distance.magnitude == approx(ref_distance.magnitude)
 
-    def test_lap_timer(self, tmpdir, data, ureg, caching_convert, caching_mesgs):
+    def test_lap_timer(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
         out = caching_mesgs(out_file)
 
@@ -138,7 +173,7 @@ class TestConvert:
             (timer * speed).to(ureg.meter).magnitude, rel=0.0001
         )
 
-    def test_record_distances(self, tmpdir, data, caching_convert, caching_mesgs):
+    def test_record_distances(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
         mesgs = caching_mesgs(out_file)
 
@@ -156,9 +191,7 @@ class TestConvert:
             mesgs, "lap", 0, "total_distance"
         )
 
-    def test_record_timestamps(
-        self, tmpdir, data, ureg, caching_convert, caching_mesgs
-    ):
+    def test_record_timestamps(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
         mesgs = caching_mesgs(out_file)
 
@@ -173,7 +206,7 @@ class TestConvert:
             actual_duration = record["timestamp"] - start_timestamp
             assert actual_duration.seconds == approx(expected_duration.magnitude, abs=1)
 
-    def test_timer_event_spacing(self, tmpdir, data, caching_convert, caching_mesgs):
+    def test_timer_event_spacing(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
         mesgs = caching_mesgs(out_file)
 
@@ -190,9 +223,7 @@ class TestConvert:
         event_spacing = event_mesgs[1]["timestamp"] - event_mesgs[0]["timestamp"]
         assert event_spacing.seconds == lap_elapsed
 
-    def test_gpx_rte_conversion(
-        self, tmpdir, data, ureg, caching_convert, caching_mesgs
-    ):
+    def test_gpx_rte_conversion(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")
         mesgs = caching_mesgs(out_file)
 

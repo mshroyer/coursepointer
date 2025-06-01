@@ -362,22 +362,42 @@ enum FileType {
     Course = 6,
 }
 
+#[repr(u16)]
+#[derive(Clone, Copy, Debug)]
+enum FileManufacturer {
+    Development = 255,
+}
+
 struct FileIdMessage {
     file_type: FileType,
+    manufacturer: FileManufacturer,
+    time_created: FitDateTime,
 }
 
 impl FileIdMessage {
-    fn new(file_type: FileType) -> Self {
-        Self { file_type }
+    fn new(file_type: FileType, manufacturer: FileManufacturer, time_created: FitDateTime) -> Self {
+        Self {
+            file_type,
+            manufacturer,
+            time_created,
+        }
     }
 
     fn field_definitions() -> Vec<FieldDefinition> {
-        vec![FieldDefinition::new(0, 1, 0)]
+        vec![
+            FieldDefinition::new(0, 1, 0),   // type
+            FieldDefinition::new(1, 2, 132), // manufacturer
+            FieldDefinition::new(4, 4, 134), // time_created
+            FieldDefinition::new(8, 14, 7), // product_name
+        ]
     }
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
         w.write_u8(self.file_type as u8)?;
+        w.write_u16::<BigEndian>(self.manufacturer as u16)?;
+        w.write_u32::<BigEndian>(self.time_created.value)?;
+        write_string_field("CoursePointer", 14, w)?;
         Ok(())
     }
 }
@@ -617,7 +637,12 @@ impl<'a> CourseFile<'a> {
             FileIdMessage::field_definitions(),
         )
         .encode(&mut dw)?;
-        FileIdMessage::new(FileType::Course).encode(0u8, &mut dw)?;
+        FileIdMessage::new(
+            FileType::Course,
+            FileManufacturer::Development,
+            FitDateTime::try_from(self.start_time)?,
+        )
+        .encode(0u8, &mut dw)?;
 
         DefinitionFrame::new(
             GlobalMessage::Course,
