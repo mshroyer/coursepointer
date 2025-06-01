@@ -29,4 +29,6 @@ def coursepointer_cli(cargo) -> RustBinFunc:
 
 @pytest.fixture(scope="session")
 def integration_stub(cargo):
-    return cargo.make_bin_func(Path("integration-stub"), "integration-stub", Profile.TEST)
+    return cargo.make_bin_func(
+        Path("integration-stub"), "integration-stub", Profile.TEST
+    )

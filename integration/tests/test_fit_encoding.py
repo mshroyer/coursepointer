@@ -16,9 +16,15 @@ conversion, so we implement our own in Python.
 
 from datetime import datetime, timezone
 
-from integration import CourseSpec, garmin_read_messages, garmin_read_file_header, garmin_sdk_record_coords, \
-    semicircles_to_degrees, \
-    assert_all_coords_approx_equal, assert_coords_approx_equal
+from integration import (
+    CourseSpec,
+    garmin_read_messages,
+    garmin_read_file_header,
+    garmin_sdk_record_coords,
+    semicircles_to_degrees,
+    assert_all_coords_approx_equal,
+    assert_coords_approx_equal,
+)
 
 
 # TODO: Add and test for remaining FIT course fields
@@ -39,14 +45,18 @@ from integration import CourseSpec, garmin_read_messages, garmin_read_file_heade
 def test_empty_course(tmpdir, integration_stub):
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
     garmin_read_messages(tmpdir / "out.fit")
 
 
 def test_header_protocol_version(tmpdir, integration_stub):
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
     header = garmin_read_file_header(tmpdir / "out.fit")
 
     # Protocol version 1 is represented as 0x10, 2 as 0x20.
@@ -59,7 +69,9 @@ def test_header_profile_version(tmpdir, integration_stub):
 
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
     header = garmin_read_file_header(tmpdir / "out.fit")
 
     # The output file should encode the same profile version.
@@ -71,7 +83,9 @@ def test_start_time(tmpdir, integration_stub):
 
     spec = CourseSpec(start_time=start_time)
     spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
     messages = garmin_read_messages(tmpdir / "out.fit")
 
     # The course's start time should be encoded correctly as the lap message's
@@ -90,7 +104,9 @@ def test_course_name(tmpdir, integration_stub):
 
     spec = CourseSpec(name=course_name)
     spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
     messages = garmin_read_messages(tmpdir / "out.fit")
 
     assert messages["course_mesgs"][0]["name"] == course_name
@@ -101,10 +117,14 @@ def test_record_coords(tmpdir, integration_stub):
 
     spec = CourseSpec(records=coords)
     spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
     messages = garmin_read_messages(tmpdir / "out.fit")
 
-    assert_all_coords_approx_equal(list(map(garmin_sdk_record_coords, messages["record_mesgs"])), coords)
+    assert_all_coords_approx_equal(
+        list(map(garmin_sdk_record_coords, messages["record_mesgs"])), coords
+    )
 
 
 def test_lap_coords(tmpdir, integration_stub):
@@ -112,10 +132,17 @@ def test_lap_coords(tmpdir, integration_stub):
 
     spec = CourseSpec(records=coords)
     spec.write_file(tmpdir / "spec.json")
-    integration_stub("write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
     messages = garmin_read_messages(tmpdir / "out.fit")
 
     lap = messages["lap_mesgs"][0]
-    assert_coords_approx_equal(semicircles_to_degrees((lap["start_position_lat"], lap["start_position_long"])),
-                               coords[0])
-    assert_coords_approx_equal(semicircles_to_degrees((lap["end_position_lat"], lap["end_position_long"])), coords[-1])
+    assert_coords_approx_equal(
+        semicircles_to_degrees((lap["start_position_lat"], lap["start_position_long"])),
+        coords[0],
+    )
+    assert_coords_approx_equal(
+        semicircles_to_degrees((lap["end_position_lat"], lap["end_position_long"])),
+        coords[-1],
+    )

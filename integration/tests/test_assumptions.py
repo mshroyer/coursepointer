@@ -9,7 +9,11 @@ from itertools import pairwise
 
 from pytest import approx
 
-from integration import fitdecode_get_definition_frames, garmin_read_messages, garmin_read_file_header
+from integration import (
+    fitdecode_get_definition_frames,
+    garmin_read_messages,
+    garmin_read_file_header,
+)
 
 
 def test_lap_messages(data):
@@ -24,7 +28,9 @@ def test_protocol_version(data):
 
 def test_endianness(data):
     # Garmin Connect exports big endian FIT files.
-    for definition_frame in fitdecode_get_definition_frames(data / "cptr003_connect.fit"):
+    for definition_frame in fitdecode_get_definition_frames(
+        data / "cptr003_connect.fit"
+    ):
         assert definition_frame.endian == ">"
 
 

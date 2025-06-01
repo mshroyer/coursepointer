@@ -79,7 +79,12 @@ class RustBinFunc:
     def __call__(self, *args: str | Path) -> str:
         print("Calling subprocess: {}".format(self.bin))
         return str(
-            subprocess.check_output([str(self.bin)] + list(args), stderr=subprocess.STDOUT, universal_newlines=True))
+            subprocess.check_output(
+                [str(self.bin)] + list(args),
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+            )
+        )
 
 
 class Cargo:
@@ -124,5 +129,7 @@ class Cargo:
         # .cargo/config.toml and CARGO_TARGET_DIR.
         return self.workspace / "target" / profile.target_subdir() / binary_filename
 
-    def make_bin_func(self, package: Optional[Path], binary: str, profile: Profile) -> RustBinFunc:
+    def make_bin_func(
+        self, package: Optional[Path], binary: str, profile: Profile
+    ) -> RustBinFunc:
         return RustBinFunc(self.build_bin(package, binary, profile))

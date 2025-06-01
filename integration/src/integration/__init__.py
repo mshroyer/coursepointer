@@ -38,8 +38,12 @@ class CourseSpec:
     start_time: datetime
     records: List[SurfacePoint]
 
-    def __init__(self, name: str = "", start_time: datetime = datetime.now(timezone.utc),
-                 records: Optional[List[Tuple[float, float]]] = None) -> None:
+    def __init__(
+        self,
+        name: str = "",
+        start_time: datetime = datetime.now(timezone.utc),
+        records: Optional[List[Tuple[float, float]]] = None,
+    ) -> None:
         self.name = name
         self.start_time = start_time
 
@@ -89,8 +93,8 @@ def garmin_read_messages(path: Path) -> dict[str, Any]:
 
 
 def semicircles_to_degrees(coords: Tuple[float, float]) -> Tuple[float, float]:
-    lat = 180 * coords[0] / 2 ** 31
-    lon = 180 * coords[1] / 2 ** 31
+    lat = 180 * coords[0] / 2**31
+    lon = 180 * coords[1] / 2**31
     return lat, lon
 
 
@@ -104,20 +108,26 @@ def garmin_sdk_record_coords(record: dict[str, Any]) -> Tuple[float, float]:
     return semicircles_to_degrees((record["position_lat"], record["position_long"]))
 
 
-def fitdecode_get_definition_frames(path: Path) -> Iterator[fitdecode.records.FitDefinitionMessage]:
+def fitdecode_get_definition_frames(
+    path: Path,
+) -> Iterator[fitdecode.records.FitDefinitionMessage]:
     with fitdecode.FitReader(path) as reader:
         for frame in reader:
             if frame.frame_type == fitdecode.FIT_FRAME_DEFINITION:
                 yield frame
 
 
-def assert_coords_approx_equal(left: Tuple[float, float], right: Tuple[float, float]) -> None:
+def assert_coords_approx_equal(
+    left: Tuple[float, float], right: Tuple[float, float]
+) -> None:
     # Test for approximate equality with an absolute tolerance of two
     # Garmin semicircles.
-    assert left == approx(right, rel=0.0, abs=(180.0 / (2 ** 30)))
+    assert left == approx(right, rel=0.0, abs=(180.0 / (2**30)))
 
 
-def assert_all_coords_approx_equal(left: List[Tuple[float, float]], right: List[Tuple[float, float]]) -> None:
+def assert_all_coords_approx_equal(
+    left: List[Tuple[float, float]], right: List[Tuple[float, float]]
+) -> None:
     assert len(left) == len(right)
     for i in range(len(left)):
         assert_coords_approx_equal(left[i], right[i])

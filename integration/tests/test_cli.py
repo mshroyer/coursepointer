@@ -41,7 +41,9 @@ def test_output_file_force(tmpdir, data, coursepointer_cli):
     with open(tmpdir / "out.fit", "w") as f:
         print("Hello", file=f)
 
-    coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit", "--force")
+    coursepointer_cli(
+        "convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit", "--force"
+    )
 
 
 def test_no_courses(tmpdir, data, coursepointer_cli):
@@ -53,7 +55,9 @@ def test_no_courses(tmpdir, data, coursepointer_cli):
 
 def test_bad_xml(tmpdir, data, coursepointer_cli):
     with raises(subprocess.CalledProcessError) as einfo:
-        coursepointer_cli("convert-gpx", data / "invalid_bad_xml.gpx", tmpdir / "out.fit")
+        coursepointer_cli(
+            "convert-gpx", data / "invalid_bad_xml.gpx", tmpdir / "out.fit"
+        )
 
     assert "<INPUT> is not a valid GPX file" in einfo.value.output
 
@@ -82,8 +86,12 @@ def test_lap_distance(tmpdir, data, coursepointer_cli):
     # re-exporting it as FIT.  We use the Connect re-export because this puts
     # the code under test on equal footing given the limited precision of
     # RWGPS's GPX exports.
-    conversion_lap_distance = garmin_read_messages(tmpdir / "out.fit")["lap_mesgs"][0]["total_distance"]
-    expected_lap_distance = garmin_read_messages(data / "cptr003_connect.fit")["lap_mesgs"][0]["total_distance"]
+    conversion_lap_distance = garmin_read_messages(tmpdir / "out.fit")["lap_mesgs"][0][
+        "total_distance"
+    ]
+    expected_lap_distance = garmin_read_messages(data / "cptr003_connect.fit")[
+        "lap_mesgs"
+    ][0]["total_distance"]
     assert conversion_lap_distance == approx(expected_lap_distance)
 
 
@@ -99,7 +107,9 @@ def test_lap_duration(tmpdir, data, ureg, coursepointer_cli):
     lap_timer = lap_mesgs[0]["total_elapsed_time"] * ureg.second
 
     assert lap_elapsed == lap_timer
-    assert lap_distance.magnitude == approx((lap_timer * speed).to(ureg.meter).magnitude, rel=0.000_100)
+    assert lap_distance.magnitude == approx(
+        (lap_timer * speed).to(ureg.meter).magnitude, rel=0.000_100
+    )
 
 
 def test_record_distances(tmpdir, data, coursepointer_cli):
