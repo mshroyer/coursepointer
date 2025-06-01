@@ -1,7 +1,7 @@
 ## Git submodule
 
 If you've cloned CoursePointer as a git repo, you'll need to import
-[GeographicLib](https://geographiclib.sourceforge.io/C/doc/index.html)'s C++
+[GeographicLib](https://geographiclib.sourceforge.io/C++/doc/index.html)'s C++
 sources as a git submodule before building.  Run:
 
 ```
@@ -22,6 +22,9 @@ reference implementation for FIT decoding.  Run these with
 uv run --package integration pytest
 ```
 
+Some of the integration tests use the nested `integration-stub` binary crate
+by passing JSON specifications to it and then examining its output.
+
 ## Formatting
 
 Though the project builds with the stable Rust toolchain, it uses nightly for
@@ -32,8 +35,8 @@ rustup toolchain install nightly
 cargo +nightly fmt
 ```
 
-Python is formatted by running [ruff](https://docs.astral.sh/ruff/) from the
-top-level project directory:
+Python code is formatted by running [ruff](https://docs.astral.sh/ruff/) from
+the top-level project directory:
 
 ```
 ruff check
