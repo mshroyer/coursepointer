@@ -93,6 +93,11 @@ def garmin_read_messages(path: Path) -> dict[str, Any]:
     return messages
 
 
+def field(mesgs: dict[str, Any], mesg_name: str, index: int, field_name: str) -> Any:
+    """Shorthand for accessing a field in Garmin SDK messages"""
+    return mesgs[mesg_name + "_mesgs"][index][field_name]
+
+
 def semicircles_to_degrees(coords: Tuple[float, float]) -> Tuple[float, float]:
     lat = 180 * coords[0] / 2**31
     lon = 180 * coords[1] / 2**31

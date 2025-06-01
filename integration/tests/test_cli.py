@@ -5,10 +5,10 @@ import subprocess
 
 from pytest import approx, raises
 
-from integration import garmin_read_messages
+from integration import field, garmin_read_messages
 
 
-class TestUserInterface:
+class TestUI:
     def test_help(self, coursepointer_cli):
         assert "Print help" in coursepointer_cli("--help").stdout
 
@@ -61,11 +61,7 @@ class TestUserInterface:
         assert "<INPUT> is not a valid GPX file" in einfo.value.stderr
 
 
-class TestGPXConversion:
-    def test_conversion_valid(self, tmpdir, data, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
-        garmin_read_messages(tmpdir / "out.fit")
-
+class TestConvert:
     def test_course_name(self, tmpdir, data, coursepointer_cli):
         coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
         messages = garmin_read_messages(tmpdir / "out.fit")
@@ -76,36 +72,34 @@ class TestGPXConversion:
         assert len(course_mesgs) == 1
         assert course_mesgs[0]["name"] == "cptr002"
 
-    def test_lap_distance(self, tmpdir, data, coursepointer_cli):
+    def test_lap_distance_and_timer(self, tmpdir, data, ureg, coursepointer_cli):
         coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
 
-        # Make sure the converted FIT file's lap distance is about equal to that of
-        # the FIT file we get when importing the GPX into Garmin Connect and then
-        # re-exporting it as FIT.  We use the Connect re-export because this puts
-        # the code under test on equal footing given the limited precision of
+        out = garmin_read_messages(tmpdir / "out.fit")
+        assert len(out["lap_mesgs"]) == 1
+
+        # We'll compare the output to the results of importing the GPX into
+        # Garmin Connect and then re-exporting it as FIT, because this puts the
+        # code under test on an equal footing given the limited precision of
         # RWGPS's GPX exports.
-        conversion_lap_distance = garmin_read_messages(tmpdir / "out.fit")["lap_mesgs"][
-            0
-        ]["total_distance"]
-        expected_lap_distance = garmin_read_messages(data / "cptr003_connect.fit")[
-            "lap_mesgs"
-        ][0]["total_distance"]
-        assert conversion_lap_distance == approx(expected_lap_distance)
+        ref = garmin_read_messages(data / "cptr003_connect.fit")
 
-    def test_lap_duration(self, tmpdir, data, ureg, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
+        # The total distance should be approximately equal to that in the FIT
+        # exported from Connect.
+        out_distance = field(out, "lap", 0, "total_distance") * ureg.meter
+        ref_distance = field(ref, "lap", 0, "total_distance") * ureg.meter
+        assert out_distance.magnitude == approx(ref_distance.magnitude)
 
+        # The elapsed and timer times should be set to the same value.
+        elapsed = field(out, "lap", 0, "total_elapsed_time") * ureg.second
+        timer = field(out, "lap", 0, "total_timer_time") * ureg.second
+        assert elapsed == timer
+
+        # The total distance should be approximately equal to the speed
+        # specified to the CLI times the recorded lap time.
         speed = 20 * ureg.kilometer / ureg.hour
-        lap_mesgs = garmin_read_messages(tmpdir / "out.fit")["lap_mesgs"]
-        assert len(lap_mesgs) == 1
-
-        lap_distance = lap_mesgs[0]["total_distance"] * ureg.meter
-        lap_elapsed = lap_mesgs[0]["total_timer_time"] * ureg.second
-        lap_timer = lap_mesgs[0]["total_elapsed_time"] * ureg.second
-
-        assert lap_elapsed == lap_timer
-        assert lap_distance.magnitude == approx(
-            (lap_timer * speed).to(ureg.meter).magnitude, rel=0.000_100
+        assert out_distance.magnitude == approx(
+            (timer * speed).to(ureg.meter).magnitude, rel=0.0001
         )
 
     def test_record_distances(self, tmpdir, data, coursepointer_cli):
