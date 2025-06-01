@@ -36,6 +36,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 [features]
 default = ["cli"]
 cli = ["dep:anyhow", "dep:clap", "dep:env_logger"]
+full-geolib = []
 
 [build-dependencies]
 cxx-build = "1.0.158"
