@@ -351,7 +351,7 @@ mod tests {
     fn test_intercept_long_segments() -> Result<()> {
         let mut builder = CourseSetBuilder::new();
         builder.create_course();
-        let mut course = builder.current_mut()?;
+        let course = builder.current_mut()?;
         course.add_route_point(geo_point!(35.5252717091331, -101.2856451853322))?;
         course.add_route_point(geo_point!(36.05200980326534, -90.02610043506964))?;
         course.add_route_point(geo_point!(38.13369722302025, -78.51238236506529))?;
