@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 from integration import (
     CourseSpec,
     garmin_read_messages,
-    garmin_read_file_header,
     garmin_sdk_record_coords,
     semicircles_to_degrees,
     assert_all_coords_approx_equal,
@@ -40,22 +39,6 @@ from integration import (
 # - event
 #   - event_group (Garmin Connect sets this to zero)
 # - file_creator
-
-
-def test_header_fields(tmpdir, integration_stub):
-    spec = CourseSpec()
-    spec.write_file(tmpdir / "spec.json")
-    integration_stub(
-        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
-    )
-    header = garmin_read_file_header(tmpdir / "out.fit")
-
-    # Protocol version 1 is represented as 0x10, 2 as 0x20.
-    assert header.protocol_version == 0x10
-
-    # The output file should encode the same profile version.
-    lib_profile_version = int(integration_stub("show-profile-version").stdout.strip())
-    assert header.profile_version == lib_profile_version
 
 
 def test_start_time(tmpdir, integration_stub):

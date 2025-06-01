@@ -1,14 +1,16 @@
 """Test the main coursepointer-cli binary"""
 
-from itertools import pairwise
 import subprocess
+from itertools import pairwise
 
 from pytest import approx, raises
 
-from integration import field, garmin_read_messages
+from integration import field, garmin_read_file_header
 
 
 class TestUI:
+    """Test the CLI's user interface"""
+
     def test_help(self, coursepointer_cli):
         assert "Print help" in coursepointer_cli("--help").stdout
 
@@ -61,7 +63,35 @@ class TestUI:
         assert "<INPUT> is not a valid GPX file" in einfo.value.stderr
 
 
+class TestFIT:
+    """Test FIT encoding in the CLI.
+
+    Tests that low-level details of FIT encoding are correct; the exact GPX used
+    as the input to the conversion isn't relative to these.
+
+    """
+
+    def test_protocol_verison(self, data, caching_convert):
+        out_file = caching_convert(data / "cptr004.gpx")
+        header = garmin_read_file_header(out_file)
+
+        # Protocol version 1 is represented as 0x10, 2 as 0x20.
+        assert header.protocol_version == 0x10
+
+    def test_profile_version(self, data, integration_stub, caching_convert):
+        out_file = caching_convert(data / "cptr004.gpx")
+        header = garmin_read_file_header(out_file)
+
+        # The output file should encode the same profile version.
+        lib_profile_version = int(
+            integration_stub("show-profile-version").stdout.strip()
+        )
+        assert header.profile_version == lib_profile_version
+
+
 class TestConvert:
+    """Tests that GPX routes and tracks are converted faithfully"""
+
     def test_course_name(self, tmpdir, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr002.gpx")
         mesgs = caching_mesgs(out_file)
