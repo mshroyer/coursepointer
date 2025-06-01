@@ -290,6 +290,7 @@ enum GlobalMessage {
     Event = 21u16,
     Course = 31u16,
     CoursePoint = 32u16,
+    FileCreator = 49u16,
 }
 
 pub struct DefinitionFrame {
@@ -388,7 +389,7 @@ impl FileIdMessage {
             FieldDefinition::new(0, 1, 0),   // type
             FieldDefinition::new(1, 2, 132), // manufacturer
             FieldDefinition::new(4, 4, 134), // time_created
-            FieldDefinition::new(8, 14, 7), // product_name
+            FieldDefinition::new(8, 14, 7),  // product_name
         ]
     }
 
@@ -605,6 +606,27 @@ impl CoursePointMessage {
     }
 }
 
+struct FileCreatorMessage {
+    software_version: u16,
+    hardware_version: u8,
+}
+
+impl FileCreatorMessage {
+    fn field_definitions() -> Vec<FieldDefinition> {
+        vec![
+            FieldDefinition::new(0, 2, 132), // software_version
+            FieldDefinition::new(1, 1, 2),   // hardware_version
+        ]
+    }
+
+    fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
+        w.write_u8(local_message_id & 0x0F)?;
+        w.write_u16::<BigEndian>(self.software_version)?;
+        w.write_u8(self.hardware_version)?;
+        Ok(())
+    }
+}
+
 pub struct CourseFile<'a> {
     course: &'a Course,
     start_time: DateTime<Utc>,
@@ -739,9 +761,21 @@ impl<'a> CourseFile<'a> {
             FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
         )
         .encode(3u8, &mut dw)?;
+
+        DefinitionFrame::new(
+            GlobalMessage::FileCreator,
+            6u8,
+            FileCreatorMessage::field_definitions(),
+        )
+        .encode(&mut dw)?;
+        FileCreatorMessage {
+            software_version: 42u16,
+            hardware_version: 1u8,
+        }
+        .encode(6u8, &mut dw)?;
+
         dw.finish()?;
         w.flush()?;
-
         Ok(())
     }
 
@@ -791,6 +825,10 @@ impl<'a> CourseFile<'a> {
             CourseFile::get_definition_message_size(CoursePointMessage::field_definitions().len());
         sz += self.course.course_points.len()
             * CourseFile::get_data_message_size(CoursePointMessage::field_definitions());
+
+        sz +=
+            CourseFile::get_definition_message_size(FileCreatorMessage::field_definitions().len());
+        sz += CourseFile::get_data_message_size(FileCreatorMessage::field_definitions());
 
         sz
     }

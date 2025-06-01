@@ -35,7 +35,6 @@ from integration import (
 #   - speed?
 # - event
 #   - event_group (Garmin Connect sets this to zero)
-# - file_creator
 
 
 def test_start_time(tmpdir, integration_stub):

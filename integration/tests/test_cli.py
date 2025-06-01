@@ -123,6 +123,14 @@ class TestFIT:
 
         assert field(mesgs, "file_id", 0, "product_name") == "CoursePointer"
 
+    def test_file_creator_versions(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        assert len(mesgs["file_creator_mesgs"]) == 1
+        assert field(mesgs, "file_creator", 0, "software_version") == 42
+        assert field(mesgs, "file_creator", 0, "hardware_version") == 1
+
 
 class TestConvert:
     """Tests that GPX routes and tracks are converted faithfully"""
