@@ -1,6 +1,9 @@
+from collections import namedtuple
 from pathlib import Path
-
+import shutil
 import subprocess
+import tempfile
+
 import pint
 import pytest
 
@@ -34,6 +37,52 @@ def integration_stub(cargo):
     return cargo.make_bin_func(
         Path("integration-stub"), "integration-stub", Profile.TEST
     )
+
+
+CachedConversion = namedtuple("CachedConversion", ["out_file", "exception"])
+
+
+@pytest.fixture(scope="session")
+def caching_convert(coursepointer_cli):
+    session_dir = Path(tempfile.mkdtemp())
+    cache = {}
+
+    def _convert(input: Path) -> Path:
+        if input in cache:
+            cached = cache[input]
+            if cached.exception:
+                raise integration.fail_with_subprocess_error(cached.exception)
+            return cached.out_file
+
+        out_dir = Path(tempfile.mkdtemp(dir=session_dir))
+        out_file = out_dir / "out.fit"
+        try:
+            coursepointer_cli("convert-gpx", input, out_file)
+        except subprocess.CalledProcessError as e:
+            cache[input] = CachedConversion(out_file, e)
+            raise integration.fail_with_subprocess_error(e)
+
+        cache[input] = CachedConversion(out_file, None)
+        return out_file
+
+    yield _convert
+
+    shutil.rmtree(session_dir)
+
+
+@pytest.fixture(scope="session")
+def caching_mesgs():
+    cache = {}
+
+    def _read_mesgs(file: Path) -> dict:
+        if file in cache:
+            return cache[file]
+
+        mesgs = integration.garmin_read_messages(file)
+        cache[file] = mesgs
+        return mesgs
+
+    return _read_mesgs
 
 
 # Wrap test case invocations to clarify subprocess errors

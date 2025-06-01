@@ -62,33 +62,39 @@ class TestUI:
 
 
 class TestConvert:
-    def test_course_name(self, tmpdir, data, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
-        messages = garmin_read_messages(tmpdir / "out.fit")
+    def test_course_name(self, tmpdir, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr002.gpx")
+        mesgs = caching_mesgs(out_file)
 
         # The file should have a single course message containing the same track
         # name given in the GPX input.
-        course_mesgs = messages["course_mesgs"]
+        course_mesgs = mesgs["course_mesgs"]
         assert len(course_mesgs) == 1
         assert course_mesgs[0]["name"] == "cptr002"
 
-    def test_lap_distance_and_timer(self, tmpdir, data, ureg, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
+    def test_lap_distance(self, tmpdir, data, ureg, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx")
+        out = caching_mesgs(out_file)
 
-        out = garmin_read_messages(tmpdir / "out.fit")
         assert len(out["lap_mesgs"]) == 1
 
         # We'll compare the output to the results of importing the GPX into
         # Garmin Connect and then re-exporting it as FIT, because this puts the
         # code under test on an equal footing given the limited precision of
         # RWGPS's GPX exports.
-        ref = garmin_read_messages(data / "cptr003_connect.fit")
+        ref = caching_mesgs(data / "cptr003_connect.fit")
 
         # The total distance should be approximately equal to that in the FIT
         # exported from Connect.
         out_distance = field(out, "lap", 0, "total_distance") * ureg.meter
         ref_distance = field(ref, "lap", 0, "total_distance") * ureg.meter
         assert out_distance.magnitude == approx(ref_distance.magnitude)
+
+    def test_lap_timer(self, tmpdir, data, ureg, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx")
+        out = caching_mesgs(out_file)
+
+        distance = field(out, "lap", 0, "total_distance") * ureg.meter
 
         # The elapsed and timer times should be set to the same value.
         elapsed = field(out, "lap", 0, "total_elapsed_time") * ureg.second
@@ -98,33 +104,35 @@ class TestConvert:
         # The total distance should be approximately equal to the speed
         # specified to the CLI times the recorded lap time.
         speed = 20 * ureg.kilometer / ureg.hour
-        assert out_distance.magnitude == approx(
+        assert distance.magnitude == approx(
             (timer * speed).to(ureg.meter).magnitude, rel=0.0001
         )
 
-    def test_record_distances(self, tmpdir, data, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
+    def test_record_distances(self, tmpdir, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx")
+        mesgs = caching_mesgs(out_file)
 
-        mesgs = garmin_read_messages(tmpdir / "out.fit")
-        record_mesgs = mesgs["record_mesgs"]
-        assert record_mesgs[0]["distance"] == 0
+        assert field(mesgs, "record", 0, "distance") == 0
 
         # Distances should be cumulative
-        for a, b in pairwise(record_mesgs):
+        for a, b in pairwise(mesgs["record_mesgs"]):
             assert a["distance"] <= b["distance"]
 
-        lap_mesgs = mesgs["lap_mesgs"]
-        assert len(lap_mesgs) == 1
+        assert len(mesgs["lap_mesgs"]) == 1
 
         # The final record's distance should be equal to the course file's lap
         # distance
-        assert record_mesgs[-1]["distance"] == lap_mesgs[0]["total_distance"]
+        assert field(mesgs, "record", -1, "distance") == field(
+            mesgs, "lap", 0, "total_distance"
+        )
 
-    def test_record_timestamps(self, tmpdir, data, ureg, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
+    def test_record_timestamps(
+        self, tmpdir, data, ureg, caching_convert, caching_mesgs
+    ):
+        out_file = caching_convert(data / "cptr003.gpx")
+        mesgs = caching_mesgs(out_file)
 
         speed = 20 * ureg.kilometer / ureg.hour
-        mesgs = garmin_read_messages(tmpdir / "out.fit")
         record_mesgs = mesgs["record_mesgs"]
 
         start_timestamp = record_mesgs[0]["timestamp"]
@@ -135,9 +143,9 @@ class TestConvert:
             actual_duration = record["timestamp"] - start_timestamp
             assert actual_duration.seconds == approx(expected_duration.magnitude, abs=1)
 
-    def test_timer_event_spacing(self, tmpdir, data, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr003.gpx", tmpdir / "out.fit")
-        mesgs = garmin_read_messages(tmpdir / "out.fit")
+    def test_timer_event_spacing(self, tmpdir, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx")
+        mesgs = caching_mesgs(out_file)
 
         event_mesgs = mesgs["event_mesgs"]
         assert len(event_mesgs) == 2
@@ -152,8 +160,11 @@ class TestConvert:
         event_spacing = event_mesgs[1]["timestamp"] - event_mesgs[0]["timestamp"]
         assert event_spacing.seconds == lap_elapsed
 
-    def test_gpx_rte_conversion(self, tmpdir, data, ureg, coursepointer_cli):
-        coursepointer_cli("convert-gpx", data / "cptr004.gpx", tmpdir / "out.fit")
-        mesgs = garmin_read_messages(tmpdir / "out.fit")
-        distance = mesgs["record_mesgs"][-1]["distance"] * ureg.meter
+    def test_gpx_rte_conversion(
+        self, tmpdir, data, ureg, caching_convert, caching_mesgs
+    ):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        distance = field(mesgs, "record", -1, "distance") * ureg.meter
         assert distance.to(ureg.mile).magnitude == approx(4.48, abs=0.01)

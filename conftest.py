@@ -1,1 +1,1 @@
-pytest_plugins = ["integration.fixtures"]
+pytest_plugins = ["integration.plugin"]
