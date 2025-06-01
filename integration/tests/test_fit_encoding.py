@@ -112,6 +112,22 @@ def test_course_name(tmpdir, integration_stub):
     assert messages["course_mesgs"][0]["name"] == course_name
 
 
+def test_course_name_truncation(tmpdir, integration_stub):
+    course_name = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore"
+
+    spec = CourseSpec(name=course_name)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+    messages = garmin_read_messages(tmpdir / "out.fit")
+
+    # The course name should be truncated to 31 characters, as the field size is
+    # configured to 32.
+    expected = "Lorem ipsum dolor sit amet, con"
+    assert messages["course_mesgs"][0]["name"] == expected
+
+
 def test_record_coords(tmpdir, integration_stub):
     coords = [(0.0, 0.0), (0.5, -0.5), (1.0, 0.0), (-1.0, 0.5)]
 
