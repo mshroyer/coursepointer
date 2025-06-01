@@ -5,6 +5,8 @@ import subprocess
 import sys
 from typing import Optional
 
+import integration
+
 
 def workspace_dir() -> Optional[Path]:
     """Get the project's root source directory
@@ -71,20 +73,21 @@ class RustBinFunc:
     CalledProcessError.
     """
 
-    bin: Path
+    binary: Path
 
-    def __init__(self, bin: Path):
-        self.bin = bin
+    def __init__(self, binary: Path, cwd: Path):
+        self.binary = binary
+        self.cwd = cwd
 
-    def __call__(self, *args: str | Path) -> str:
-        print("Calling subprocess: {}".format(self.bin))
-        return str(
-            subprocess.check_output(
-                [str(self.bin)] + list(args),
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-            )
+    def __call__(self, *args: str | Path) -> subprocess.CompletedProcess:
+        result = subprocess.run(
+            [str(self.binary)] + list(args),
+            check=True,
+            capture_output=True,
+            text=True,
+            universal_newlines=True,
         )
+        return result
 
 
 class Cargo:
@@ -121,6 +124,17 @@ class Cargo:
             args.extend(["--package", package])
         args.extend(["--bin", binary, "--profile", str(profile)])
 
+        try:
+            subprocess.run(
+                args,
+                check=True,
+                capture_output=True,
+                text=True,
+                universal_newlines=True,
+                cwd=self.workspace,
+            )
+        except subprocess.CalledProcessError as e:
+            integration.fail_with_subprocess_error(e)
         subprocess.check_call(args, cwd=self.workspace)
         binary_filename = binary + ".exe" if is_windows() else binary
 
@@ -132,4 +146,4 @@ class Cargo:
     def make_bin_func(
         self, package: Optional[Path], binary: str, profile: Profile
     ) -> RustBinFunc:
-        return RustBinFunc(self.build_bin(package, binary, profile))
+        return RustBinFunc(self.build_bin(package, binary, profile), self.workspace)

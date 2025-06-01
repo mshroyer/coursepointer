@@ -9,21 +9,21 @@ from integration import garmin_read_messages
 
 
 def test_help(coursepointer_cli):
-    assert "Print help" in coursepointer_cli("--help")
+    assert "Print help" in coursepointer_cli("--help").stdout
 
 
 def test_no_subcommand(coursepointer_cli):
     with raises(subprocess.CalledProcessError) as einfo:
         coursepointer_cli()
 
-    assert "Usage:" in einfo.value.output
+    assert "Usage:" in einfo.value.stderr
 
 
 def test_missing_input(tmpdir, coursepointer_cli):
     with raises(subprocess.CalledProcessError) as einfo:
         coursepointer_cli("convert-gpx", tmpdir / "nonexistent.gpx", tmpdir / "out.fit")
 
-    assert "Opening the GPX <INPUT> file" in einfo.value.output
+    assert "Opening the GPX <INPUT> file" in einfo.value.stderr
 
 
 def test_output_file_exists(tmpdir, data, coursepointer_cli):
@@ -34,7 +34,7 @@ def test_output_file_exists(tmpdir, data, coursepointer_cli):
         coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
 
     # Error message can vary slightly by platform
-    assert "file exists" in einfo.value.output.lower()
+    assert "file exists" in einfo.value.stderr.lower()
 
 
 def test_output_file_force(tmpdir, data, coursepointer_cli):
@@ -50,7 +50,7 @@ def test_no_courses(tmpdir, data, coursepointer_cli):
     with raises(subprocess.CalledProcessError) as einfo:
         coursepointer_cli("convert-gpx", data / "invalid_empty.gpx", tmpdir / "out.fit")
 
-    assert "No course was found" in einfo.value.output
+    assert "No course was found" in einfo.value.stderr
 
 
 def test_bad_xml(tmpdir, data, coursepointer_cli):
@@ -59,7 +59,7 @@ def test_bad_xml(tmpdir, data, coursepointer_cli):
             "convert-gpx", data / "invalid_bad_xml.gpx", tmpdir / "out.fit"
         )
 
-    assert "<INPUT> is not a valid GPX file" in einfo.value.output
+    assert "<INPUT> is not a valid GPX file" in einfo.value.stderr
 
 
 def test_conversion_valid(tmpdir, data, coursepointer_cli):

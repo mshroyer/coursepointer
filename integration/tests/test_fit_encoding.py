@@ -65,7 +65,7 @@ def test_header_protocol_version(tmpdir, integration_stub):
 
 def test_header_profile_version(tmpdir, integration_stub):
     # Get the self-reported Garmin global profile version from the library.
-    lib_profile_version = int(integration_stub("show-profile-version").strip())
+    lib_profile_version = int(integration_stub("show-profile-version").stdout.strip())
 
     spec = CourseSpec()
     spec.write_file(tmpdir / "spec.json")

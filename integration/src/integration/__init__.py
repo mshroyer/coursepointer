@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+from subprocess import CalledProcessError
 from typing import Any, Iterator, List, Optional, Tuple
 
-from pytest import approx
+from pytest import approx, fail
 import garmin_fit_sdk
 import fitdecode
 
@@ -131,3 +132,28 @@ def assert_all_coords_approx_equal(
     assert len(left) == len(right)
     for i in range(len(left)):
         assert_coords_approx_equal(left[i], right[i])
+
+
+def fail_with_subprocess_error(e: CalledProcessError):
+    lines = [f"Command {e.cmd!r} exited with return code {e.returncode}"]
+
+    if getattr(e, "stdout", None):
+        out = (
+            e.stdout if isinstance(e.stdout, str) else e.stdout.decode(errors="ignore")
+        )
+        if out:
+            lines.append("=== STDOUT ===")
+            lines.append(out.rstrip())
+
+    if getattr(e, "stderr", None):
+        err = (
+            e.stderr if isinstance(e.stderr, str) else e.stderr.decode(errors="ignore")
+        )
+        if err:
+            lines.append("=== STDERR ===")
+            lines.append(err.rstrip())
+
+    msg = "\n".join(lines)
+
+    # Suppress the default Python stack trace output
+    fail(msg, pytrace=False)
