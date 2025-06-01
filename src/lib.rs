@@ -14,7 +14,7 @@
 //!
 //! - `cli` enables the additional dependencies needed by the CLI
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
-//!    of a hand-picked subset
+//!   of a hand-picked subset
 
 mod algorithm;
 mod course;
