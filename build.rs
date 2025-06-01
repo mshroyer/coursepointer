@@ -1,7 +1,7 @@
 const GEOGRAPHICLIB_SRC: &str = "geographiclib/src";
 
 #[cfg(feature = "full-geolib")]
-mod sources2 {
+mod sources {
     use std::path::{Path, PathBuf};
 
     use crate::GEOGRAPHICLIB_SRC;
