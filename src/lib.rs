@@ -1,14 +1,14 @@
-//! The main library crate for CoursePointer.
+//! A CLI tool and library for computing FIT course points from GPX.
+//!
+//! Builds on
+//! [GeographicLib](https://geographiclib.sourceforge.io/C++/doc/index.html) to
+//! compute the interception points and course distances of waypoints near
+//! routes or tracks imported from a GPX file, then encodes this as a FIT course
+//! for navigation on a Garmin device such as an Edge bicycle computer or a
+//! Fenix watch.
 //!
 //! See the [`convert_gpx`] function, which is used by the CLI, for the main
 //! entry point into the library.
-//!
-//! This contains the bulk of the application logic. But there are two other
-//! crates to know about:
-//!
-//! - [`geographic`] builds the C++ version of GeographicLib and provides FFI.
-//! - [`types`] provides simple units of measure and other types used by both
-//!   this crate and [`geographic`] to avoid a circular dependency.
 
 mod algorithm;
 mod course;
@@ -92,11 +92,25 @@ pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: W) -> Result<
     Ok(())
 }
 
+/// CXX Generated FFI for GeographicLib
+///
+/// This currently has to be inline in lib.rs because non-inline mods are
+/// unstable in proc macro input:
+/// <https://github.com/rust-lang/rust/issues/54727>
 #[allow(clippy::too_many_arguments)]
 #[cxx::bridge(namespace = "CoursePointer")]
 mod ffi {
     unsafe extern "C++" {
         include!("coursepointer/include/shim.hpp");
+
+        fn geodesic_direct(
+            lat1: f64,
+            lon1: f64,
+            az1: f64,
+            s12: f64,
+            lat2: &mut f64,
+            lon2: &mut f64,
+        ) -> Result<f64>;
 
         fn geodesic_inverse_with_azimuth(
             lat1: f64,
@@ -106,15 +120,6 @@ mod ffi {
             s12: &mut f64,
             azi1: &mut f64,
             azi2: &mut f64,
-        ) -> Result<f64>;
-
-        fn geodesic_direct(
-            lat1: f64,
-            lon1: f64,
-            az1: f64,
-            s12: f64,
-            lat2: &mut f64,
-            lon2: &mut f64,
         ) -> Result<f64>;
 
         fn gnomonic_forward(

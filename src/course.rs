@@ -132,16 +132,18 @@ impl NearbySegment<Meters<f64>> for &InterceptSolution {
     }
 }
 
-/// An abstract course.
+/// A course for navigation.
 ///
-/// Contains records defining the segments of the course on the WGS84 ellipsoid,
-/// as well as each record's geodesic distance along the entire course. May
-/// optionally contain elevation data.
+/// This contains the distance data needed as input for a FIT course file, but
+/// it does not represent speeds or timestamps.
 pub struct Course {
-    /// The records that define the course, in order of physical traversal.
+    /// The records (coordinates and cumulative distances) that define the
+    /// course, in order of physical traversal.
     pub records: Vec<Record>,
 
-    /// The course points that have been located on the course.
+    /// The course points and their cumulative distances. These are derived from
+    /// the subset of waypoints provided to [`CourseSetBuilder`] that are
+    /// located near the course.
     pub course_points: Vec<CoursePoint>,
 
     /// The name of the course, if given.
@@ -173,7 +175,7 @@ pub struct CourseBuilder {
 
 #[allow(clippy::new_without_default)]
 impl CourseBuilder {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             segments: Vec::new(),
             prev_point: None,
@@ -205,7 +207,7 @@ impl CourseBuilder {
         Ok(())
     }
 
-    pub fn build(self) -> Course {
+    fn build(self) -> Course {
         match &self.name {
             Some(name) => debug!("Building course {}", name),
             None => debug!("Building untitled course"),

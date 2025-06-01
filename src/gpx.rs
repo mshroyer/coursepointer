@@ -9,9 +9,8 @@
 //! may also contain segments.
 //!
 //! To use this module, instantiate a [`GpxReader`] by calling
-//! [`GpxReader::from_text`] or [`GpxReader::from_reader`]. Iterating over the
-//! [`GpxReader`] will produce a sequence of [`GpxItem`] describing the
-//! contents of the input.
+//! [`GpxReader::from_reader`]. Iterating over the [`GpxReader`] will produce a
+//! sequence of [`GpxItem`] describing the contents of the input.
 
 use std::io::BufRead;
 use std::num::ParseFloatError;

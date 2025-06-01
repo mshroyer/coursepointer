@@ -160,7 +160,7 @@ impl TryFrom<FitSurfacePoint> for GeoPoint {
 /// Implements the Garmin FIT CRC algorithm.
 ///
 /// A direct transcription of Garmin's reference implementation at
-/// https://developer.garmin.com/fit/protocol/
+/// <https://developer.garmin.com/fit/protocol/>
 struct Crc {
     sum: u16,
 }

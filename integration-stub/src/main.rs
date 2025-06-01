@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
-use coursepointer::testonly::{CourseBuilder, CourseFile, Degrees, GeoPoint, KilometersPerHour};
+use coursepointer::testonly::{CourseFile, CourseSetBuilder, Degrees, GeoPoint, KilometersPerHour};
 use serde::Deserialize;
 
 #[derive(Parser)]
@@ -62,16 +62,18 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let spec: CourseSpec = serde_json::from_reader(spec_file)?;
 
     let mut fit_file = BufWriter::new(File::create(&out)?);
-    let mut course_builder = CourseBuilder::new();
-    course_builder.set_name(spec.name);
+    let mut builder = CourseSetBuilder::new();
+    builder.create_course();
+    builder.current_mut()?.set_name(spec.name);
     for point in &spec.records {
-        course_builder.add_route_point(GeoPoint::new(
+        builder.current_mut()?.add_route_point(GeoPoint::new(
             Degrees(point.lat),
             Degrees(point.lon),
             None,
         )?)?;
     }
-    let course = course_builder.build();
+    let course_set = builder.build()?;
+    let course = course_set.courses.first().unwrap();
     let course_file = CourseFile::new(
         &course,
         parse_rfc9557_utc(&spec.start_time)?,
