@@ -277,8 +277,12 @@ pub struct CoursePoint {
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
+    use approx::assert_relative_eq;
 
-    use crate::course::CourseBuilder;
+    use crate::course::{CourseBuilder, CourseSetBuilder};
+    use crate::gpx::Waypoint;
+    use crate::measure::{Degrees, Meters};
+    use crate::types::GeoPoint;
     use crate::{geo_point, geo_points};
 
     #[test]
@@ -340,6 +344,36 @@ mod tests {
         let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2), (1.2, 2.1), (1.1, 2.2)];
 
         assert_eq!(record_points, expected_points);
+        Ok(())
+    }
+
+    #[test]
+    fn test_intercept_long_segments() -> Result<()> {
+        let mut builder = CourseSetBuilder::new();
+        builder.create_course();
+        let mut course = builder.current_mut()?;
+        course.add_route_point(geo_point!(35.5252717091331, -101.2856451853322))?;
+        course.add_route_point(geo_point!(36.05200980326534, -90.02610043506964))?;
+        course.add_route_point(geo_point!(38.13369722302025, -78.51238236506529))?;
+
+        builder.add_waypoint(Waypoint {
+            name: "MyWaypoint".to_owned(),
+            cmt: None,
+            sym: None,
+            type_: None,
+            point: GeoPoint::new(Degrees(35.951314), Degrees(-94.973085), None)?,
+        });
+
+        let course_set = builder.build()?;
+        assert_eq!(course_set.courses.len(), 1);
+        let course = course_set.courses.first().unwrap();
+        assert_eq!(course.course_points.len(), 1);
+        let course_point = course.course_points.first().unwrap();
+        assert_relative_eq!(
+            course_point.distance,
+            Meters(572863.0),
+            max_relative = 0.0001
+        );
         Ok(())
     }
 }

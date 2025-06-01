@@ -7,6 +7,7 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div};
 
+use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
 use num_traits::Num;
 
 #[allow(dead_code)]
@@ -59,6 +60,38 @@ macro_rules! unit_of_measure {
 
             fn div(self, rhs: N) -> Self {
                 Self(self.0 / rhs)
+            }
+        }
+
+        impl AbsDiffEq for $u<f64> {
+            type Epsilon = f64;
+
+            fn default_epsilon() -> Self::Epsilon {
+                f64::EPSILON
+            }
+
+            fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+                abs_diff_eq!(self.0, other.0, epsilon = epsilon)
+            }
+        }
+
+        impl RelativeEq for $u<f64> {
+            fn default_max_relative() -> Self::Epsilon {
+                f64::EPSILON
+            }
+
+            fn relative_eq(
+                &self,
+                other: &Self,
+                epsilon: Self::Epsilon,
+                max_relative: Self::Epsilon,
+            ) -> bool {
+                relative_eq!(
+                    self.0,
+                    other.0,
+                    epsilon = epsilon,
+                    max_relative = max_relative
+                )
             }
         }
     };
