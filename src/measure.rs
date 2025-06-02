@@ -8,10 +8,34 @@ use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div, Mul};
 
 use approx::{AbsDiffEq, RelativeEq, relative_eq};
-use num_traits::{Float, Num};
+use num_traits::{Float, Num, NumCast};
+
+trait IntoDimBase
+{
+    type DimBase;
+
+    fn into_dim_base(self) -> Self::DimBase;
+}
+
+trait FromDimBase
+{
+    type DimBase;
+
+    fn from_dim_base(value: Self::DimBase) -> Self;
+}
+
+trait FromUnit<U>
+{
+    fn from_unit(u: U) -> Self;
+}
+
+trait IntoUnit<U>
+{
+    fn into_unit(self) -> U;
+}
 
 macro_rules! unit_of_measure {
-    ($u:tt) => {
+    ($u:ident) => {
         #[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
         pub struct $u<N: Num>(pub N);
 
@@ -86,28 +110,98 @@ macro_rules! unit_of_measure {
             }
         }
     };
+
+    ($u:ident, ($coeff:expr, $base:ident)) => {
+        unit_of_measure!($u);
+
+        impl<N> FromUnit<$u<N>> for $base<N>
+        where
+            N: Num + NumCast,
+        {
+            fn from_unit(value: $u<N>) -> Self {
+                // TODO: Find a way to remove this runtime panic?
+                Self(value.0 * NumCast::from($coeff).expect("literal out of range for N"))
+            }
+        }
+
+        impl<N> FromUnit<$base<N>> for $u<N>
+        where
+            N: Num + NumCast,
+        {
+            fn from_unit(value: $base<N>) -> Self {
+                Self(value.0 / NumCast::from($coeff).expect("literal out of range for N"))
+            }
+        }
+
+        impl<N> IntoDimBase for $u<N>
+        where
+            N: Num + NumCast,
+        {
+            type DimBase = $base<N>;
+
+            fn into_dim_base(self) -> Self::DimBase {
+                Self::DimBase::from_unit(self)
+            }
+        }
+
+        // impl<N, V> From<V> for $u<N>
+        // where
+        //     N: Num + NumCast,
+        //     V: IntoUnit<$u<N>>,
+        // {
+        //     fn from(v: V) -> Self {
+        //         v.into_unit()
+        //     }
+        // }
+        //
+        // impl<N, V> From<V> for $base<N>
+        // where
+        //     N: Num + NumCast,
+        //     V: IntoUnit<$base<N>>,
+        // {
+        //     fn from(value: V) -> Self {
+        //         value.into_unit()
+        //     }
+        // }
+        //
+        // impl<N> From<$u<N>> for $base<N>
+        // where
+        //     N: Num + NumCast,
+        // {
+        //     fn from(value: $u<N>) -> Self {
+        //         // TODO: Find a way to remove this runtime panic?
+        //         Self(value.0 * NumCast::from($coeff).expect("literal out of range for N"))
+        //     }
+        // }
+        //
+        // impl<N> From<$base<N>> for $u<N>
+        // where
+        //     N: Num + NumCast,
+        // {
+        //     fn from(value: $base<N>) -> Self {
+        //         Self(value.0 / NumCast::from($coeff).expect("literal out of range for N"))
+        //     }
+        // }
+    };
 }
 
-macro_rules! conversion_group {
-    ($base:ident, ( $coeff:tt, $other:ident ) $(, $rest:tt )?) => {
-        impl<N> From<$base<N>> for $other<N>
-        where
-            N: Num + From<f64>,
-        {
-            fn from(value: $base<N>) -> $other<N> {
-                $other(value.0 * N::from($coeff))
-            }
-        }
+impl<U, V> FromUnit<V> for U
+where
+    U: FromUnit<V::DimBase>,
+    V: IntoDimBase,
+{
+    fn from_unit(v: V) -> Self {
+        U::from_unit(v.into_dim_base())
+    }
+}
 
-        impl<N> From<$other<N>> for $base<N>
-        where
-            N: Num + From<f64>,
-        {
-            fn from(value: $other<N>) -> $base<N> {
-                $base(value.0 / N::from($coeff))
-            }
-        }
-    };
+impl<U, V> IntoUnit<U> for V
+where
+    U: FromUnit<V>,
+{
+    fn into_unit(self) -> U {
+        U::from_unit(self)
+    }
 }
 
 macro_rules! unit_ratio_impl {
@@ -145,7 +239,7 @@ macro_rules! unit_ratio {
 
 // Time units:
 unit_of_measure![Seconds];
-unit_of_measure![Hours];
+unit_of_measure![Hours, (3600, Seconds)];
 
 // Distance units:
 unit_of_measure![Meters];
@@ -194,6 +288,8 @@ unit_ratio![MetersPerSecond, Meters, Seconds];
 mod tests {
     use super::*;
 
+    unit_of_measure!(Minutes, (60, Seconds));
+
     #[test]
     fn convert_meters_to_cm() {
         assert_eq!(Centimeters::from(Meters(5)), Centimeters(500));
@@ -206,4 +302,22 @@ mod tests {
         assert_eq!(Meters(6), Seconds(2) * MetersPerSecond(3));
         assert_eq!(Meters(6), MetersPerSecond(3) * Seconds(2));
     }
+
+    #[test]
+    fn from_unit_conversions() {
+        assert_eq!(Seconds::from_unit(Hours(1)), Seconds(3600));
+        assert_eq!(Minutes::from_unit(Hours(2)), Minutes(120));
+    }
+
+    #[test]
+    fn into_unit_conversions() {
+        let seconds : Seconds<f64> = Hours(3.0).into_unit();
+        assert_eq!(seconds, Seconds(10800.0));
+    }
+
+    // #[test]
+    // fn from_conversions() {
+    //     assert_eq!(Seconds::from(Hours(1)), Seconds(3600));
+    //     assert_eq!(Minutes::from(Hours(2)), Minutes(120));
+    // }
 }

@@ -281,8 +281,7 @@ mod tests {
 
     use crate::course::{CourseBuilder, CourseSetBuilder};
     use crate::gpx::Waypoint;
-    use crate::measure::{Degrees, Meters};
-    use crate::types::GeoPoint;
+    use crate::measure::Meters;
     use crate::{geo_point, geo_points};
 
     #[test]
@@ -361,7 +360,7 @@ mod tests {
             cmt: None,
             sym: None,
             type_: None,
-            point: GeoPoint::new(Degrees(35.951314), Degrees(-94.973085), None)?,
+            point: geo_point!(35.951314, -94.973085),
         });
 
         let course_set = builder.build()?;
