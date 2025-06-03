@@ -17,13 +17,6 @@ trait IntoDimBase
     fn into_dim_base(self) -> Self::DimBase;
 }
 
-trait FromDimBase
-{
-    type DimBase;
-
-    fn from_dim_base(value: Self::DimBase) -> Self;
-}
-
 trait FromUnit<U>
 {
     fn from_unit(u: U) -> Self;
@@ -143,45 +136,6 @@ macro_rules! unit_of_measure {
                 Self::DimBase::from_unit(self)
             }
         }
-
-        // impl<N, V> From<V> for $u<N>
-        // where
-        //     N: Num + NumCast,
-        //     V: IntoUnit<$u<N>>,
-        // {
-        //     fn from(v: V) -> Self {
-        //         v.into_unit()
-        //     }
-        // }
-        //
-        // impl<N, V> From<V> for $base<N>
-        // where
-        //     N: Num + NumCast,
-        //     V: IntoUnit<$base<N>>,
-        // {
-        //     fn from(value: V) -> Self {
-        //         value.into_unit()
-        //     }
-        // }
-        //
-        // impl<N> From<$u<N>> for $base<N>
-        // where
-        //     N: Num + NumCast,
-        // {
-        //     fn from(value: $u<N>) -> Self {
-        //         // TODO: Find a way to remove this runtime panic?
-        //         Self(value.0 * NumCast::from($coeff).expect("literal out of range for N"))
-        //     }
-        // }
-        //
-        // impl<N> From<$base<N>> for $u<N>
-        // where
-        //     N: Num + NumCast,
-        // {
-        //     fn from(value: $base<N>) -> Self {
-        //         Self(value.0 / NumCast::from($coeff).expect("literal out of range for N"))
-        //     }
-        // }
     };
 }
 
@@ -314,10 +268,4 @@ mod tests {
         let seconds : Seconds<f64> = Hours(3.0).into_unit();
         assert_eq!(seconds, Seconds(10800.0));
     }
-
-    // #[test]
-    // fn from_conversions() {
-    //     assert_eq!(Seconds::from(Hours(1)), Seconds(3600));
-    //     assert_eq!(Minutes::from(Hours(2)), Minutes(120));
-    // }
 }
