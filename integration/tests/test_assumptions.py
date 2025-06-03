@@ -11,13 +11,12 @@ from pytest import approx
 
 from integration import (
     fitdecode_get_definition_frames,
-    garmin_read_messages,
     garmin_read_file_header,
 )
 
 
-def test_lap_messages(data):
-    laps = garmin_read_messages(data / "cptr003_connect.fit")["lap_mesgs"]
+def test_lap_messages(data, caching_mesgs):
+    laps = caching_mesgs(data / "cptr003_connect.fit")["lap_mesgs"]
     assert len(laps) == 1
 
 
@@ -34,8 +33,8 @@ def test_endianness(data):
         assert definition_frame.endian == ">"
 
 
-def test_record_distances(data):
-    mesgs = garmin_read_messages(data / "cptr003_connect.fit")
+def test_record_distances(data, caching_mesgs):
+    mesgs = caching_mesgs(data / "cptr003_connect.fit")
     record_mesgs = mesgs["record_mesgs"]
     assert record_mesgs[0]["distance"] == 0
 
@@ -50,8 +49,8 @@ def test_record_distances(data):
     assert record_mesgs[-1]["distance"] == approx(lap_mesgs[0]["total_distance"])
 
 
-def test_speed_scale(data, ureg):
-    mesgs = garmin_read_messages(data / "cptr003_connect.fit")
+def test_speed_scale(data, ureg, caching_mesgs):
+    mesgs = caching_mesgs(data / "cptr003_connect.fit")
     record_speeds = list(map(lambda msg: msg["speed"], mesgs["record_mesgs"]))
     avg_speed = ((sum(record_speeds) / len(record_speeds)) * ureg("m/s")).to("km/h")
 
