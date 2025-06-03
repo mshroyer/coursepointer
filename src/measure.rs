@@ -10,20 +10,17 @@ use std::ops::{Add, AddAssign, Div, Mul};
 use approx::{AbsDiffEq, RelativeEq, relative_eq};
 use num_traits::{Float, Num, NumCast};
 
-trait IntoDimBase
-{
+trait IntoDimBase {
     type DimBase;
 
     fn into_dim_base(self) -> Self::DimBase;
 }
 
-trait FromUnit<U>
-{
+trait FromUnit<U> {
     fn from_unit(u: U) -> Self;
 }
 
-trait IntoUnit<U>
-{
+trait IntoUnit<U> {
     fn into_unit(self) -> U;
 }
 
@@ -107,22 +104,30 @@ macro_rules! unit_of_measure {
     ($u:ident, ($coeff:expr, $base:ident)) => {
         unit_of_measure!($u);
 
-        impl FromUnit<$u<f64>> for $base<f64>
+        impl<N> FromUnit<$u<N>> for $base<f64>
+        where
+            N: Num,
+            f64: From<N>,
         {
-            fn from_unit(value: $u<f64>) -> Self {
-                // TODO: Find a way to remove this runtime panic?
-                Self(value.0 * ($coeff as f64))
+            fn from_unit(value: $u<N>) -> Self {
+                Self(<f64 as From<N>>::from(value.0) * ($coeff as f64))
             }
         }
 
-        impl FromUnit<$base<f64>> for $u<f64>
+        impl<N> FromUnit<$base<N>> for $u<f64>
+        where
+            N: Num,
+            f64: From<N>,
         {
-            fn from_unit(value: $base<f64>) -> Self {
-                Self(value.0 / ($coeff as f64))
+            fn from_unit(value: $base<N>) -> Self {
+                Self(<f64 as From<N>>::from(value.0) / ($coeff as f64))
             }
         }
 
-        impl IntoDimBase for $u<f64>
+        impl<N> IntoDimBase for $u<N>
+        where
+            N: Num,
+            f64: From<N>,
         {
             type DimBase = $base<f64>;
 
@@ -259,16 +264,12 @@ mod tests {
 
     #[test]
     fn into_unit_conversions() {
-        let seconds : Seconds<f64> = Hours(3.0).into_unit();
+        let seconds: Seconds<f64> = Hours(3.0).into_unit();
         assert_eq!(seconds, Seconds(10800.0));
     }
 
     #[test]
-    fn casting() {
-        let n1 : Option<u32> = NumCast::from(100u8);
-        assert!(n1.is_some());
-
-        let n2 : Option<u32> = NumCast::from(0.01);
-        assert!(n2.is_some());
+    fn casting_integer_values() {
+        assert_eq!(Seconds(60.0), Seconds::from_unit(Minutes(1)));
     }
 }
