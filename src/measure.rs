@@ -107,30 +107,24 @@ macro_rules! unit_of_measure {
     ($u:ident, ($coeff:expr, $base:ident)) => {
         unit_of_measure!($u);
 
-        impl<N> FromUnit<$u<N>> for $base<N>
-        where
-            N: Num + NumCast,
+        impl FromUnit<$u<f64>> for $base<f64>
         {
-            fn from_unit(value: $u<N>) -> Self {
+            fn from_unit(value: $u<f64>) -> Self {
                 // TODO: Find a way to remove this runtime panic?
-                Self(value.0 * NumCast::from($coeff).expect("literal out of range for N"))
+                Self(value.0 * ($coeff as f64))
             }
         }
 
-        impl<N> FromUnit<$base<N>> for $u<N>
-        where
-            N: Num + NumCast,
+        impl FromUnit<$base<f64>> for $u<f64>
         {
-            fn from_unit(value: $base<N>) -> Self {
-                Self(value.0 / NumCast::from($coeff).expect("literal out of range for N"))
+            fn from_unit(value: $base<f64>) -> Self {
+                Self(value.0 / ($coeff as f64))
             }
         }
 
-        impl<N> IntoDimBase for $u<N>
-        where
-            N: Num + NumCast,
+        impl IntoDimBase for $u<f64>
         {
-            type DimBase = $base<N>;
+            type DimBase = $base<f64>;
 
             fn into_dim_base(self) -> Self::DimBase {
                 Self::DimBase::from_unit(self)
@@ -242,12 +236,12 @@ unit_ratio![MetersPerSecond, Meters, Seconds];
 mod tests {
     use super::*;
 
-    unit_of_measure!(Minutes, (60, Seconds));
-
     #[test]
     fn convert_meters_to_cm() {
         assert_eq!(Centimeters::from(Meters(5)), Centimeters(500));
     }
+
+    unit_of_measure!(Minutes, (60, Seconds));
 
     #[test]
     fn unit_ratio() {
@@ -259,13 +253,22 @@ mod tests {
 
     #[test]
     fn from_unit_conversions() {
-        assert_eq!(Seconds::from_unit(Hours(1)), Seconds(3600));
-        assert_eq!(Minutes::from_unit(Hours(2)), Minutes(120));
+        assert_eq!(Seconds::from_unit(Hours(1.0)), Seconds(3600.0));
+        assert_eq!(Minutes::from_unit(Hours(2.0)), Minutes(120.0));
     }
 
     #[test]
     fn into_unit_conversions() {
         let seconds : Seconds<f64> = Hours(3.0).into_unit();
         assert_eq!(seconds, Seconds(10800.0));
+    }
+
+    #[test]
+    fn casting() {
+        let n1 : Option<u32> = NumCast::from(100u8);
+        assert!(n1.is_some());
+
+        let n2 : Option<u32> = NumCast::from(0.01);
+        assert!(n2.is_some());
     }
 }
