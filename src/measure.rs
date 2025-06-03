@@ -127,7 +127,22 @@ macro_rules! unit_of_measure {
 
     ($u:ident, $coeff:tt * $base:ident) => {
         unit_of_measure!($u);
+        unit_conversion!($u, $coeff, $base);
+    };
 
+    ($u:ident, $base:ident * $coeff:tt) => {
+        unit_of_measure!($u);
+        unit_conversion!($u, $coeff, $base);
+    };
+
+    ($u:ident, $base:ident / $coeff:tt) => {
+        unit_of_measure!($u);
+        unit_conversion!($u, 1.0 / ($coeff as f64), $base);
+    };
+}
+
+macro_rules! unit_conversion {
+    ($u:ident, $coeff:expr, $base:ident) => {
         impl<N> FromUnit<$u<N>> for $base<f64>
         where
             N: Num,
@@ -225,11 +240,11 @@ macro_rules! unit_ratio {
 
 // Time units:
 unit_of_measure![Seconds];
-unit_of_measure![Hours, 3600 * Seconds];
+unit_of_measure![Hours, Seconds * 3600];
 
 // Distance units:
 unit_of_measure![Meters];
-unit_of_measure![Centimeters];
+unit_of_measure![Centimeters, Meters / 100];
 
 // conversion_group![Meters, (100.0, Centimeters)];
 
@@ -314,13 +329,18 @@ mod tests {
     }
 
     #[test]
+    fn convert_divisor_coefficient() {
+        assert_eq!(Centimeters(250.0), Centimeters::from_unit(Meters(2.5)));
+    }
+
+    #[test]
     fn cast_into() {
         let x: Option<Meters<u32>> = Meters(42.0).cast_into();
         assert_eq!(x, Some(Meters(42)));
 
         let y: Option<Seconds<u8>> = Seconds(10000.0).cast_into();
         assert_eq!(y, None);
-        
+
         let z: Option<Meters<u32>> = Meters(12.6).cast_into();
         assert_eq!(z, Some(Meters(12)));
     }
