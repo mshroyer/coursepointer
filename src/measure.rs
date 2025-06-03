@@ -24,6 +24,17 @@ trait IntoUnit<U> {
     fn into_unit(self) -> U;
 }
 
+trait CastUnitFrom<U>
+where
+    Self: Sized,
+{
+    fn cast_from(value: U) -> Option<Self>;
+}
+
+trait CastUnitInto<U> {
+    fn cast_into(self) -> Option<U>;
+}
+
 macro_rules! unit_of_measure {
     ($u:ident) => {
         #[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
@@ -57,6 +68,19 @@ macro_rules! unit_of_measure {
 
             fn div(self, rhs: N) -> Self {
                 Self(self.0 / rhs)
+            }
+        }
+
+        // Numeric casting
+
+        impl<M, N> CastUnitFrom<$u<M>> for $u<N>
+        where
+            N: Num + NumCast,
+            M: Num + NumCast,
+            Self: Sized,
+        {
+            fn cast_from(value: $u<M>) -> Option<Self> {
+                NumCast::from(value.0).map(Self)
             }
         }
 
@@ -101,7 +125,7 @@ macro_rules! unit_of_measure {
         }
     };
 
-    ($u:ident, ($coeff:expr, $base:ident)) => {
+    ($u:ident, $coeff:tt * $base:ident) => {
         unit_of_measure!($u);
 
         impl<N> FromUnit<$u<N>> for $base<f64>
@@ -157,6 +181,15 @@ where
     }
 }
 
+impl<U, V> CastUnitInto<U> for V
+where
+    U: CastUnitFrom<V>,
+{
+    fn cast_into(self) -> Option<U> {
+        U::cast_from(self)
+    }
+}
+
 macro_rules! unit_ratio_impl {
     ($ratio:ident, $num:ident, $denom:ident) => {
         impl<N> Div<$denom<N>> for $num<N>
@@ -192,7 +225,7 @@ macro_rules! unit_ratio {
 
 // Time units:
 unit_of_measure![Seconds];
-unit_of_measure![Hours, (3600, Seconds)];
+unit_of_measure![Hours, 3600 * Seconds];
 
 // Distance units:
 unit_of_measure![Meters];
@@ -242,11 +275,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn unit_addition() {
+        let a = Meters(2);
+        let b = Meters(3);
+        assert_eq!(a + b, Meters(5));
+    }
+
+    #[test]
     fn convert_meters_to_cm() {
         assert_eq!(Centimeters::from(Meters(5)), Centimeters(500));
     }
 
-    unit_of_measure!(Minutes, (60, Seconds));
+    unit_of_measure!(Minutes, 60 * Seconds);
 
     #[test]
     fn unit_ratio() {
@@ -269,7 +309,19 @@ mod tests {
     }
 
     #[test]
-    fn casting_integer_values() {
+    fn convert_integer_values() {
         assert_eq!(Seconds(60.0), Seconds::from_unit(Minutes(1)));
+    }
+
+    #[test]
+    fn cast_into() {
+        let x: Option<Meters<u32>> = Meters(42.0).cast_into();
+        assert_eq!(x, Some(Meters(42)));
+
+        let y: Option<Seconds<u8>> = Seconds(10000.0).cast_into();
+        assert_eq!(y, None);
+        
+        let z: Option<Meters<u32>> = Meters(12.6).cast_into();
+        assert_eq!(z, Some(Meters(12)));
     }
 }
