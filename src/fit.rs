@@ -14,7 +14,7 @@ use num_traits::int::PrimInt;
 use thiserror::Error;
 
 use crate::course::Course;
-use crate::measure::{Centimeters, Degrees};
+use crate::measure::{Centimeter, Degree};
 use crate::types::{GeoPoint, TypeError};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
@@ -154,7 +154,7 @@ impl TryFrom<FitSurfacePoint> for GeoPoint {
     fn try_from(value: FitSurfacePoint) -> std::result::Result<Self, Self::Error> {
         let lat = <f64 as From<i32>>::from(value.lat_semis) * 180.0 / 2f64.pow(31);
         let lon = <f64 as From<i32>>::from(value.lon_semis) * 180.0 / 2f64.pow(31);
-        Ok(GeoPoint::new(Degrees(lat), Degrees(lon), None)?)
+        Ok(GeoPoint::new(Degree(lat), Degree(lon), None)?)
     }
 }
 
@@ -518,7 +518,7 @@ struct RecordMessage {
     position: FitSurfacePoint,
 
     /// The record's cumulative distance along the entire course.
-    cumulative_distance: Centimeters<u32>,
+    cumulative_distance: Centimeter<u32>,
 
     /// The absolute time of the record.
     timestamp: FitDateTime,
@@ -527,7 +527,7 @@ struct RecordMessage {
 impl RecordMessage {
     fn new(
         position: FitSurfacePoint,
-        cumulative_distance: Centimeters<u32>,
+        cumulative_distance: Centimeter<u32>,
         timestamp: FitDateTime,
     ) -> Self {
         Self {
@@ -567,7 +567,7 @@ struct CoursePointMessage {
     timestamp: FitDateTime,
     type_: CoursePointType,
     position: FitSurfacePoint,
-    distance: Centimeters<u32>,
+    distance: Centimeter<u32>,
     name: String,
 }
 
@@ -576,7 +576,7 @@ impl CoursePointMessage {
         timestamp: FitDateTime,
         type_: CoursePointType,
         position: FitSurfacePoint,
-        distance: Centimeters<u32>,
+        distance: Centimeter<u32>,
         name: String,
     ) -> Self {
         Self {
@@ -703,7 +703,7 @@ impl<'a> CourseFile<'a> {
         LapMessage::new(
             FitDateTime::try_from(self.start_time)?,
             u32::try_from(self.total_duration()?.num_milliseconds())?,
-            truncate_float(Centimeters::from(self.course.total_distance()).0)?,
+            truncate_float(Centimeter::from(self.course.total_distance()).0)?,
             start_pos,
             end_pos,
         )
@@ -726,14 +726,14 @@ impl<'a> CourseFile<'a> {
         )
         .encode(&mut dw)?;
         for record in &self.course.records {
-            let distance: Centimeters<f64> = record.cumulative_distance.into();
+            let distance: Centimeter<f64> = record.cumulative_distance.into();
             let timedelta: Second<f64> = record.cumulative_distance / self.speed;
             let timestamp = self
                 .start_time
                 .add(TimeDelta::seconds(truncate_float(timedelta.value_unsafe)?));
             let record_message = RecordMessage::new(
                 record.point.try_into()?,
-                Centimeters(truncate_float(distance.0)?),
+                Centimeter(truncate_float(distance.0)?),
                 timestamp.try_into()?,
             );
             record_message.encode(4u8, &mut dw)?;
@@ -746,7 +746,7 @@ impl<'a> CourseFile<'a> {
         )
         .encode(&mut dw)?;
         for course_point in &self.course.course_points {
-            let distance: Centimeters<f64> = course_point.distance.into();
+            let distance: Centimeter<f64> = course_point.distance.into();
             let timedelta: Second<f64> = course_point.distance / self.speed;
             let timestamp = self
                 .start_time
@@ -755,7 +755,7 @@ impl<'a> CourseFile<'a> {
                 timestamp.try_into()?,
                 course_point.point_type,
                 course_point.point.try_into()?,
-                Centimeters(truncate_float(distance.0)?),
+                Centimeter(truncate_float(distance.0)?),
                 course_point.name.to_string(),
             );
             course_point_message.encode(5u8, &mut dw)?;

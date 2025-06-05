@@ -1,8 +1,8 @@
-//! Simple zero-overhead unit of measure types
-//!
-//! A poor man's version of F#'s units of measure, in order to keep units
-//! correct by construction.  I wrote these rather than use the popular `uom`
-//! crate because the latter obscures the actual storage unit and numeric type.
+//! Units of measure
+//! 
+//! Extends the SI units of measure we use fom [`dimensioned`] with
+//! dimensionless angular types, as well as a special type for [`Centimeter`],
+//! which is used heavily in FIT encoding.
 
 use std::ops::{Add, AddAssign, Div};
 
@@ -89,12 +89,12 @@ macro_rules! unit_of_measure {
 }
 
 // Angular units:
-unit_of_measure![Degrees];
-unit_of_measure![Semicircles];
+unit_of_measure![Degree];
+unit_of_measure![Semicircle];
 
-unit_of_measure![Centimeters];
+unit_of_measure![Centimeter];
 
-impl<N> From<Meter<N>> for Centimeters<N>
+impl<N> From<Meter<N>> for Centimeter<N>
 where
     N: Num + From<i32>,
 {

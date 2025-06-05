@@ -2,12 +2,12 @@ use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
-use crate::measure::Degrees;
+use crate::measure::Degree;
 
 #[derive(Error, Debug)]
 pub enum TypeError {
     #[error("geographic point invariant: invalid value {1:?} for {0:?}")]
-    GeoPointInvariant(GeoPointDimension, Degrees<f64>),
+    GeoPointInvariant(GeoPointDimension, Degree<f64>),
 }
 
 type Result<T> = std::result::Result<T, TypeError>;
@@ -17,8 +17,8 @@ type Result<T> = std::result::Result<T, TypeError>;
 /// Enforces valid latitude and longitude values as type invariants.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GeoPoint {
-    lat: Degrees<f64>,
-    lon: Degrees<f64>,
+    lat: Degree<f64>,
+    lon: Degree<f64>,
     ele: Option<Meter<f64>>,
 }
 
@@ -30,7 +30,7 @@ pub enum GeoPointDimension {
 }
 
 impl GeoPoint {
-    pub fn new(lat: Degrees<f64>, lon: Degrees<f64>, ele: Option<Meter<f64>>) -> Result<GeoPoint> {
+    pub fn new(lat: Degree<f64>, lon: Degree<f64>, ele: Option<Meter<f64>>) -> Result<GeoPoint> {
         if lat.0 < -90.0 || lat.0 > 90.0 {
             return Err(TypeError::GeoPointInvariant(
                 GeoPointDimension::Latitude,
@@ -47,12 +47,12 @@ impl GeoPoint {
     }
 
     /// Get point latitude
-    pub fn lat(&self) -> Degrees<f64> {
+    pub fn lat(&self) -> Degree<f64> {
         self.lat
     }
 
     /// Get point longitude
-    pub fn lon(&self) -> Degrees<f64> {
+    pub fn lon(&self) -> Degree<f64> {
         self.lon
     }
 
@@ -65,8 +65,8 @@ impl GeoPoint {
 impl Default for GeoPoint {
     fn default() -> GeoPoint {
         GeoPoint {
-            lat: Degrees(0.0),
-            lon: Degrees(0.0),
+            lat: Degree(0.0),
+            lon: Degree(0.0),
             ele: None,
         }
     }
@@ -115,7 +115,7 @@ pub struct GeoSegment {
     pub point1: GeoPoint,
     pub point2: GeoPoint,
     pub geo_distance: Meter<f64>,
-    pub azimuth1: Degrees<f64>,
+    pub azimuth1: Degree<f64>,
 }
 
 /// A point on a 2D projection.
@@ -140,15 +140,15 @@ impl Default for XYPoint {
 macro_rules! geo_point {
     ( $lat:expr, $lon:expr ) => {
         $crate::types::GeoPoint::new(
-            $crate::measure::Degrees($lat),
-            $crate::measure::Degrees($lon),
+            $crate::measure::Degree($lat),
+            $crate::measure::Degree($lon),
             None,
         )?
     };
     ( $lat:expr, $lon:expr, $ele:expr ) => {
         $crate::types::GeoPoint::new(
-            $crate::measure::Degrees($lat),
-            $crate::measure::Degrees($lon),
+            $crate::measure::Degree($lat),
+            $crate::measure::Degree($lon),
             Some($ele * ::dimensioned::si::M),
         )?
     };

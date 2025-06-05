@@ -5,7 +5,7 @@
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
-use crate::measure::Degrees;
+use crate::measure::Degree;
 use crate::types::{GeoPoint, TypeError, XYPoint};
 
 #[derive(Error, Debug)]
@@ -22,16 +22,16 @@ type Result<T> = std::result::Result<T, GeographicError>;
 #[allow(dead_code)]
 pub struct InverseSolution {
     /// Arc distance between the points.
-    pub arc_distance: Degrees<f64>,
+    pub arc_distance: Degree<f64>,
 
     /// Geodesic distance between the points.
     pub geo_distance: Meter<f64>,
 
     /// Azimuth of the geodesic as measured at point1.
-    pub azimuth1: Degrees<f64>,
+    pub azimuth1: Degree<f64>,
 
     /// Azimuth of the geodesic as measured at point1.
-    pub azimuth2: Degrees<f64>,
+    pub azimuth2: Degree<f64>,
 }
 
 /// Calculate a solution to the inverse geodesic problem.
@@ -53,10 +53,10 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     )?;
 
     Ok(InverseSolution {
-        arc_distance: Degrees(arc_distance_deg),
+        arc_distance: Degree(arc_distance_deg),
         geo_distance: geo_distance_m * M,
-        azimuth1: Degrees(azimuth1_deg),
-        azimuth2: Degrees(azimuth2_deg),
+        azimuth1: Degree(azimuth1_deg),
+        azimuth2: Degree(azimuth2_deg),
     })
 }
 
@@ -64,7 +64,7 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
 #[allow(dead_code)]
 pub struct DirectSolution {
     /// Arc distance between the points.
-    pub arc_distance: Degrees<f64>,
+    pub arc_distance: Degree<f64>,
 
     /// Destination point.
     pub point2: GeoPoint,
@@ -76,7 +76,7 @@ pub struct DirectSolution {
 /// where we end up and its arc distance from the start point.
 pub fn geodesic_direct(
     point1: &GeoPoint,
-    azimuth: Degrees<f64>,
+    azimuth: Degree<f64>,
     distance: Meter<f64>,
 ) -> Result<DirectSolution> {
     let mut lat2_deg = 0.0;
@@ -90,8 +90,8 @@ pub fn geodesic_direct(
         &mut lon2_deg,
     )?;
     Ok(DirectSolution {
-        arc_distance: Degrees(arc_distance_deg),
-        point2: GeoPoint::new(Degrees(lat2_deg), Degrees(lon2_deg), None)?,
+        arc_distance: Degree(arc_distance_deg),
+        point2: GeoPoint::new(Degree(lat2_deg), Degree(lon2_deg), None)?,
     })
 }
 
@@ -129,7 +129,7 @@ pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint
         &mut lat_deg,
         &mut lon_deg,
     )?;
-    Ok(GeoPoint::new(Degrees(lat_deg), Degrees(lon_deg), None)?)
+    Ok(GeoPoint::new(Degree(lat_deg), Degree(lon_deg), None)?)
 }
 
 #[cfg(test)]
@@ -139,13 +139,13 @@ mod tests {
     use dimensioned::si::M;
 
     use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
-    use crate::measure::Degrees;
+    use crate::measure::Degree;
     use crate::types::GeoPoint;
 
     #[test]
     fn test_geodesic_inverse() -> Result<()> {
-        let point1 = GeoPoint::new(Degrees(0.0), Degrees(0.0), None)?;
-        let point2 = GeoPoint::new(Degrees(5.0), Degrees(5.0), None)?;
+        let point1 = GeoPoint::new(Degree(0.0), Degree(0.0), None)?;
+        let point2 = GeoPoint::new(Degree(5.0), Degree(5.0), None)?;
 
         let result = geodesic_inverse(&point1, &point2)?;
         assert_relative_eq!(
@@ -158,8 +158,8 @@ mod tests {
 
     #[test]
     fn test_geodesic_direct() -> Result<()> {
-        let point1 = GeoPoint::new(Degrees(10.0), Degrees(-20.0), None)?;
-        let point2 = GeoPoint::new(Degrees(30.0), Degrees(40.0), None)?;
+        let point1 = GeoPoint::new(Degree(10.0), Degree(-20.0), None)?;
+        let point2 = GeoPoint::new(Degree(30.0), Degree(40.0), None)?;
 
         let inverse = geodesic_inverse(&point1, &point2)?;
         let result = geodesic_direct(&point1, inverse.azimuth1, inverse.geo_distance)?;
@@ -171,8 +171,8 @@ mod tests {
 
     #[test]
     fn test_gnomonic_forward() -> Result<()> {
-        let point0 = GeoPoint::new(Degrees(20.0), Degrees(-40.0), None)?;
-        let point = GeoPoint::new(Degrees(17.0), Degrees(-35.0), None)?;
+        let point0 = GeoPoint::new(Degree(20.0), Degree(-40.0), None)?;
+        let point = GeoPoint::new(Degree(17.0), Degree(-35.0), None)?;
 
         let result = gnomonic_forward(&point0, &point)?;
         // point's longitude is east of point0's
@@ -184,8 +184,8 @@ mod tests {
 
     #[test]
     fn test_gnomonic_reverse() -> Result<()> {
-        let point0 = GeoPoint::new(Degrees(20.0), Degrees(-40.0), None)?;
-        let point = GeoPoint::new(Degrees(17.0), Degrees(-35.0), None)?;
+        let point0 = GeoPoint::new(Degree(20.0), Degree(-40.0), None)?;
+        let point = GeoPoint::new(Degree(17.0), Degree(-35.0), None)?;
 
         let xypoint = gnomonic_forward(&point0, &point)?;
         let result = gnomonic_reverse(&point0, &xypoint)?;

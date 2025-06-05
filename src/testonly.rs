@@ -5,5 +5,5 @@
 
 pub use crate::course::CourseSetBuilder;
 pub use crate::fit::{CourseFile, PROFILE_VERSION};
-pub use crate::measure::Degrees;
+pub use crate::measure::Degree;
 pub use crate::types::GeoPoint;
