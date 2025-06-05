@@ -28,13 +28,15 @@ mod types;
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
+use dimensioned::f64prefixes::KILO;
+use dimensioned::si::M;
+use dimensioned::si::f64consts::HR;
 pub use fit::FitEncodeError;
 use thiserror::Error;
 
 use crate::course::{CourseError, CourseSetBuilder};
 use crate::fit::CourseFile;
 use crate::gpx::{GpxItem, GpxReader};
-use crate::measure::KilometersPerHour;
 use crate::types::TypeError;
 
 #[derive(Error, Debug)]
@@ -92,7 +94,8 @@ pub fn convert_gpx<R: BufRead, W: Write>(gpx_input: R, fit_output: W) -> Result<
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
     let course = course_set.courses.first().unwrap();
-    let course_file = CourseFile::new(course, Utc::now(), KilometersPerHour(20.0).into());
+    let speed = 20.0 * (KILO * M) / HR;
+    let course_file = CourseFile::new(course, Utc::now(), speed);
     course_file.encode(fit_output)?;
 
     Ok(())

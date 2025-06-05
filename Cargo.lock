@@ -391,6 +391,7 @@ dependencies = [
  "chrono",
  "clap",
  "coursepointer",
+ "dimensioned",
  "serde",
  "serde_json",
 ]

@@ -2,9 +2,10 @@
 //!
 //! Wraps the CXX FFI for GeographicLib in a friendlier interface.
 
+use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
-use crate::measure::{Degrees, Meters};
+use crate::measure::Degrees;
 use crate::types::{GeoPoint, TypeError, XYPoint};
 
 #[derive(Error, Debug)]
@@ -24,7 +25,7 @@ pub struct InverseSolution {
     pub arc_distance: Degrees<f64>,
 
     /// Geodesic distance between the points.
-    pub geo_distance: Meters<f64>,
+    pub geo_distance: Meter<f64>,
 
     /// Azimuth of the geodesic as measured at point1.
     pub azimuth1: Degrees<f64>,
@@ -53,7 +54,7 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
 
     Ok(InverseSolution {
         arc_distance: Degrees(arc_distance_deg),
-        geo_distance: Meters(geo_distance_m),
+        geo_distance: geo_distance_m * M,
         azimuth1: Degrees(azimuth1_deg),
         azimuth2: Degrees(azimuth2_deg),
     })
@@ -76,7 +77,7 @@ pub struct DirectSolution {
 pub fn geodesic_direct(
     point1: &GeoPoint,
     azimuth: Degrees<f64>,
-    distance: Meters<f64>,
+    distance: Meter<f64>,
 ) -> Result<DirectSolution> {
     let mut lat2_deg = 0.0;
     let mut lon2_deg = 0.0;
@@ -84,7 +85,7 @@ pub fn geodesic_direct(
         point1.lat().0,
         point1.lon().0,
         azimuth.0,
-        distance.0,
+        distance.value_unsafe,
         &mut lat2_deg,
         &mut lon2_deg,
     )?;
@@ -106,8 +107,8 @@ pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XYPoint> 
         point0.lon().0,
         point.lat().0,
         point.lon().0,
-        &mut result.x.0,
-        &mut result.y.0,
+        &mut result.x.value_unsafe,
+        &mut result.y.value_unsafe,
     )?;
     Ok(result)
 }
@@ -123,8 +124,8 @@ pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint
     crate::ffi::gnomonic_reverse(
         point0.lat().0,
         point0.lon().0,
-        xypoint.x.0,
-        xypoint.y.0,
+        xypoint.x.value_unsafe,
+        xypoint.y.value_unsafe,
         &mut lat_deg,
         &mut lon_deg,
     )?;
@@ -135,6 +136,7 @@ pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint
 mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
+    use dimensioned::si::M;
 
     use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
     use crate::measure::Degrees;
@@ -146,7 +148,11 @@ mod tests {
         let point2 = GeoPoint::new(Degrees(5.0), Degrees(5.0), None)?;
 
         let result = geodesic_inverse(&point1, &point2)?;
-        assert_relative_eq!(result.geo_distance.0, 784029.0, max_relative = 0.000_001);
+        assert_relative_eq!(
+            result.geo_distance,
+            784029.0 * M,
+            max_relative = 0.000_001 * M
+        );
         Ok(())
     }
 
@@ -170,9 +176,9 @@ mod tests {
 
         let result = gnomonic_forward(&point0, &point)?;
         // point's longitude is east of point0's
-        assert!(result.x.0 > 0.0);
+        assert!(result.x.value_unsafe > 0.0);
         // point's latitude is south of point0's
-        assert!(result.y.0 < 0.0);
+        assert!(result.y.value_unsafe < 0.0);
         Ok(())
     }
 

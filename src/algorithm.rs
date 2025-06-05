@@ -8,12 +8,12 @@
 use std::error::Error;
 use std::ops::Mul;
 
+use dimensioned::si::M;
 use thiserror::Error;
 
 use crate::geographic::{
     GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
 };
-use crate::measure::Meters;
 use crate::types::{GeoPoint, GeoSegment, XYPoint};
 
 #[derive(Error, Debug)]
@@ -88,8 +88,8 @@ pub fn karney_interception(segment: &GeoSegment, point: &GeoPoint) -> Result<Geo
         intercept = gnomonic_reverse(
             &intercept,
             &XYPoint {
-                x: Meters(start.x.0 + v.x),
-                y: Meters(start.y.0 + v.y),
+                x: (start.x.value_unsafe + v.x) * M,
+                y: (start.y.value_unsafe + v.y) * M,
             },
         )?;
     }
@@ -212,8 +212,8 @@ impl Mul<f64> for Vec2 {
 
 fn subtract_xypoints(a: &XYPoint, b: &XYPoint) -> Vec2 {
     Vec2 {
-        x: a.x.0 - b.x.0,
-        y: a.y.0 - b.y.0,
+        x: a.x.value_unsafe - b.x.value_unsafe,
+        y: a.y.value_unsafe - b.y.value_unsafe,
     }
 }
 

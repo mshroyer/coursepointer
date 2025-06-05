@@ -1,7 +1,8 @@
 use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
+use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
-use crate::measure::{Degrees, Meters};
+use crate::measure::Degrees;
 
 #[derive(Error, Debug)]
 pub enum TypeError {
@@ -18,7 +19,7 @@ type Result<T> = std::result::Result<T, TypeError>;
 pub struct GeoPoint {
     lat: Degrees<f64>,
     lon: Degrees<f64>,
-    ele: Option<Meters<f64>>,
+    ele: Option<Meter<f64>>,
 }
 
 #[derive(Debug)]
@@ -29,7 +30,7 @@ pub enum GeoPointDimension {
 }
 
 impl GeoPoint {
-    pub fn new(lat: Degrees<f64>, lon: Degrees<f64>, ele: Option<Meters<f64>>) -> Result<GeoPoint> {
+    pub fn new(lat: Degrees<f64>, lon: Degrees<f64>, ele: Option<Meter<f64>>) -> Result<GeoPoint> {
         if lat.0 < -90.0 || lat.0 > 90.0 {
             return Err(TypeError::GeoPointInvariant(
                 GeoPointDimension::Latitude,
@@ -56,7 +57,7 @@ impl GeoPoint {
     }
 
     /// Get point elevation, if known
-    pub fn ele(&self) -> Option<Meters<f64>> {
+    pub fn ele(&self) -> Option<Meter<f64>> {
         self.ele
     }
 }
@@ -113,22 +114,22 @@ impl RelativeEq for GeoPoint {
 pub struct GeoSegment {
     pub point1: GeoPoint,
     pub point2: GeoPoint,
-    pub geo_distance: Meters<f64>,
+    pub geo_distance: Meter<f64>,
     pub azimuth1: Degrees<f64>,
 }
 
 /// A point on a 2D projection.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct XYPoint {
-    pub x: Meters<f64>,
-    pub y: Meters<f64>,
+    pub x: Meter<f64>,
+    pub y: Meter<f64>,
 }
 
 impl Default for XYPoint {
     fn default() -> Self {
         Self {
-            x: Meters(0.0),
-            y: Meters(0.0),
+            x: 0.0 * M,
+            y: 0.0 * M,
         }
     }
 }
@@ -148,7 +149,7 @@ macro_rules! geo_point {
         $crate::types::GeoPoint::new(
             $crate::measure::Degrees($lat),
             $crate::measure::Degrees($lon),
-            Some(Meters($ele)),
+            Some($ele * ::dimensioned::si::M),
         )?
     };
 }

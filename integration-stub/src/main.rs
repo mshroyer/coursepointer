@@ -5,7 +5,10 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
-use coursepointer::testonly::{CourseFile, CourseSetBuilder, Degrees, GeoPoint, KilometersPerHour};
+use coursepointer::testonly::{CourseFile, CourseSetBuilder, Degrees, GeoPoint};
+use dimensioned::f64prefixes::KILO;
+use dimensioned::si::M;
+use dimensioned::si::f64consts::HR;
 use serde::Deserialize;
 
 #[derive(Parser)]
@@ -77,7 +80,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let course_file = CourseFile::new(
         &course,
         parse_rfc9557_utc(&spec.start_time)?,
-        KilometersPerHour(18.0).into(),
+        18.0 * (KILO * M) / HR,
     );
     course_file.encode(&mut fit_file)?;
     Ok(())

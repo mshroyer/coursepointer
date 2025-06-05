@@ -5,6 +5,7 @@ use std::sync::LazyLock;
 
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
+use dimensioned::si::{M, Meter, MeterPerSecond, Second};
 use num_traits::Pow;
 use num_traits::bounds::Bounded;
 use num_traits::cast::NumCast;
@@ -13,7 +14,7 @@ use num_traits::int::PrimInt;
 use thiserror::Error;
 
 use crate::course::Course;
-use crate::measure::{Centimeters, Degrees, Meters, MetersPerSecond, Seconds};
+use crate::measure::{Centimeters, Degrees};
 use crate::types::{GeoPoint, TypeError};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
@@ -634,11 +635,11 @@ impl FileCreatorMessage {
 pub struct CourseFile<'a> {
     course: &'a Course,
     start_time: DateTime<Utc>,
-    speed: MetersPerSecond<f64>,
+    speed: MeterPerSecond<f64>,
 }
 
 impl<'a> CourseFile<'a> {
-    pub fn new(course: &'a Course, start_time: DateTime<Utc>, speed: MetersPerSecond<f64>) -> Self {
+    pub fn new(course: &'a Course, start_time: DateTime<Utc>, speed: MeterPerSecond<f64>) -> Self {
         Self {
             course,
             start_time,
@@ -726,10 +727,10 @@ impl<'a> CourseFile<'a> {
         .encode(&mut dw)?;
         for record in &self.course.records {
             let distance: Centimeters<f64> = record.cumulative_distance.into();
-            let timedelta: Seconds<f64> = record.cumulative_distance / self.speed;
+            let timedelta: Second<f64> = record.cumulative_distance / self.speed;
             let timestamp = self
                 .start_time
-                .add(TimeDelta::seconds(truncate_float(timedelta.0)?));
+                .add(TimeDelta::seconds(truncate_float(timedelta.value_unsafe)?));
             let record_message = RecordMessage::new(
                 record.point.try_into()?,
                 Centimeters(truncate_float(distance.0)?),
@@ -746,10 +747,10 @@ impl<'a> CourseFile<'a> {
         .encode(&mut dw)?;
         for course_point in &self.course.course_points {
             let distance: Centimeters<f64> = course_point.distance.into();
-            let timedelta: Seconds<f64> = course_point.distance / self.speed;
+            let timedelta: Second<f64> = course_point.distance / self.speed;
             let timestamp = self
                 .start_time
-                .add(TimeDelta::seconds(truncate_float(timedelta.0)?));
+                .add(TimeDelta::seconds(truncate_float(timedelta.value_unsafe)?));
             let course_point_message = CoursePointMessage::new(
                 timestamp.try_into()?,
                 course_point.point_type,
@@ -785,13 +786,13 @@ impl<'a> CourseFile<'a> {
         Ok(())
     }
 
-    fn total_distance(&self) -> Meters<f64> {
+    fn total_distance(&self) -> Meter<f64> {
         self.course
             .records
             .iter()
             .last()
             .map(|r| r.cumulative_distance)
-            .unwrap_or(Meters(0.0))
+            .unwrap_or(0.0 * M)
     }
 
     /// Returns the timestamp corresponding to the course's speed and total
@@ -800,8 +801,8 @@ impl<'a> CourseFile<'a> {
         self.total_duration_at_distance(self.total_distance())
     }
 
-    fn total_duration_at_distance(&self, distance: Meters<f64>) -> Result<TimeDelta> {
-        let total_duration_seconds: i64 = truncate_float((distance / self.speed).0)?;
+    fn total_duration_at_distance(&self, distance: Meter<f64>) -> Result<TimeDelta> {
+        let total_duration_seconds: i64 = truncate_float((distance / self.speed).value_unsafe)?;
         Ok(TimeDelta::seconds(total_duration_seconds))
     }
 

@@ -16,13 +16,14 @@ use std::io::BufRead;
 use std::num::ParseFloatError;
 use std::{mem, str};
 
-use quick_xml::events::Event;
+use dimensioned::si::{Meter, M};
 use quick_xml::events::attributes::AttrError;
+use quick_xml::events::Event;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
 
-use crate::measure::{Degrees, Meters};
+use crate::measure::Degrees;
 use crate::types::{GeoPoint, TypeError};
 
 /// An error processing a GPX track file.
@@ -171,7 +172,7 @@ struct NextPtFields {
     type_: Option<String>,
     lat: Option<Degrees<f64>>,
     lon: Option<Degrees<f64>>,
-    ele: Option<Meters<f64>>,
+    ele: Option<Meter<f64>>,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -278,7 +279,7 @@ where
                     | [Tag::Gpx, Tag::Wpt, Tag::Ele] => {
                         if let Err(e) = (|| {
                             self.next_pt_fields.ele =
-                                Some(Meters(str::from_utf8(text.as_ref())?.parse()?));
+                                Some(str::from_utf8(text.as_ref())?.parse::<f64>()? * M);
                             Ok(())
                         })() {
                             return Some(Err(e));
@@ -348,7 +349,7 @@ mod tests {
 
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
     use crate::geo_points;
-    use crate::measure::{Degrees, Meters};
+    use crate::measure::Degrees;
     use crate::types::GeoPoint;
 
     macro_rules! waypoint {

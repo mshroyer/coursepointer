@@ -7,6 +7,7 @@
 //! Once all the data has been added (for example, by parsing it from a GPX
 //! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
+use dimensioned::si::{M, Meter};
 use log::debug;
 use thiserror::Error;
 
@@ -16,7 +17,6 @@ use crate::algorithm::{
 use crate::fit::CoursePointType;
 use crate::geographic::{GeographicError, geodesic_inverse};
 use crate::gpx::Waypoint;
-use crate::measure::Meters;
 use crate::types::{GeoPoint, GeoSegment};
 
 #[derive(Error, Debug)]
@@ -77,7 +77,7 @@ impl CourseSetBuilder {
         for waypoint in &self.waypoints {
             for course in &mut self.courses {
                 let mut slns = Vec::new();
-                let mut course_distance = Meters(0.0);
+                let mut course_distance = 0.0 * M;
                 for segment in &course.segments {
                     let intercept = karney_interception(segment, &waypoint.point)?;
                     let distance = geodesic_inverse(&waypoint.point, &intercept)?.geo_distance;
@@ -91,7 +91,7 @@ impl CourseSetBuilder {
                     course_distance += segment.geo_distance;
                 }
 
-                let near_segments = find_nearby_segments(&slns, Meters(35.0));
+                let near_segments = find_nearby_segments(&slns, 35.0 * M);
                 debug!(
                     "Found {} segments near {}",
                     near_segments.len(),
@@ -119,15 +119,15 @@ struct InterceptSolution {
     intercept_point: GeoPoint,
 
     /// The geodesic distance between the intercept point and the waypoint.
-    intercept_distance: Meters<f64>,
+    intercept_distance: Meter<f64>,
 
     /// The distance along the entire course at which this point of interception
     /// appears.
-    course_distance: Meters<f64>,
+    course_distance: Meter<f64>,
 }
 
-impl NearbySegment<Meters<f64>> for &InterceptSolution {
-    fn waypoint_distance(&self) -> Meters<f64> {
+impl NearbySegment<Meter<f64>> for &InterceptSolution {
+    fn waypoint_distance(&self) -> Meter<f64> {
         self.intercept_distance
     }
 }
@@ -152,11 +152,11 @@ pub struct Course {
 
 impl Course {
     /// The total distance of the course.
-    pub fn total_distance(&self) -> Meters<f64> {
+    pub fn total_distance(&self) -> Meter<f64> {
         self.records
             .last()
             .map(|x| x.cumulative_distance)
-            .unwrap_or(Meters(0.0))
+            .unwrap_or(0.0 * M)
     }
 
     /// Checks whether elevation data is available in this course.
@@ -213,7 +213,7 @@ impl CourseBuilder {
             None => debug!("Building untitled course"),
         }
         let mut records = Vec::new();
-        let mut cumulative_distance = Meters(0.0);
+        let mut cumulative_distance = 0.0 * M;
         match (self.segments.first(), self.prev_point) {
             (Some(first), _) => records.push(Record {
                 point: first.point1,
@@ -256,7 +256,7 @@ pub struct Record {
     pub point: GeoPoint,
 
     /// Cumulative distance along the course.
-    pub cumulative_distance: Meters<f64>,
+    pub cumulative_distance: Meter<f64>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -265,7 +265,7 @@ pub struct CoursePoint {
     pub point: GeoPoint,
 
     /// Distance at which the point appears along the total course.
-    pub distance: Meters<f64>,
+    pub distance: Meter<f64>,
 
     /// Course point type.
     pub point_type: CoursePointType,
@@ -278,10 +278,10 @@ pub struct CoursePoint {
 mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
+    use dimensioned::si::M;
 
     use crate::course::{CourseBuilder, CourseSetBuilder};
     use crate::gpx::Waypoint;
-    use crate::measure::Meters;
     use crate::{geo_point, geo_points};
 
     #[test]
@@ -370,8 +370,8 @@ mod tests {
         let course_point = course.course_points.first().unwrap();
         assert_relative_eq!(
             course_point.distance,
-            Meters(572863.0),
-            max_relative = 0.0001
+            572863.0 * M,
+            max_relative = 0.0001 * M
         );
         Ok(())
     }
