@@ -28,11 +28,12 @@ mod types;
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
+use dimensioned::si::MeterPerSecond;
 pub use fit::FitEncodeError;
 use thiserror::Error;
 
-pub use crate::course::CourseOptions;
 use crate::course::{CourseError, CourseSetBuilder};
+pub use crate::course::{CourseOptions, InterceptStrategy};
 use crate::fit::CourseFile;
 use crate::gpx::{GpxItem, GpxReader};
 use crate::types::TypeError;
@@ -64,10 +65,10 @@ pub type Result<T> = std::result::Result<T, CoursePointerError>;
 pub fn convert_gpx<R: BufRead, W: Write>(
     gpx_input: R,
     fit_output: W,
-    options: CourseOptions,
+    course_options: CourseOptions,
+    fit_speed: MeterPerSecond<f64>,
 ) -> Result<()> {
-    let speed = options.speed;
-    let mut builder = CourseSetBuilder::new(options);
+    let mut builder = CourseSetBuilder::new(course_options);
     let gpx_reader = GpxReader::from_reader(gpx_input);
     for item in gpx_reader {
         let item = item?;
@@ -97,7 +98,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
     let course = course_set.courses.first().unwrap();
-    let course_file = CourseFile::new(course, Utc::now(), speed);
+    let course_file = CourseFile::new(course, Utc::now(), fit_speed);
     course_file.encode(fit_output)?;
 
     Ok(())

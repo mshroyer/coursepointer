@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
-use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError};
+use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M};
 
@@ -35,11 +35,16 @@ struct ConvertGpxArgs {
     /// devices that support it
     #[clap(long, short, default_value = "5.0")]
     speed: f64,
+
+    /// Strategy for handling duplicate intercepts (within threshold) of the
+    /// course from a waypoint.
+    #[clap(long, short = 'r', default_value_t = InterceptStrategy::Nearest)]
+    strategy: InterceptStrategy,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Convert a GPX file to a FIT course
+    /// Convert a GPX file to a FIT file with course points
     ///
     /// Given a GPX file containing a single track, converts the track to a
     /// Garmin FIT course file.
@@ -71,12 +76,13 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
         .context("Creating the <OUTPUT> file")?,
     );
 
-    let options = CourseOptions {
+    let course_options = CourseOptions {
         threshold: args.threshold * M,
-        speed: args.speed * KILO * M / HR,
+        strategy: args.strategy,
     };
+    let fit_speed = args.speed * KILO * M / HR;
 
-    let res = coursepointer::convert_gpx(gpx_file, fit_file, options);
+    let res = coursepointer::convert_gpx(gpx_file, fit_file, course_options, fit_speed);
     match &res {
         Err(CoursePointerError::Gpx(_)) => {
             res.context("The <INPUT> is not a valid GPX file. Check that it is correct.")

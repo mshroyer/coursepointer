@@ -7,8 +7,9 @@
 //! Once all the data has been added (for example, by parsing it from a GPX
 //! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
-use dimensioned::f64prefixes::KILO;
-use dimensioned::si::{HR, M, Meter, MeterPerSecond};
+use std::fmt::Display;
+
+use dimensioned::si::{M, Meter};
 use log::debug;
 use thiserror::Error;
 
@@ -34,6 +35,38 @@ pub enum CourseError {
 
 type Result<T> = std::result::Result<T, CourseError>;
 
+/// Strategy for handling duplicate intercepts from a waypoint.
+///
+/// Duplicate interception can happen in an out-and-back course, for example.
+/// This strategy determines what to do in the case that duplicate intercepts
+/// are available.
+#[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum InterceptStrategy {
+    /// The nearest intercept should be chosen as the course point.
+    Nearest,
+
+    /// The first intercept should be chosen as the course point.
+    First,
+
+    /// All available intercepts should be chosen as repeated course points.
+    All,
+}
+
+impl Display for InterceptStrategy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                InterceptStrategy::Nearest => "nearest",
+                InterceptStrategy::First => "first",
+                InterceptStrategy::All => "all",
+            }
+        )
+    }
+}
+
 /// Options for building a course.
 pub struct CourseOptions {
     /// The threshold distance of a waypoint from the segments of a course,
@@ -41,16 +74,16 @@ pub struct CourseOptions {
     /// turning it into a course point.
     pub threshold: Meter<f64>,
 
-    /// The speed used to compute timestamps along the course. This will appear
-    /// as the speed of the virtual partner, on devices that support it.
-    pub speed: MeterPerSecond<f64>,
+    /// What strategy should be applied in the case of duplicate course
+    /// intercepts from a waypoint.
+    pub strategy: InterceptStrategy,
 }
 
 impl Default for CourseOptions {
     fn default() -> Self {
         Self {
             threshold: 35.0 * M,
-            speed: 20.0 * KILO * M / HR,
+            strategy: InterceptStrategy::Nearest,
         }
     }
 }
@@ -120,7 +153,7 @@ impl CourseSetBuilder {
                     course_distance += segment.geo_distance;
                 }
 
-                let near_segments = find_nearby_segments(&slns, self.options.threshold);
+                let mut near_segments = find_nearby_segments(&slns, self.options.threshold);
                 debug!(
                     "Found {} segments near {}",
                     near_segments.len(),
@@ -128,18 +161,51 @@ impl CourseSetBuilder {
                 );
 
                 if !near_segments.is_empty() {
-                    // TODO: Handle multiple passbys
-                    let sln = near_segments[0];
-                    course.course_points.push(CoursePoint {
-                        point: sln.intercept_point,
-                        distance: sln.course_distance,
-                        point_type: CoursePointType::Generic,
-                        name: waypoint.name.clone(),
-                    })
+                    match self.options.strategy {
+                        InterceptStrategy::Nearest => {
+                            near_segments.sort_by(|a, b| {
+                                a.intercept_distance
+                                    .partial_cmp(&b.intercept_distance)
+                                    .unwrap()
+                            });
+                            Self::add_course_point(
+                                &mut course.course_points,
+                                near_segments[0],
+                                waypoint,
+                            );
+                        }
+
+                        InterceptStrategy::First => {
+                            Self::add_course_point(
+                                &mut course.course_points,
+                                near_segments[0],
+                                waypoint,
+                            );
+                        }
+
+                        InterceptStrategy::All => {
+                            for sln in near_segments {
+                                Self::add_course_point(&mut course.course_points, sln, waypoint);
+                            }
+                        }
+                    }
                 }
             }
         }
         Ok(())
+    }
+
+    fn add_course_point(
+        course_points: &mut Vec<CoursePoint>,
+        sln: &InterceptSolution,
+        waypoint: &Waypoint,
+    ) {
+        course_points.push(CoursePoint {
+            point: sln.intercept_point,
+            distance: sln.course_distance,
+            point_type: CoursePointType::Generic,
+            name: waypoint.name.clone(),
+        });
     }
 }
 

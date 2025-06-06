@@ -308,7 +308,7 @@ class TestIntercept:
         assert names[3] == "Goat Point Over"
 
     def test_threshold_arg(self, data, ureg, caching_convert, caching_mesgs):
-        out_file = caching_convert(data / "cptr004.gpx")
+        out_file = caching_convert(data / "cptr004.gpx", "--strategy", "first")
         mesgs = caching_mesgs(out_file)
 
         russell_point = mesgs["course_point_mesgs"][1]
@@ -320,7 +320,9 @@ class TestIntercept:
         # If we set the threshold argument to < 35m, the first interception with
         # Russell Point won't be until we come around the loop on the hike,
         # putting the distance at around 2.55 miles instead of 2.04 miles.
-        out_file2 = caching_convert(data / "cptr004.gpx", "--threshold", "20")
+        out_file2 = caching_convert(
+            data / "cptr004.gpx", "--strategy", "first", "--threshold", "20"
+        )
         mesgs2 = caching_mesgs(out_file2)
 
         russell_point2 = mesgs2["course_point_mesgs"][1]
@@ -329,4 +331,36 @@ class TestIntercept:
         expected_meters2 = (2.55 * ureg.mile).to(ureg.meter)
         assert russell_point2["distance"] == approx(
             expected_meters2.magnitude, rel=0.01
+        )
+
+    def test_default_nearest_strategy(self, data, ureg, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        russell_point = mesgs["course_point_mesgs"][1]
+        assert russell_point["name"] == "Russell Point"
+
+        # Even though we pass within 35m of Russell Point at around 2.04 miles,
+        # we pass much nearer at 2.55 miles. With the default intercept strategy
+        # set to "nearest" we should choose the latter interception by default.
+        expected_meters = (2.55 * ureg.mile).to(ureg.meter)
+        assert russell_point["distance"] == approx(expected_meters.magnitude, rel=0.01)
+
+    def test_all_strategy(self, data, ureg, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx", "--strategy", "all")
+        mesgs = caching_mesgs(out_file)
+
+        # With strategy "all" we intercept Russell Point twice within 35m:
+        assert len(mesgs["course_point_mesgs"]) == 5
+
+        russell_point1 = mesgs["course_point_mesgs"][1]
+        assert russell_point1["name"] == "Russell Point"
+        assert russell_point1["distance"] == approx(
+            (2.04 * ureg.mile).to(ureg.meter).magnitude, rel=0.01
+        )
+
+        russell_point2 = mesgs["course_point_mesgs"][2]
+        assert russell_point2["name"] == "Russell Point"
+        assert russell_point2["distance"] == approx(
+            (2.55 * ureg.mile).to(ureg.meter).magnitude, rel=0.01
         )
