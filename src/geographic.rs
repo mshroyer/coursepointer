@@ -5,7 +5,7 @@
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
-use crate::measure::Degree;
+use crate::measure::{DEG, Degree};
 use crate::types::{GeoPoint, TypeError, XYPoint};
 
 #[derive(Error, Debug)]
@@ -43,20 +43,20 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
     let arc_distance_deg = crate::ffi::geodesic_inverse_with_azimuth(
-        point1.lat().0,
-        point1.lon().0,
-        point2.lat().0,
-        point2.lon().0,
+        point1.lat().value_unsafe,
+        point1.lon().value_unsafe,
+        point2.lat().value_unsafe,
+        point2.lon().value_unsafe,
         &mut geo_distance_m,
         &mut azimuth1_deg,
         &mut azimuth2_deg,
     )?;
 
     Ok(InverseSolution {
-        arc_distance: Degree(arc_distance_deg),
+        arc_distance: arc_distance_deg * DEG,
         geo_distance: geo_distance_m * M,
-        azimuth1: Degree(azimuth1_deg),
-        azimuth2: Degree(azimuth2_deg),
+        azimuth1: azimuth1_deg * DEG,
+        azimuth2: azimuth2_deg * DEG,
     })
 }
 
@@ -82,16 +82,16 @@ pub fn geodesic_direct(
     let mut lat2_deg = 0.0;
     let mut lon2_deg = 0.0;
     let arc_distance_deg = crate::ffi::geodesic_direct(
-        point1.lat().0,
-        point1.lon().0,
-        azimuth.0,
+        point1.lat().value_unsafe,
+        point1.lon().value_unsafe,
+        azimuth.value_unsafe,
         distance.value_unsafe,
         &mut lat2_deg,
         &mut lon2_deg,
     )?;
     Ok(DirectSolution {
-        arc_distance: Degree(arc_distance_deg),
-        point2: GeoPoint::new(Degree(lat2_deg), Degree(lon2_deg), None)?,
+        arc_distance: arc_distance_deg * DEG,
+        point2: GeoPoint::new(lat2_deg * DEG, lon2_deg * DEG, None)?,
     })
 }
 
@@ -103,10 +103,10 @@ pub fn geodesic_direct(
 pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XYPoint> {
     let mut result = XYPoint::default();
     crate::ffi::gnomonic_forward(
-        point0.lat().0,
-        point0.lon().0,
-        point.lat().0,
-        point.lon().0,
+        point0.lat().value_unsafe,
+        point0.lon().value_unsafe,
+        point.lat().value_unsafe,
+        point.lon().value_unsafe,
         &mut result.x.value_unsafe,
         &mut result.y.value_unsafe,
     )?;
@@ -122,14 +122,14 @@ pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint
     let mut lat_deg = 0.0;
     let mut lon_deg = 0.0;
     crate::ffi::gnomonic_reverse(
-        point0.lat().0,
-        point0.lon().0,
+        point0.lat().value_unsafe,
+        point0.lon().value_unsafe,
         xypoint.x.value_unsafe,
         xypoint.y.value_unsafe,
         &mut lat_deg,
         &mut lon_deg,
     )?;
-    Ok(GeoPoint::new(Degree(lat_deg), Degree(lon_deg), None)?)
+    Ok(GeoPoint::new(lat_deg * DEG, lon_deg * DEG, None)?)
 }
 
 #[cfg(test)]
@@ -139,13 +139,13 @@ mod tests {
     use dimensioned::si::M;
 
     use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
-    use crate::measure::Degree;
+    use crate::measure::DEG;
     use crate::types::GeoPoint;
 
     #[test]
     fn test_geodesic_inverse() -> Result<()> {
-        let point1 = GeoPoint::new(Degree(0.0), Degree(0.0), None)?;
-        let point2 = GeoPoint::new(Degree(5.0), Degree(5.0), None)?;
+        let point1 = GeoPoint::new(0.0 * DEG, 0.0 * DEG, None)?;
+        let point2 = GeoPoint::new(5.0 * DEG, 5.0 * DEG, None)?;
 
         let result = geodesic_inverse(&point1, &point2)?;
         assert_relative_eq!(
@@ -158,8 +158,8 @@ mod tests {
 
     #[test]
     fn test_geodesic_direct() -> Result<()> {
-        let point1 = GeoPoint::new(Degree(10.0), Degree(-20.0), None)?;
-        let point2 = GeoPoint::new(Degree(30.0), Degree(40.0), None)?;
+        let point1 = GeoPoint::new(10.0 * DEG, -20.0 * DEG, None)?;
+        let point2 = GeoPoint::new(30.0 * DEG, 40.0 * DEG, None)?;
 
         let inverse = geodesic_inverse(&point1, &point2)?;
         let result = geodesic_direct(&point1, inverse.azimuth1, inverse.geo_distance)?;
@@ -171,8 +171,8 @@ mod tests {
 
     #[test]
     fn test_gnomonic_forward() -> Result<()> {
-        let point0 = GeoPoint::new(Degree(20.0), Degree(-40.0), None)?;
-        let point = GeoPoint::new(Degree(17.0), Degree(-35.0), None)?;
+        let point0 = GeoPoint::new(20.0 * DEG, -40.0 * DEG, None)?;
+        let point = GeoPoint::new(17.0 * DEG, -35.0 * DEG, None)?;
 
         let result = gnomonic_forward(&point0, &point)?;
         // point's longitude is east of point0's
@@ -184,8 +184,8 @@ mod tests {
 
     #[test]
     fn test_gnomonic_reverse() -> Result<()> {
-        let point0 = GeoPoint::new(Degree(20.0), Degree(-40.0), None)?;
-        let point = GeoPoint::new(Degree(17.0), Degree(-35.0), None)?;
+        let point0 = GeoPoint::new(20.0 * DEG, -40.0 * DEG, None)?;
+        let point = GeoPoint::new(17.0 * DEG, -35.0 * DEG, None)?;
 
         let xypoint = gnomonic_forward(&point0, &point)?;
         let result = gnomonic_reverse(&point0, &xypoint)?;

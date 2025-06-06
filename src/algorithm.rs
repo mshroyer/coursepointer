@@ -230,7 +230,7 @@ mod tests {
     use serde::Deserialize;
 
     use super::{FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception};
-    use crate::measure::Degree;
+    use crate::measure::DEG;
     use crate::types::{GeoPoint, GeoSegment};
 
     #[derive(Deserialize)]
@@ -259,19 +259,12 @@ mod tests {
             .from_path(intercepts_path)?;
         for case in rdr.deserialize() {
             let datum: InterceptsDatum = case?;
-            let geo_start = GeoPoint::new(
-                Degree(datum.geo_start_lat),
-                Degree(datum.geo_start_lon),
-                None,
-            )?;
-            let geo_end =
-                GeoPoint::new(Degree(datum.geo_end_lat), Degree(datum.geo_end_lon), None)?;
-            let p = GeoPoint::new(Degree(datum.p_lat), Degree(datum.p_lon), None)?;
-            let intercept = GeoPoint::new(
-                Degree(datum.intercept_lat),
-                Degree(datum.intercept_lon),
-                None,
-            )?;
+            let geo_start =
+                GeoPoint::new(datum.geo_start_lat * DEG, datum.geo_start_lon * DEG, None)?;
+            let geo_end = GeoPoint::new(datum.geo_end_lat * DEG, datum.geo_end_lon * DEG, None)?;
+            let p = GeoPoint::new(datum.p_lat * DEG, datum.p_lon * DEG, None)?;
+            let intercept =
+                GeoPoint::new(datum.intercept_lat * DEG, datum.intercept_lon * DEG, None)?;
 
             let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
             let result = karney_interception(&seg, &p)?;
@@ -284,9 +277,9 @@ mod tests {
 
     #[test]
     fn test_karney_interception_zero_length_segment() -> Result<()> {
-        let seg_point = GeoPoint::new(Degree(3.0), Degree(4.0), None)?;
+        let seg_point = GeoPoint::new(3.0 * DEG, 4.0 * DEG, None)?;
         let seg = GeoSegment::from_geo_points(seg_point, seg_point)?;
-        let p = GeoPoint::new(Degree(3.5), Degree(4.5), None)?;
+        let p = GeoPoint::new(3.5 * DEG, 4.5 * DEG, None)?;
         let intercept = karney_interception(&seg, &p)?;
 
         // For a zero-length segment, the intercept should be the segment's
@@ -297,8 +290,8 @@ mod tests {
 
     #[test]
     fn test_karney_interception_point_on_segment() -> Result<()> {
-        let point1 = GeoPoint::new(Degree(3.0), Degree(4.0), None)?;
-        let point2 = GeoPoint::new(Degree(3.5), Degree(4.5), None)?;
+        let point1 = GeoPoint::new(3.0 * DEG, 4.0 * DEG, None)?;
+        let point2 = GeoPoint::new(3.5 * DEG, 4.5 * DEG, None)?;
         let seg = GeoSegment::from_geo_points(point1, point2)?;
         let intercept = karney_interception(&seg, &point1)?;
 

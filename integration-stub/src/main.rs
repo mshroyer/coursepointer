@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
-use coursepointer::testonly::{CourseFile, CourseSetBuilder, Degree, GeoPoint};
+use coursepointer::testonly::{CourseFile, CourseSetBuilder, DEG, GeoPoint};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::M;
 use dimensioned::si::f64consts::HR;
@@ -70,8 +70,8 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     builder.current_mut()?.set_name(spec.name);
     for point in &spec.records {
         builder.current_mut()?.add_route_point(GeoPoint::new(
-            Degree(point.lat),
-            Degree(point.lon),
+            point.lat * DEG,
+            point.lon * DEG,
             None,
         )?)?;
     }

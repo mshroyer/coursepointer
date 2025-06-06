@@ -16,14 +16,14 @@ use std::io::BufRead;
 use std::num::ParseFloatError;
 use std::{mem, str};
 
-use dimensioned::si::{Meter, M};
-use quick_xml::events::attributes::AttrError;
+use dimensioned::si::{M, Meter};
 use quick_xml::events::Event;
+use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
 
-use crate::measure::Degree;
+use crate::measure::{DEG, Degree};
 use crate::types::{GeoPoint, TypeError};
 
 /// An error processing a GPX track file.
@@ -250,10 +250,10 @@ where
                                     let a = attr?;
                                     if a.key == QName(b"lat") {
                                         self.next_pt_fields.lat =
-                                            Some(Degree(str::from_utf8(&a.value)?.parse()?));
+                                            Some(str::from_utf8(&a.value)?.parse::<f64>()? * DEG);
                                     } else if a.key == QName(b"lon") {
                                         self.next_pt_fields.lon =
-                                            Some(Degree(str::from_utf8(&a.value)?.parse()?));
+                                            Some(str::from_utf8(&a.value)?.parse::<f64>()? * DEG);
                                     }
                                 }
                                 Ok(())
@@ -349,7 +349,7 @@ mod tests {
 
     use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
     use crate::geo_points;
-    use crate::measure::Degree;
+    use crate::measure::DEG;
     use crate::types::GeoPoint;
 
     macro_rules! waypoint {
@@ -359,7 +359,7 @@ mod tests {
                 cmt: $cmt.map(|s| s.to_owned()),
                 sym: $sym.map(|s| s.to_owned()),
                 type_: $type_.map(|s| s.to_owned()),
-                point: GeoPoint::new(Degree($lat), Degree($lon), None)?,
+                point: GeoPoint::new($lat * DEG, $lon * DEG, None)?,
             }
         };
         ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr, $ele:expr ) => {
@@ -368,7 +368,7 @@ mod tests {
                 cmt: $cmt.map(|s| s.to_owned()),
                 sym: $sym.map(|s| s.to_owned()),
                 type_: $type_.map(|s| s.to_owned()),
-                point: GeoPoint::new(Degree($lat), Degree($lon), Some(Meters($ele)))?,
+                point: GeoPoint::new($lat * DEG, $lon * DEG, Some($ele * M))?,
             }
         };
     }

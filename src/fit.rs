@@ -14,7 +14,7 @@ use num_traits::int::PrimInt;
 use thiserror::Error;
 
 use crate::course::Course;
-use crate::measure::{Centimeter, Degree};
+use crate::measure::{CM, Centimeter, DEG};
 use crate::types::{GeoPoint, TypeError};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
@@ -139,8 +139,8 @@ impl TryFrom<GeoPoint> for FitSurfacePoint {
     type Error = FitEncodeError;
 
     fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
-        let lat_semis = truncate_float((2f64.pow(31) / 180.0) * value.lat().0)?;
-        let lon_semis = truncate_float((2f64.pow(31) / 180.0) * value.lon().0)?;
+        let lat_semis = truncate_float((2f64.pow(31) / 180.0) * value.lat().value_unsafe)?;
+        let lon_semis = truncate_float((2f64.pow(31) / 180.0) * value.lon().value_unsafe)?;
         Ok(Self {
             lat_semis,
             lon_semis,
@@ -154,7 +154,7 @@ impl TryFrom<FitSurfacePoint> for GeoPoint {
     fn try_from(value: FitSurfacePoint) -> std::result::Result<Self, Self::Error> {
         let lat = <f64 as From<i32>>::from(value.lat_semis) * 180.0 / 2f64.pow(31);
         let lon = <f64 as From<i32>>::from(value.lon_semis) * 180.0 / 2f64.pow(31);
-        Ok(GeoPoint::new(Degree(lat), Degree(lon), None)?)
+        Ok(GeoPoint::new(lat * DEG, lon * DEG, None)?)
     }
 }
 
@@ -551,7 +551,7 @@ impl RecordMessage {
         w.write_u8(local_message_id & 0x0F)?;
         w.write_i32::<BigEndian>(self.position.lat_semis)?;
         w.write_i32::<BigEndian>(self.position.lon_semis)?;
-        w.write_u32::<BigEndian>(self.cumulative_distance.0)?;
+        w.write_u32::<BigEndian>(self.cumulative_distance.value_unsafe)?;
         w.write_u32::<BigEndian>(self.timestamp.value)?;
         Ok(())
     }
@@ -604,7 +604,7 @@ impl CoursePointMessage {
         w.write_u32::<BigEndian>(self.timestamp.value)?;
         w.write_i32::<BigEndian>(self.position.lat_semis)?;
         w.write_i32::<BigEndian>(self.position.lon_semis)?;
-        w.write_u32::<BigEndian>(self.distance.0)?;
+        w.write_u32::<BigEndian>(self.distance.value_unsafe)?;
         w.write_u8(self.type_ as u8)?;
         write_string_field(self.name.as_str(), 16, w)?;
         Ok(())
@@ -703,7 +703,7 @@ impl<'a> CourseFile<'a> {
         LapMessage::new(
             FitDateTime::try_from(self.start_time)?,
             u32::try_from(self.total_duration()?.num_milliseconds())?,
-            truncate_float(Centimeter::from(self.course.total_distance()).0)?,
+            truncate_float(Centimeter::from(self.course.total_distance()).value_unsafe)?,
             start_pos,
             end_pos,
         )
@@ -731,9 +731,10 @@ impl<'a> CourseFile<'a> {
             let timestamp = self
                 .start_time
                 .add(TimeDelta::seconds(truncate_float(timedelta.value_unsafe)?));
+            let distance_int_cm: u32 = truncate_float(distance.value_unsafe)?;
             let record_message = RecordMessage::new(
                 record.point.try_into()?,
-                Centimeter(truncate_float(distance.0)?),
+                distance_int_cm * CM,
                 timestamp.try_into()?,
             );
             record_message.encode(4u8, &mut dw)?;
@@ -751,11 +752,12 @@ impl<'a> CourseFile<'a> {
             let timestamp = self
                 .start_time
                 .add(TimeDelta::seconds(truncate_float(timedelta.value_unsafe)?));
+            let distance_int_cm: u32 = truncate_float(distance.value_unsafe)?;
             let course_point_message = CoursePointMessage::new(
                 timestamp.try_into()?,
                 course_point.point_type,
                 course_point.point.try_into()?,
-                Centimeter(truncate_float(distance.0)?),
+                distance_int_cm * CM,
                 course_point.name.to_string(),
             );
             course_point_message.encode(5u8, &mut dw)?;

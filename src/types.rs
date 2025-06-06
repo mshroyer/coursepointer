@@ -2,7 +2,7 @@ use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
-use crate::measure::Degree;
+use crate::measure::{DEG, Degree};
 
 #[derive(Error, Debug)]
 pub enum TypeError {
@@ -31,13 +31,13 @@ pub enum GeoPointDimension {
 
 impl GeoPoint {
     pub fn new(lat: Degree<f64>, lon: Degree<f64>, ele: Option<Meter<f64>>) -> Result<GeoPoint> {
-        if lat.0 < -90.0 || lat.0 > 90.0 {
+        if lat.value_unsafe < -90.0 || lat.value_unsafe > 90.0 {
             return Err(TypeError::GeoPointInvariant(
                 GeoPointDimension::Latitude,
                 lat,
             ));
         }
-        if lon.0 < -180.0 || lon.0 > 180.0 {
+        if lon.value_unsafe < -180.0 || lon.value_unsafe > 180.0 {
             return Err(TypeError::GeoPointInvariant(
                 GeoPointDimension::Longitude,
                 lon,
@@ -65,8 +65,8 @@ impl GeoPoint {
 impl Default for GeoPoint {
     fn default() -> GeoPoint {
         GeoPoint {
-            lat: Degree(0.0),
-            lon: Degree(0.0),
+            lat: 0.0 * DEG,
+            lon: 0.0 * DEG,
             ele: None,
         }
     }
@@ -80,8 +80,15 @@ impl AbsDiffEq for GeoPoint {
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        abs_diff_eq!(self.lat.0, other.lat.0, epsilon = epsilon)
-            && abs_diff_eq!(self.lon.0, other.lon.0, epsilon = epsilon)
+        abs_diff_eq!(
+            self.lat.value_unsafe,
+            other.lat.value_unsafe,
+            epsilon = epsilon
+        ) && abs_diff_eq!(
+            self.lon.value_unsafe,
+            other.lon.value_unsafe,
+            epsilon = epsilon
+        )
     }
 }
 
@@ -97,13 +104,13 @@ impl RelativeEq for GeoPoint {
         max_relative: Self::Epsilon,
     ) -> bool {
         relative_eq!(
-            self.lat().0,
-            other.lat().0,
+            self.lat().value_unsafe,
+            other.lat().value_unsafe,
             epsilon = epsilon,
             max_relative = max_relative
         ) && relative_eq!(
-            self.lon().0,
-            other.lon().0,
+            self.lon().value_unsafe,
+            other.lon().value_unsafe,
             epsilon = epsilon,
             max_relative = max_relative
         )
@@ -140,15 +147,15 @@ impl Default for XYPoint {
 macro_rules! geo_point {
     ( $lat:expr, $lon:expr ) => {
         $crate::types::GeoPoint::new(
-            $crate::measure::Degree($lat),
-            $crate::measure::Degree($lon),
+            $lat * $crate::measure::DEG,
+            $lon * $crate::measure::DEG,
             None,
         )?
     };
     ( $lat:expr, $lon:expr, $ele:expr ) => {
         $crate::types::GeoPoint::new(
-            $crate::measure::Degree($lat),
-            $crate::measure::Degree($lon),
+            $lat * $crate::measure::DEG,
+            $lon * $crate::measure::DEG,
             Some($ele * ::dimensioned::si::M),
         )?
     };
