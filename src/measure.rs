@@ -10,6 +10,8 @@ use approx::{AbsDiffEq, RelativeEq, relative_eq};
 use dimensioned::si::{Meter, Second};
 use num_traits::{Float, Num, NumCast, Pow, ToPrimitive};
 
+use crate::types::{Result, TypeError};
+
 macro_rules! unit_of_measure {
     ($a:ident as $u:ident) => {
         #[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
@@ -149,15 +151,26 @@ unit_of_measure![CM as Centimeter];
 unit_of_measure![MS as Millisecond];
 unit_of_measure![NS as Nanosecond];
 
-impl From<Degree<f64>> for Semicircle<f64> {
-    fn from(value: Degree<f64>) -> Self {
-        Self::new((2f64.pow(31) / 180.0) * value.value_unsafe)
+impl TryFrom<Degree<f64>> for Semicircle<i32> {
+    type Error = TypeError;
+
+    fn try_from(value: Degree<f64>) -> Result<Self> {
+        let mut sc64 = <i64 as NumCast>::from((2f64.pow(31) / 180.0) * value.value_unsafe)
+            .ok_or(TypeError::NumericCast)?;
+
+        if sc64 == (i32::MAX as i64) + 1 {
+            // GPX allows longitude in [-180.0, 180.0] inclusive, but Garmin's
+            // semicircles can't represent a value corresponding to positive 180
+            // degrees. So instead, wrap back around to -180.
+            sc64 = i32::MIN as i64;
+        }
+        Ok(<i32 as NumCast>::from(sc64).ok_or(TypeError::NumericCast)? * SEMI)
     }
 }
 
-impl From<Semicircle<f64>> for Degree<f64> {
-    fn from(value: Semicircle<f64>) -> Self {
-        Self::new(value.value_unsafe * 180.0 / 2f64.powi(31))
+impl From<Semicircle<i32>> for Degree<f64> {
+    fn from(value: Semicircle<i32>) -> Self {
+        (<f64 as From<i32>>::from(value.value_unsafe) * 180.0 / 2f64.pow(31)) * DEG
     }
 }
 
@@ -185,5 +198,47 @@ where
 {
     fn from(value: Second<N>) -> Self {
         Self::new(N::from(1_000_000_000) * value.value_unsafe)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+
+    use super::{DEG, Degree, SEMI, Semicircle};
+
+    #[test]
+    fn from_deg_min() -> Result<()> {
+        let sc = Semicircle::<i32>::try_from(-180.0 * DEG)?;
+        assert_eq!(sc, i32::MIN * SEMI);
+        Ok(())
+    }
+
+    #[test]
+    fn from_deg_max() -> Result<()> {
+        let sc = Semicircle::<i32>::try_from(180.0 * DEG)?;
+
+        // 180 degrees should wrap around to negative in semicircle
+        // representation
+        assert_eq!(sc, i32::MIN * SEMI);
+        Ok(())
+    }
+
+    #[test]
+    fn sc_round_trip_negative() -> Result<()> {
+        let original = (i32::MIN + 10) * SEMI;
+        let deg: Degree<f64> = original.try_into()?;
+        let result: Semicircle<i32> = deg.try_into()?;
+        assert_eq!(result, original);
+        Ok(())
+    }
+
+    #[test]
+    fn sc_round_trip_positive() -> Result<()> {
+        let original = (i32::MAX - 10) * SEMI;
+        let deg: Degree<f64> = original.try_into()?;
+        let result: Semicircle<i32> = deg.try_into()?;
+        assert_eq!(result, original);
+        Ok(())
     }
 }

@@ -128,10 +128,8 @@ impl TryFrom<GeoPoint> for FitSurfacePoint {
 
     fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
-            lat: Semicircle::<i32>::num_cast_from(value.lat().into())
-                .ok_or(FitEncodeError::NumCast)?,
-            lon: Semicircle::<i32>::num_cast_from(value.lon().into())
-                .ok_or(FitEncodeError::NumCast)?,
+            lat: value.lat().try_into()?,
+            lon: value.lon().try_into()?,
         })
     }
 }
@@ -140,15 +138,7 @@ impl TryFrom<FitSurfacePoint> for GeoPoint {
     type Error = FitEncodeError;
 
     fn try_from(value: FitSurfacePoint) -> std::result::Result<Self, Self::Error> {
-        Ok(GeoPoint::new(
-            Semicircle::<f64>::num_cast_from(value.lat)
-                .ok_or(FitEncodeError::NumCast)?
-                .into(),
-            Semicircle::<f64>::num_cast_from(value.lon)
-                .ok_or(FitEncodeError::NumCast)?
-                .into(),
-            None,
-        )?)
+        Ok(GeoPoint::new(value.lat.into(), value.lon.into(), None)?)
     }
 }
 

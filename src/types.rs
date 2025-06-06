@@ -6,11 +6,13 @@ use crate::measure::{DEG, Degree};
 
 #[derive(Error, Debug)]
 pub enum TypeError {
-    #[error("geographic point invariant: invalid value {1:?} for {0:?}")]
+    #[error("Geographic point invariant: invalid value {1:?} for {0:?}")]
     GeoPointInvariant(GeoPointDimension, Degree<f64>),
+    #[error("Numeric type cast")]
+    NumericCast,
 }
 
-type Result<T> = std::result::Result<T, TypeError>;
+pub type Result<T> = std::result::Result<T, TypeError>;
 
 /// A point on the surface of the WGS84 ellipsoid.
 ///
