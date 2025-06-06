@@ -4,12 +4,31 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use coursepointer::{CoursePointerError, FitEncodeError};
+use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError};
+use dimensioned::si::M;
 
 #[derive(Parser)]
 struct Args {
     #[command(subcommand)]
     cmd: Commands,
+}
+
+#[derive(Parser)]
+struct ConvertGpxArgs {
+    /// GPX input path
+    input: PathBuf,
+
+    /// FIT file output path
+    output: PathBuf,
+
+    /// Force overwrite the output file, if it already exists
+    #[clap(long, short, action)]
+    force: bool,
+
+    /// Max distance from course at which a waypoint is considered a course
+    /// point, in meters
+    #[clap(long, short, default_value = "35.0")]
+    threshold: f64,
 }
 
 #[derive(Subcommand)]
@@ -18,36 +37,30 @@ enum Commands {
     ///
     /// Given a GPX file containing a single track, converts the track to a
     /// Garmin FIT course file.
-    ConvertGpx {
-        /// GPX input path
-        input: PathBuf,
-
-        /// Path where to write FIT output
-        output: PathBuf,
-
-        /// Force overwrite the output file, if it already exists
-        #[clap(long, short, action)]
-        force: bool,
-    },
+    ConvertGpx(ConvertGpxArgs),
 }
 
-fn convert_gpx_cmd(input: PathBuf, output: PathBuf, force: bool) -> Result<()> {
-    log::debug!("convert-gpx: {:?} -> {:?}", input, output);
+fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
+    log::debug!("convert-gpx: {:?} -> {:?}", args.input, args.output);
     let gpx_file = BufReader::new(
-        File::open(&input)
+        File::open(&args.input)
             .context("Opening the GPX <INPUT> file. Check that it exists and can be accessed.")?,
     );
 
     let fit_file = BufWriter::new(
-        if force {
-            File::create(output)
+        if args.force {
+            File::create(args.output)
         } else {
-            File::create_new(output)
+            File::create_new(args.output)
         }
         .context("Creating the <OUTPUT> file")?,
     );
 
-    let res = coursepointer::convert_gpx(gpx_file, fit_file);
+    let options = CourseOptions {
+        threshold: args.threshold * M,
+    };
+
+    let res = coursepointer::convert_gpx(gpx_file, fit_file, options);
     match &res {
         Err(CoursePointerError::Gpx(_)) => {
             res.context("The <INPUT> is not a valid GPX file. Check that it is correct.")
@@ -79,10 +92,6 @@ fn main() -> Result<()> {
     env_logger::init();
 
     match args.cmd {
-        Commands::ConvertGpx {
-            input,
-            output,
-            force,
-        } => convert_gpx_cmd(input, output, force),
+        Commands::ConvertGpx(sub_args) => convert_gpx_cmd(sub_args),
     }
 }

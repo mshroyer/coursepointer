@@ -27,23 +27,39 @@ pub enum CourseError {
     MissingCourse,
     #[error("Error in geographic calculation")]
     Algorithm(#[from] AlgorithmError),
+    #[error("Distance is NaN")]
+    NaNDistance,
 }
 
 type Result<T> = std::result::Result<T, CourseError>;
+
+pub struct CourseOptions {
+    pub threshold: Meter<f64>,
+}
+
+impl Default for CourseOptions {
+    fn default() -> Self {
+        Self {
+            threshold: 35.0 * M,
+        }
+    }
+}
 
 pub struct CourseSet {
     pub courses: Vec<Course>,
 }
 
 pub struct CourseSetBuilder {
+    options: CourseOptions,
     courses: Vec<CourseBuilder>,
     waypoints: Vec<Waypoint>,
 }
 
 #[allow(clippy::new_without_default)]
 impl CourseSetBuilder {
-    pub fn new() -> Self {
+    pub fn new(options: CourseOptions) -> Self {
         Self {
+            options,
             courses: Vec::new(),
             waypoints: Vec::new(),
         }
@@ -81,6 +97,9 @@ impl CourseSetBuilder {
                 for segment in &course.segments {
                     let intercept = karney_interception(segment, &waypoint.point)?;
                     let distance = geodesic_inverse(&waypoint.point, &intercept)?.geo_distance;
+                    if distance.value_unsafe.is_nan() {
+                        return Err(CourseError::NaNDistance);
+                    }
                     let offset = geodesic_inverse(&segment.point1, &intercept)?.geo_distance;
 
                     slns.push(InterceptSolution {
@@ -91,7 +110,7 @@ impl CourseSetBuilder {
                     course_distance += segment.geo_distance;
                 }
 
-                let near_segments = find_nearby_segments(&slns, 35.0 * M);
+                let near_segments = find_nearby_segments(&slns, self.options.threshold);
                 debug!(
                     "Found {} segments near {}",
                     near_segments.len(),
@@ -207,7 +226,7 @@ impl CourseBuilder {
         Ok(())
     }
 
-    fn build(self) -> Course {
+    fn build(mut self) -> Course {
         match &self.name {
             Some(name) => debug!("Building course {}", name),
             None => debug!("Building untitled course"),
@@ -241,6 +260,12 @@ impl CourseBuilder {
             "{} repeated adjacent points were excluded from the conversion",
             self.num_releated_points_skipped
         );
+
+        // Unwrap is safe here because we check for NaN distances when adding
+        // course points in the set builder
+        self.course_points
+            .sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+
         Course {
             records,
             course_points: self.course_points,
@@ -282,7 +307,7 @@ mod tests {
 
     use crate::course::{CourseBuilder, CourseSetBuilder};
     use crate::gpx::Waypoint;
-    use crate::{geo_point, geo_points};
+    use crate::{CourseOptions, geo_point, geo_points};
 
     #[test]
     fn test_course_builder_empty() -> Result<()> {
@@ -348,7 +373,7 @@ mod tests {
 
     #[test]
     fn test_intercept_long_segments() -> Result<()> {
-        let mut builder = CourseSetBuilder::new();
+        let mut builder = CourseSetBuilder::new(CourseOptions::default());
         builder.create_course();
         let course = builder.current_mut()?;
         course.add_route_point(geo_point!(35.5252717091331, -101.2856451853322))?;

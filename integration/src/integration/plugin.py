@@ -47,9 +47,10 @@ def caching_convert(coursepointer_cli):
     session_dir = Path(tempfile.mkdtemp())
     cache = {}
 
-    def _convert(input: Path) -> Path:
-        if input in cache:
-            cached = cache[input]
+    def _convert(input: Path, *extra_args) -> Path:
+        cache_key = (input, extra_args)
+        if cache_key in cache:
+            cached = cache[cache_key]
             if cached.exception:
                 raise integration.fail_with_subprocess_error(cached.exception)
             return cached.out_file
@@ -57,12 +58,14 @@ def caching_convert(coursepointer_cli):
         out_dir = Path(tempfile.mkdtemp(dir=session_dir))
         out_file = out_dir / "out.fit"
         try:
-            coursepointer_cli("convert-gpx", input, out_file)
+            args = ["convert-gpx", input, out_file]
+            args.extend(extra_args)
+            coursepointer_cli(*args)
         except subprocess.CalledProcessError as e:
-            cache[input] = CachedConversion(out_file, e)
+            cache[cache_key] = CachedConversion(out_file, e)
             raise integration.fail_with_subprocess_error(e)
 
-        cache[input] = CachedConversion(out_file, None)
+        cache[cache_key] = CachedConversion(out_file, None)
         return out_file
 
     yield _convert

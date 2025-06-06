@@ -265,7 +265,31 @@ class TestIntercept:
             assert distance <= course_length
 
         names = list(map(lambda mesg: mesg["name"], mesgs["course_point_mesgs"]))
-        assert "Castle Rock Fal" in names
-        assert "Russell Point" in names
-        assert "Emily Smith Poi" in names
-        assert "Goat Point Over" in names
+        assert names[0] == "Castle Rock Fal"
+        assert names[1] == "Russell Point"
+        assert names[2] == "Emily Smith Poi"
+        assert names[3] == "Goat Point Over"
+
+    def test_threshold_arg(self, data, ureg, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        russell_point = mesgs["course_point_mesgs"][1]
+        assert russell_point["name"] == "Russell Point"
+
+        expected_meters = (2.04 * ureg.mile).to(ureg.meter)
+        assert russell_point["distance"] == approx(expected_meters.magnitude, rel=0.01)
+
+        # If we set the threshold argument to < 35m, the first interception with
+        # Russell Point won't be until we come around the loop on the hike,
+        # putting the distance at around 2.55 miles instead of 2.04 miles.
+        out_file2 = caching_convert(data / "cptr004.gpx", "--threshold", "20")
+        mesgs2 = caching_mesgs(out_file2)
+
+        russell_point2 = mesgs2["course_point_mesgs"][1]
+        assert russell_point2["name"] == "Russell Point"
+
+        expected_meters2 = (2.55 * ureg.mile).to(ureg.meter)
+        assert russell_point2["distance"] == approx(
+            expected_meters2.magnitude, rel=0.01
+        )
