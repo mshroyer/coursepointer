@@ -7,8 +7,8 @@
 use std::ops::{Add, AddAssign, Div, Mul};
 
 use approx::{AbsDiffEq, RelativeEq, relative_eq};
-use dimensioned::si::Meter;
-use num_traits::{Float, Num};
+use dimensioned::si::{Meter, Second};
+use num_traits::{Float, Num, NumCast, Pow, ToPrimitive};
 
 macro_rules! unit_of_measure {
     ($a:ident as $u:ident) => {
@@ -26,6 +26,16 @@ macro_rules! unit_of_measure {
             }
         }
 
+        impl<N> $u<N>
+        where
+            N: Num + NumCast,
+        {
+            pub fn num_cast_from<M: Num + ToPrimitive>(val: $u<M>) -> Option<$u<N>> {
+                <N as NumCast>::from(val.value_unsafe).map($u::new)
+            }
+        }
+
+        #[allow(dead_code)]
         pub const $a: $u<u8> = $u { value_unsafe: 1u8 };
 
         impl<N> Add for $u<N>
@@ -124,7 +134,7 @@ macro_rules! __constant_mul_impl {
             type Output = $u<$n>;
 
             fn mul(self, rhs: $u<N>) -> Self::Output {
-                Self::Output::new(self * $n::from(rhs.value_unsafe))
+                Self::Output::new(self * <$n as ::std::convert::From<N>>::from(rhs.value_unsafe))
             }
         }
     };
@@ -136,11 +146,44 @@ unit_of_measure![SEMI as Semicircle];
 
 unit_of_measure![CM as Centimeter];
 
+unit_of_measure![MS as Millisecond];
+unit_of_measure![NS as Nanosecond];
+
+impl From<Degree<f64>> for Semicircle<f64> {
+    fn from(value: Degree<f64>) -> Self {
+        Self::new((2f64.pow(31) / 180.0) * value.value_unsafe)
+    }
+}
+
+impl From<Semicircle<f64>> for Degree<f64> {
+    fn from(value: Semicircle<f64>) -> Self {
+        Self::new(value.value_unsafe * 180.0 / 2f64.powi(31))
+    }
+}
+
 impl<N> From<Meter<N>> for Centimeter<N>
 where
-    N: Num + From<i32>,
+    N: Num + From<u8>,
 {
     fn from(value: Meter<N>) -> Self {
         Self::new(N::from(100) * value.value_unsafe)
+    }
+}
+
+impl<N> From<Second<N>> for Millisecond<N>
+where
+    N: Num + From<u16>,
+{
+    fn from(value: Second<N>) -> Self {
+        Self::new(N::from(1_000) * value.value_unsafe)
+    }
+}
+
+impl<N> From<Second<N>> for Nanosecond<N>
+where
+    N: Num + From<u32>,
+{
+    fn from(value: Second<N>) -> Self {
+        Self::new(N::from(1_000_000_000) * value.value_unsafe)
     }
 }

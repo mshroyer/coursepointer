@@ -6,15 +6,11 @@ use std::sync::LazyLock;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
 use dimensioned::si::{M, Meter, MeterPerSecond, Second};
-use num_traits::Pow;
-use num_traits::bounds::Bounded;
 use num_traits::cast::NumCast;
-use num_traits::float::Float;
-use num_traits::int::PrimInt;
 use thiserror::Error;
 
 use crate::course::Course;
-use crate::measure::{CM, Centimeter, DEG};
+use crate::measure::{Centimeter, Millisecond, Nanosecond, SEMI, Semicircle};
 use crate::types::{GeoPoint, TypeError};
 
 /// The version of the Garmin SDK from which we obtain our profile information.
@@ -29,8 +25,8 @@ pub enum FitEncodeError {
     Io(#[from] std::io::Error),
     #[error("Error encoding integer")]
     IntegerEncoding(#[from] std::num::TryFromIntError),
-    #[error("Error in float conversion")]
-    FloatConversion,
+    #[error("Error in numeric cast")]
+    NumCast,
     #[error("Error encoding string")]
     StringEncoding,
     #[error("Error encoding date_time")]
@@ -79,7 +75,7 @@ const GARMIN_DATE_TIME_MIN: u32 = 0x10000000;
 struct FitDateTime {
     /// A timestamp as measured from the Garmin epoch of 1981-12-31T00:00:00Z,
     /// or a relative time in seconds if below 0x10000000.
-    value: u32,
+    value_unsafe: u32,
 }
 
 impl TryFrom<DateTime<Utc>> for FitDateTime {
@@ -91,7 +87,7 @@ impl TryFrom<DateTime<Utc>> for FitDateTime {
             return Err(FitEncodeError::DateTimeEncoding);
         }
         Ok(Self {
-            value: u32::try_from(ts)?,
+            value_unsafe: u32::try_from(ts)?,
         })
     }
 }
@@ -100,50 +96,42 @@ impl TryFrom<FitDateTime> for DateTime<Utc> {
     type Error = FitEncodeError;
 
     fn try_from(value: FitDateTime) -> std::result::Result<Self, Self::Error> {
-        if value.value < GARMIN_DATE_TIME_MIN {
+        if value.value_unsafe < GARMIN_DATE_TIME_MIN {
             return Err(FitEncodeError::DateTimeEncoding);
         }
-        Ok(GARMIN_EPOCH.add(TimeDelta::seconds(value.value as i64)))
+        Ok(GARMIN_EPOCH.add(TimeDelta::seconds(value.value_unsafe as i64)))
+    }
+}
+
+impl TryFrom<TimeDelta> for Millisecond<u32> {
+    type Error = FitEncodeError;
+
+    fn try_from(value: TimeDelta) -> Result<Self> {
+        let num_milliseconds =
+            <u32 as NumCast>::from(value.num_milliseconds()).ok_or(FitEncodeError::NumCast)?;
+        Ok(Self::new(num_milliseconds))
     }
 }
 
 /// A point on the surface of the ellipsoid, as represented in a FIT file.
 #[derive(Debug, Clone, Copy)]
 struct FitSurfacePoint {
-    /// Latitutde in semicircles
-    lat_semis: i32,
+    /// Latitude in semicircles
+    lat: Semicircle<i32>,
 
     /// Longitude in semicircles
-    lon_semis: i32,
-}
-
-/// Lossily converts a float to an integer type
-///
-/// Accepts lossy conversion, but still returns an error if the value to be
-/// converted lies outside the expressible range of the target integer type.
-fn truncate_float<F, I>(f: F) -> Result<I>
-where
-    F: Float + NumCast,
-    I: PrimInt + NumCast + Bounded,
-{
-    let min = NumCast::from(I::min_value()).unwrap();
-    let max = NumCast::from(I::max_value()).unwrap();
-    if f >= min && f <= max {
-        Ok(NumCast::from(f.round()).unwrap())
-    } else {
-        Err(FitEncodeError::FloatConversion)
-    }
+    lon: Semicircle<i32>,
 }
 
 impl TryFrom<GeoPoint> for FitSurfacePoint {
     type Error = FitEncodeError;
 
     fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
-        let lat_semis = truncate_float((2f64.pow(31) / 180.0) * value.lat().value_unsafe)?;
-        let lon_semis = truncate_float((2f64.pow(31) / 180.0) * value.lon().value_unsafe)?;
         Ok(Self {
-            lat_semis,
-            lon_semis,
+            lat: Semicircle::<i32>::num_cast_from(value.lat().into())
+                .ok_or(FitEncodeError::NumCast)?,
+            lon: Semicircle::<i32>::num_cast_from(value.lon().into())
+                .ok_or(FitEncodeError::NumCast)?,
         })
     }
 }
@@ -152,9 +140,15 @@ impl TryFrom<FitSurfacePoint> for GeoPoint {
     type Error = FitEncodeError;
 
     fn try_from(value: FitSurfacePoint) -> std::result::Result<Self, Self::Error> {
-        let lat = <f64 as From<i32>>::from(value.lat_semis) * 180.0 / 2f64.pow(31);
-        let lon = <f64 as From<i32>>::from(value.lon_semis) * 180.0 / 2f64.pow(31);
-        Ok(GeoPoint::new(lat * DEG, lon * DEG, None)?)
+        Ok(GeoPoint::new(
+            Semicircle::<f64>::num_cast_from(value.lat)
+                .ok_or(FitEncodeError::NumCast)?
+                .into(),
+            Semicircle::<f64>::num_cast_from(value.lon)
+                .ok_or(FitEncodeError::NumCast)?
+                .into(),
+            None,
+        )?)
     }
 }
 
@@ -398,7 +392,7 @@ impl FileIdMessage {
         w.write_u8(local_message_id & 0x0F)?;
         w.write_u8(self.file_type as u8)?;
         w.write_u16::<BigEndian>(self.manufacturer as u16)?;
-        w.write_u32::<BigEndian>(self.time_created.value)?;
+        w.write_u32::<BigEndian>(self.time_created.value_unsafe)?;
         write_string_field("CoursePointer", 14, w)?;
         Ok(())
     }
@@ -406,8 +400,8 @@ impl FileIdMessage {
 
 struct LapMessage {
     start_time: FitDateTime,
-    duration_ms: u32,
-    dist_cm: u32,
+    duration: Millisecond<u32>,
+    distance: Centimeter<u32>,
     start_pos: Option<FitSurfacePoint>,
     end_pos: Option<FitSurfacePoint>,
 }
@@ -415,15 +409,15 @@ struct LapMessage {
 impl LapMessage {
     fn new(
         start_time: FitDateTime,
-        duration_ms: u32,
-        dist_cm: u32,
+        duration: Millisecond<u32>,
+        distance: Centimeter<u32>,
         start_pos: Option<FitSurfacePoint>,
         end_pos: Option<FitSurfacePoint>,
     ) -> Self {
         Self {
             start_time,
-            duration_ms,
-            dist_cm,
+            duration,
+            distance,
             start_pos,
             end_pos,
         }
@@ -445,21 +439,21 @@ impl LapMessage {
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        w.write_u32::<BigEndian>(self.start_time.value)?;
-        w.write_u32::<BigEndian>(self.start_time.value)?;
-        w.write_u32::<BigEndian>(self.duration_ms)?;
-        w.write_u32::<BigEndian>(self.duration_ms)?;
-        w.write_u32::<BigEndian>(self.dist_cm)?;
+        w.write_u32::<BigEndian>(self.start_time.value_unsafe)?;
+        w.write_u32::<BigEndian>(self.start_time.value_unsafe)?;
+        w.write_u32::<BigEndian>(self.duration.value_unsafe)?;
+        w.write_u32::<BigEndian>(self.duration.value_unsafe)?;
+        w.write_u32::<BigEndian>(self.distance.value_unsafe)?;
         let null_pos = FitSurfacePoint {
-            lat_semis: 0i32,
-            lon_semis: 0i32,
+            lat: 0 * SEMI,
+            lon: 0 * SEMI,
         };
         let start_pos = self.start_pos.unwrap_or(null_pos);
         let end_pos = self.end_pos.unwrap_or(null_pos);
-        w.write_i32::<BigEndian>(start_pos.lat_semis)?;
-        w.write_i32::<BigEndian>(start_pos.lon_semis)?;
-        w.write_i32::<BigEndian>(end_pos.lat_semis)?;
-        w.write_i32::<BigEndian>(end_pos.lon_semis)?;
+        w.write_i32::<BigEndian>(start_pos.lat.value_unsafe)?;
+        w.write_i32::<BigEndian>(start_pos.lon.value_unsafe)?;
+        w.write_i32::<BigEndian>(end_pos.lat.value_unsafe)?;
+        w.write_i32::<BigEndian>(end_pos.lon.value_unsafe)?;
         Ok(())
     }
 }
@@ -505,7 +499,7 @@ impl EventMessage {
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        w.write_u32::<BigEndian>(self.timestamp.value)?;
+        w.write_u32::<BigEndian>(self.timestamp.value_unsafe)?;
         w.write_u8(self.event as u8)?;
         w.write_u8(self.event_group)?;
         w.write_u8(self.event_type as u8)?;
@@ -549,10 +543,10 @@ impl RecordMessage {
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        w.write_i32::<BigEndian>(self.position.lat_semis)?;
-        w.write_i32::<BigEndian>(self.position.lon_semis)?;
+        w.write_i32::<BigEndian>(self.position.lat.value_unsafe)?;
+        w.write_i32::<BigEndian>(self.position.lon.value_unsafe)?;
         w.write_u32::<BigEndian>(self.cumulative_distance.value_unsafe)?;
-        w.write_u32::<BigEndian>(self.timestamp.value)?;
+        w.write_u32::<BigEndian>(self.timestamp.value_unsafe)?;
         Ok(())
     }
 }
@@ -601,9 +595,9 @@ impl CoursePointMessage {
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
         w.write_u8(local_message_id & 0x0F)?;
-        w.write_u32::<BigEndian>(self.timestamp.value)?;
-        w.write_i32::<BigEndian>(self.position.lat_semis)?;
-        w.write_i32::<BigEndian>(self.position.lon_semis)?;
+        w.write_u32::<BigEndian>(self.timestamp.value_unsafe)?;
+        w.write_i32::<BigEndian>(self.position.lat.value_unsafe)?;
+        w.write_i32::<BigEndian>(self.position.lon.value_unsafe)?;
         w.write_u32::<BigEndian>(self.distance.value_unsafe)?;
         w.write_u8(self.type_ as u8)?;
         write_string_field(self.name.as_str(), 16, w)?;
@@ -630,6 +624,14 @@ impl FileCreatorMessage {
         w.write_u8(self.hardware_version)?;
         Ok(())
     }
+}
+
+fn timedelta_from_seconds(s: Second<f64>) -> Result<TimeDelta> {
+    Ok(TimeDelta::nanoseconds(
+        Nanosecond::<i64>::num_cast_from(s.into())
+            .ok_or(FitEncodeError::NumCast)?
+            .value_unsafe,
+    ))
 }
 
 pub struct CourseFile<'a> {
@@ -702,8 +704,9 @@ impl<'a> CourseFile<'a> {
             .encode(&mut dw)?;
         LapMessage::new(
             FitDateTime::try_from(self.start_time)?,
-            u32::try_from(self.total_duration()?.num_milliseconds())?,
-            truncate_float(Centimeter::from(self.course.total_distance()).value_unsafe)?,
+            self.total_duration()?.try_into()?,
+            Centimeter::<u32>::num_cast_from(self.course.total_distance().into())
+                .ok_or(FitEncodeError::NumCast)?,
             start_pos,
             end_pos,
         )
@@ -728,13 +731,10 @@ impl<'a> CourseFile<'a> {
         for record in &self.course.records {
             let distance: Centimeter<f64> = record.cumulative_distance.into();
             let timedelta: Second<f64> = record.cumulative_distance / self.speed;
-            let timestamp = self
-                .start_time
-                .add(TimeDelta::seconds(truncate_float(timedelta.value_unsafe)?));
-            let distance_int_cm: u32 = truncate_float(distance.value_unsafe)?;
+            let timestamp = self.start_time.add(timedelta_from_seconds(timedelta)?);
             let record_message = RecordMessage::new(
                 record.point.try_into()?,
-                distance_int_cm * CM,
+                Centimeter::<u32>::num_cast_from(distance).ok_or(FitEncodeError::NumCast)?,
                 timestamp.try_into()?,
             );
             record_message.encode(4u8, &mut dw)?;
@@ -749,15 +749,12 @@ impl<'a> CourseFile<'a> {
         for course_point in &self.course.course_points {
             let distance: Centimeter<f64> = course_point.distance.into();
             let timedelta: Second<f64> = course_point.distance / self.speed;
-            let timestamp = self
-                .start_time
-                .add(TimeDelta::seconds(truncate_float(timedelta.value_unsafe)?));
-            let distance_int_cm: u32 = truncate_float(distance.value_unsafe)?;
+            let timestamp = self.start_time.add(timedelta_from_seconds(timedelta)?);
             let course_point_message = CoursePointMessage::new(
                 timestamp.try_into()?,
                 course_point.point_type,
                 course_point.point.try_into()?,
-                distance_int_cm * CM,
+                Centimeter::<u32>::num_cast_from(distance).ok_or(FitEncodeError::NumCast)?,
                 course_point.name.to_string(),
             );
             course_point_message.encode(5u8, &mut dw)?;
@@ -804,8 +801,7 @@ impl<'a> CourseFile<'a> {
     }
 
     fn total_duration_at_distance(&self, distance: Meter<f64>) -> Result<TimeDelta> {
-        let total_duration_seconds: i64 = truncate_float((distance / self.speed).value_unsafe)?;
-        Ok(TimeDelta::seconds(total_duration_seconds))
+        timedelta_from_seconds(distance / self.speed)
     }
 
     /// Computes the total size of the data segment of this file, including
