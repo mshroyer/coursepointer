@@ -33,7 +33,7 @@ struct ConvertGpxArgs {
 
     /// Speed in kilometers per hour, as used for the "virtual partner" on
     /// devices that support it
-    #[clap(long, short, default_value = "20.0")]
+    #[clap(long, short, default_value = "5.0")]
     speed: f64,
 }
 

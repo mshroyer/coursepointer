@@ -192,7 +192,7 @@ class TestConvert:
 
         # The total distance should be approximately equal to the speed
         # specified to the CLI times the recorded lap time.
-        speed = 20 * ureg.kilometer / ureg.hour
+        speed = 5 * ureg.kilometer / ureg.hour
         assert distance.magnitude == approx(
             (timer * speed).to(ureg.meter).magnitude, rel=0.0001
         )
@@ -219,7 +219,7 @@ class TestConvert:
         out_file = caching_convert(data / "cptr003.gpx")
         mesgs = caching_mesgs(out_file)
 
-        speed = 20 * ureg.kilometer / ureg.hour
+        speed = 5 * ureg.kilometer / ureg.hour
         record_mesgs = mesgs["record_mesgs"]
 
         start_timestamp = record_mesgs[0]["timestamp"]
