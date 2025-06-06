@@ -7,7 +7,8 @@
 //! Once all the data has been added (for example, by parsing it from a GPX
 //! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
-use dimensioned::si::{M, Meter};
+use dimensioned::f64prefixes::KILO;
+use dimensioned::si::{HR, M, Meter, MeterPerSecond};
 use log::debug;
 use thiserror::Error;
 
@@ -33,14 +34,23 @@ pub enum CourseError {
 
 type Result<T> = std::result::Result<T, CourseError>;
 
+/// Options for building a course.
 pub struct CourseOptions {
+    /// The threshold distance of a waypoint from the segments of a course,
+    /// below which the course will be considered "intercepted" by the waypoint,
+    /// turning it into a course point.
     pub threshold: Meter<f64>,
+
+    /// The speed used to compute timestamps along the course. This will appear
+    /// as the speed of the virtual partner, on devices that support it.
+    pub speed: MeterPerSecond<f64>,
 }
 
 impl Default for CourseOptions {
     fn default() -> Self {
         Self {
             threshold: 35.0 * M,
+            speed: 20.0 * KILO * M / HR,
         }
     }
 }

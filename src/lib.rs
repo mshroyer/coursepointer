@@ -28,9 +28,6 @@ mod types;
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
-use dimensioned::f64prefixes::KILO;
-use dimensioned::si::M;
-use dimensioned::si::f64consts::HR;
 pub use fit::FitEncodeError;
 use thiserror::Error;
 
@@ -69,6 +66,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
     fit_output: W,
     options: CourseOptions,
 ) -> Result<()> {
+    let speed = options.speed;
     let mut builder = CourseSetBuilder::new(options);
     let gpx_reader = GpxReader::from_reader(gpx_input);
     for item in gpx_reader {
@@ -99,7 +97,6 @@ pub fn convert_gpx<R: BufRead, W: Write>(
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
     let course = course_set.courses.first().unwrap();
-    let speed = 20.0 * (KILO * M) / HR;
     let course_file = CourseFile::new(course, Utc::now(), speed);
     course_file.encode(fit_output)?;
 

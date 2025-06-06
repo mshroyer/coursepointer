@@ -5,7 +5,8 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError};
-use dimensioned::si::M;
+use dimensioned::f64prefixes::KILO;
+use dimensioned::si::{HR, M};
 
 #[derive(Parser)]
 struct Args {
@@ -29,6 +30,11 @@ struct ConvertGpxArgs {
     /// point, in meters
     #[clap(long, short, default_value = "35.0")]
     threshold: f64,
+
+    /// Speed in kilometers per hour, as used for the "virtual partner" on
+    /// devices that support it
+    #[clap(long, short, default_value = "20.0")]
+    speed: f64,
 }
 
 #[derive(Subcommand)]
@@ -58,6 +64,7 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
 
     let options = CourseOptions {
         threshold: args.threshold * M,
+        speed: args.speed * KILO * M / HR,
     };
 
     let res = coursepointer::convert_gpx(gpx_file, fit_file, options);

@@ -47,6 +47,22 @@ class TestUI:
             "convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit", "--force"
         )
 
+    def test_speed_arg(self, tmpdir, data, ureg, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx", "--speed", "30.0")
+        out = caching_mesgs(out_file)
+
+        distance = field(out, "lap", 0, "total_distance") * ureg.meter
+
+        # The elapsed and timer times should be set to the same value.
+        elapsed = field(out, "lap", 0, "total_elapsed_time") * ureg.second
+
+        # The total distance should be approximately equal to the speed
+        # specified to the CLI times the recorded lap time.
+        speed = 30 * ureg.kilometer / ureg.hour
+        assert distance.magnitude == approx(
+            (elapsed * speed).to(ureg.meter).magnitude, rel=0.0001
+        )
+
     def test_no_courses(self, tmpdir, data, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
@@ -251,6 +267,8 @@ class TestConvert:
 
 
 class TestIntercept:
+    """Tests calculation of waypoint intercepts as course points"""
+
     def test_waypoint_interception(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")
         mesgs = caching_mesgs(out_file)
