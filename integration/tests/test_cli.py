@@ -79,6 +79,25 @@ class TestUI:
 
         assert "<INPUT> is not a valid GPX file" in einfo.value.stderr
 
+    def test_negative_threshold(self, tmpdir, data, coursepointer_cli):
+        with raises(subprocess.CalledProcessError) as einfo:
+            coursepointer_cli(
+                "convert-gpx",
+                data / "cptr002.gpx",
+                tmpdir / "out.fit",
+                "--threshold=-30",
+            )
+
+        assert "negative" in einfo.value.stderr
+
+    def test_low_speed(self, tmpdir, data, coursepointer_cli):
+        with raises(subprocess.CalledProcessError) as einfo:
+            coursepointer_cli(
+                "convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit", "--speed=0"
+            )
+
+        assert "too low" in einfo.value.stderr
+
 
 class TestFIT:
     """Test FIT encoding in the CLI.

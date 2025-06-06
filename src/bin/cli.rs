@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError};
 use dimensioned::f64prefixes::KILO;
@@ -48,6 +48,15 @@ enum Commands {
 
 fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
     log::debug!("convert-gpx: {:?} -> {:?}", args.input, args.output);
+
+    if args.threshold < 0.0 {
+        bail!("Threshold cannot be negative");
+    }
+
+    if args.speed < 0.001 {
+        bail!("Speeds too low can cause some Garmin devices to crash");
+    }
+
     let gpx_file = BufReader::new(
         File::open(&args.input)
             .context("Opening the GPX <INPUT> file. Check that it exists and can be accessed.")?,
