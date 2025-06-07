@@ -3,12 +3,24 @@ use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
-use clap::{Parser, Subcommand};
+use clap::builder::styling::Styles;
+use clap::{ColorChoice, Parser, Subcommand, command};
+use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M};
 
+pub const CLAP_STYLING: Styles = Styles::styled()
+    .header(HEADER)
+    .usage(USAGE)
+    .literal(LITERAL)
+    .placeholder(PLACEHOLDER)
+    .error(ERROR)
+    .valid(VALID)
+    .invalid(INVALID);
+
 #[derive(Parser)]
+#[command(name = "coursepointer", version, about, color = ColorChoice::Auto, styles = CLAP_STYLING)]
 struct Args {
     #[command(subcommand)]
     cmd: Commands,

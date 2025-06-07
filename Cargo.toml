@@ -27,7 +27,7 @@ env_logger = { version = "0.11.8", optional = true }
 cxx = "1.0.158"
 approx = "0.5.1"
 dimensioned = { version = "0.8.0", features = ["approx"] }
-strum = { version = "0.27.1", features = ["derive"] }
+clap-cargo = { version = "0.15.2", optional = true }
 
 [dev-dependencies]
 anyhow = "1.0.98"
@@ -37,7 +37,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 
 [features]
 default = ["cli"]
-cli = ["dep:anyhow", "dep:clap", "dep:env_logger"]
+cli = ["dep:anyhow", "dep:clap", "dep:clap-cargo", "dep:env_logger"]
 full-geolib = []
 
 [build-dependencies]
