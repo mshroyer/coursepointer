@@ -42,8 +42,10 @@ full-geolib = []
 
 [build-dependencies]
 cxx-build = "1.0.158"
-#lto = true
 
 [workspace]
 resolver = "2"
 members = ["integration-stub"]
+
+[profile.release]
+lto = false
