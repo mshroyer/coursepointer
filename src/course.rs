@@ -11,7 +11,7 @@ use std::fmt::Display;
 
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
-use tracing::{debug, info};
+use tracing::{Level, debug, info, span};
 
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception,
@@ -132,9 +132,11 @@ impl CourseSetBuilder {
         Ok(CourseSet { courses })
     }
 
-    #[tracing::instrument(level = "debug", skip_all)]
+    #[tracing::instrument(level = "debug", name = "process", skip_all)]
     fn process_waypoints(&mut self) -> Result<()> {
         for waypoint in &self.waypoints {
+            let span = span!(Level::DEBUG, "waypoint", name = %waypoint.name);
+            let _enter = span.enter();
             for course in &mut self.courses {
                 let mut slns = Vec::new();
                 let mut course_distance = 0.0 * M;
@@ -156,14 +158,14 @@ impl CourseSetBuilder {
 
                 let mut near_segments = find_nearby_segments(&slns, self.options.threshold);
                 info!(
-                    "Found {} intercepts for waypoint {:?}",
-                    near_segments.len(),
-                    waypoint.name
+                    intercepts = near_segments.len(),
+                    "Processed {:?}", waypoint.name,
                 );
                 for seg in &near_segments {
                     info!(
-                        "- Intercept {:.2} away at course distance {:.2}",
-                        seg.intercept_distance, seg.course_distance
+                        intercept_dist = ?seg.intercept_distance,
+                        course_dist = %seg.course_distance,
+                        "Intercept",
                     );
                 }
 
