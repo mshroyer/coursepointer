@@ -8,6 +8,7 @@ use std::ops::{Add, AddAssign, Div, Mul};
 
 use approx::{AbsDiffEq, RelativeEq, relative_eq};
 use dimensioned::si::{Meter, Second};
+use log::debug;
 use num_traits::{Float, Num, NumCast, Pow, ToPrimitive};
 
 use crate::types::{Result, TypeError};
@@ -162,6 +163,7 @@ impl TryFrom<Degree<f64>> for Semicircle<i32> {
             // GPX allows longitude in [-180.0, 180.0] inclusive, but Garmin's
             // semicircles can't represent a value corresponding to positive 180
             // degrees. So instead, wrap back around to -180.
+            debug!("Wrapping ~180.0 deg to negative semicircle value");
             sc64 = i32::MIN as i64;
         }
         Ok(<i32 as NumCast>::from(sc64).ok_or(TypeError::NumericCast)? * SEMI)

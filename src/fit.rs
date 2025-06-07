@@ -6,6 +6,7 @@ use std::sync::LazyLock;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
 use dimensioned::si::{M, Meter, MeterPerSecond, Second};
+use log::debug;
 use num_traits::cast::NumCast;
 use thiserror::Error;
 
@@ -185,6 +186,7 @@ impl Crc {
 struct CheckSummingWrite<'a, W: Write> {
     crc: Crc,
     base: &'a mut W,
+    bytes_written: usize,
 }
 
 impl<'a, W: Write> CheckSummingWrite<'a, W> {
@@ -192,18 +194,20 @@ impl<'a, W: Write> CheckSummingWrite<'a, W> {
         Self {
             crc: Crc::new(),
             base,
+            bytes_written: 0usize,
         }
     }
 
     /// Finish using the writer and write the CRC to the end of the stream.
-    fn finish(self) -> Result<()> {
+    fn finish(self) -> Result<usize> {
         self.base.write_u16::<LittleEndian>(self.crc.sum)?;
-        Ok(())
+        Ok(self.bytes_written)
     }
 }
 
 impl<W: Write> Write for CheckSummingWrite<'_, W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.bytes_written += buf.len();
         self.crc.add_bytes(buf);
         self.base.write(buf)
     }
@@ -307,6 +311,10 @@ impl DefinitionFrame {
         for def in &self.field_definitions {
             def.encode(w)?;
         }
+        debug!(
+            "Wrote definition frame for {:?} with local type {}",
+            self.global_message, self.local_message_type
+        );
         Ok(())
     }
 }
@@ -644,7 +652,8 @@ impl<'a> CourseFile<'a> {
         let mut hw = CheckSummingWrite::new(&mut w);
         let h = FileHeader::new(self.get_data_size())?;
         h.encode(&mut hw)?;
-        hw.finish()?;
+        let bytes_written = hw.finish()?;
+        debug!("Wrote {} file header bytes + 2 byte CRC", bytes_written);
 
         // File data
         let mut dw = CheckSummingWrite::new(&mut w);
@@ -729,6 +738,10 @@ impl<'a> CourseFile<'a> {
             );
             record_message.encode(4u8, &mut dw)?;
         }
+        debug!(
+            "Encoded {} course record messages",
+            self.course.records.len()
+        );
 
         DefinitionFrame::new(
             GlobalMessage::CoursePoint,
@@ -749,6 +762,10 @@ impl<'a> CourseFile<'a> {
             );
             course_point_message.encode(5u8, &mut dw)?;
         }
+        debug!(
+            "Encoded {} course point messages",
+            self.course.course_points.len()
+        );
 
         EventMessage::new(
             Event::Timer,
@@ -770,8 +787,10 @@ impl<'a> CourseFile<'a> {
         }
         .encode(6u8, &mut dw)?;
 
-        dw.finish()?;
+        let bytes_written = dw.finish()?;
+        debug!("Wrote {bytes_written} data bytes + 2 byte CRC");
         w.flush()?;
+        debug!("Flushed base writer");
         Ok(())
     }
 
@@ -824,6 +843,8 @@ impl<'a> CourseFile<'a> {
         sz +=
             CourseFile::get_definition_message_size(FileCreatorMessage::field_definitions().len());
         sz += CourseFile::get_data_message_size(FileCreatorMessage::field_definitions());
+
+        debug!("Computed FIT data (definition + messages) size: {}", sz);
 
         sz
     }

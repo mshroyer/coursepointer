@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use std::path::PathBuf;
+use std::path::{PathBuf, absolute};
 
 use anyhow::{Context, Result, bail};
 use clap::builder::styling::Styles;
@@ -9,6 +9,7 @@ use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VAL
 use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M};
+use log::{Level, error, info, log_enabled, warn};
 
 pub const CLAP_STYLING: Styles = Styles::styled()
     .header(HEADER)
@@ -85,15 +86,32 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
         File::open(&args.input)
             .context("Opening the GPX <INPUT> file. Check that it exists and can be accessed.")?,
     );
+    info!("Opened GPX input file: {:?}", absolute(args.input)?);
 
+    if (args.force && log_enabled!(Level::Warn)) || (!args.force && log_enabled!(Level::Error)) {
+        if args.output.exists() {
+            if args.force {
+                warn!(
+                    "Output file exists and will be overwritten: {:?}",
+                    args.output
+                );
+            } else {
+                error!(
+                    "Output file already exists and may not be overwritten: {:?}",
+                    args.output
+                );
+            }
+        }
+    }
     let fit_file = BufWriter::new(
         if args.force {
-            File::create(args.output)
+            File::create(&args.output)
         } else {
-            File::create_new(args.output)
+            File::create_new(&args.output)
         }
         .context("Creating the <OUTPUT> file")?,
     );
+    info!("Created FIT output file: {:?}", absolute(args.output)?);
 
     let course_options = CourseOptions {
         threshold: args.threshold * M,

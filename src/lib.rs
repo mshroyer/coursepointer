@@ -30,6 +30,7 @@ use std::io::{BufRead, Write};
 use chrono::Utc;
 use dimensioned::si::MeterPerSecond;
 pub use fit::FitEncodeError;
+use log::debug;
 use thiserror::Error;
 
 use crate::course::{CourseError, CourseSetBuilder};
@@ -69,9 +70,12 @@ pub fn convert_gpx<R: BufRead, W: Write>(
     fit_speed: MeterPerSecond<f64>,
 ) -> Result<()> {
     let mut builder = CourseSetBuilder::new(course_options);
+    let mut num_items = 0usize;
+    let mut skipped_items = 0usize;
     let gpx_reader = GpxReader::from_reader(gpx_input);
     for item in gpx_reader {
         let item = item?;
+        num_items += 1;
         match item {
             GpxItem::TrackOrRoute => {
                 builder.create_course();
@@ -89,9 +93,16 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                 builder.add_waypoint(wpt);
             }
 
-            _ => (),
+            _ => {
+                skipped_items += 1;
+            }
         }
     }
+    debug!(
+        "Read {} GpxItem(s), matching {}",
+        num_items,
+        num_items - skipped_items
+    );
 
     let course_set = builder.build()?;
     if course_set.courses.len() != 1usize {

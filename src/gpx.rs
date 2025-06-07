@@ -17,6 +17,7 @@ use std::num::ParseFloatError;
 use std::{mem, str};
 
 use dimensioned::si::{M, Meter};
+use log::debug;
 use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
@@ -138,6 +139,9 @@ where
     reader: Reader<R>,
     tag_path: TagPath,
     next_pt_fields: NextPtFields,
+    num_tag_start: usize,
+    num_tag_end: usize,
+    num_next: usize,
 }
 
 impl<R> GpxReader<R>
@@ -154,6 +158,9 @@ where
             reader,
             tag_path: vec![],
             next_pt_fields: NextPtFields::default(),
+            num_tag_start: 0,
+            num_tag_end: 0,
+            num_next: 0,
         }
     }
 }
@@ -219,6 +226,7 @@ where
     type Item = Result<GpxItem>;
 
     fn next(&mut self) -> Option<Result<GpxItem>> {
+        self.num_next += 1;
         let mut buf = Vec::new();
 
         // Keep iterating through quick_xml events until a new GpxItem can be
@@ -227,14 +235,22 @@ where
             match self.reader.read_event_into(&mut buf) {
                 Err(err) => return Some(Err(GpxError::Xml(err))),
 
-                Ok(Event::Eof) => return None,
+                Ok(Event::Eof) => {
+                    debug!(
+                        "GpxReader processed {} tag start and {} tag end events in {} iterations",
+                        self.num_tag_start, self.num_tag_end, self.num_next
+                    );
+                    return None;
+                }
 
                 Ok(Event::Start(elt)) => {
+                    self.num_tag_start += 1;
                     let tag = get_tag(elt.name().as_ref());
                     self.tag_path.push(tag);
 
                     match self.tag_path.as_slice() {
                         [Tag::Gpx, Tag::Trk] | [Tag::Gpx, Tag::Rte] => {
+                            debug!("Found start of track or route at path: {:?}", self.tag_path);
                             return Some(Ok(GpxItem::TrackOrRoute));
                         }
 
@@ -310,6 +326,7 @@ where
                 },
 
                 Ok(Event::End(_elt)) => {
+                    self.num_tag_end += 1;
                     let tag_path = self.tag_path.clone();
                     self.tag_path.pop();
 
@@ -325,6 +342,7 @@ where
                         }
 
                         [Tag::Gpx, Tag::Wpt] => {
+                            debug!("Found waypoint with name: {:?}", self.next_pt_fields.name);
                             return Some(
                                 match Waypoint::try_from(mem::take(&mut self.next_pt_fields)) {
                                     Ok(p) => Ok(GpxItem::Waypoint(p)),

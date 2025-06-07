@@ -10,7 +10,7 @@
 use std::fmt::Display;
 
 use dimensioned::si::{M, Meter};
-use log::debug;
+use log::{debug, info};
 use thiserror::Error;
 
 use crate::algorithm::{
@@ -154,11 +154,17 @@ impl CourseSetBuilder {
                 }
 
                 let mut near_segments = find_nearby_segments(&slns, self.options.threshold);
-                debug!(
-                    "Found {} segments near {}",
+                info!(
+                    "Found {} intercepts for waypoint {:?}",
                     near_segments.len(),
                     waypoint.name
                 );
+                for seg in &near_segments {
+                    info!(
+                        "- Intercept {:.2} away at course distance {:.2}",
+                        seg.intercept_distance, seg.course_distance
+                    );
+                }
 
                 if !near_segments.is_empty() {
                     match self.options.strategy {
@@ -304,8 +310,8 @@ impl CourseBuilder {
 
     fn build(mut self) -> Course {
         match &self.name {
-            Some(name) => debug!("Building course {}", name),
-            None => debug!("Building untitled course"),
+            Some(name) => info!("Building course {}", name),
+            None => info!("Building untitled course"),
         }
         let mut records = Vec::new();
         let mut cumulative_distance = 0.0 * M;
@@ -320,6 +326,7 @@ impl CourseBuilder {
             }),
             (None, None) => (),
         }
+        let num_segments = self.segments.len();
         for segment in self.segments {
             cumulative_distance += segment.geo_distance;
             records.push(Record {
@@ -327,13 +334,14 @@ impl CourseBuilder {
                 cumulative_distance,
             });
         }
-        debug!(
-            "Processed {} segments with a total distance of {}",
+        info!(
+            "Processed {} course records ({} segments) with a total distance of {:.2}",
             records.len(),
+            num_segments,
             cumulative_distance
         );
         debug!(
-            "{} repeated adjacent points were excluded from the conversion",
+            "{} repeated records (zero-length segments) were excluded from the conversion",
             self.num_releated_points_skipped
         );
 
