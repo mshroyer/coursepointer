@@ -46,10 +46,10 @@ pub enum InterceptStrategy {
     /// The nearest intercept should be chosen as the course point.
     Nearest,
 
-    /// The first intercept should be chosen as the course point.
+    /// The first intercept by distance along the course should be chosen.
     First,
 
-    /// All available intercepts should be chosen as repeated course points.
+    /// All available intercepts should be chosen as duplicate course points.
     All,
 }
 
