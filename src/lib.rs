@@ -30,8 +30,8 @@ use std::io::{BufRead, Write};
 use chrono::Utc;
 use dimensioned::si::MeterPerSecond;
 pub use fit::FitEncodeError;
-use log::debug;
 use thiserror::Error;
+use tracing::debug;
 
 use crate::course::{CourseError, CourseSetBuilder};
 pub use crate::course::{CourseOptions, InterceptStrategy};

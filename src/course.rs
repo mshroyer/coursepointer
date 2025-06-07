@@ -10,8 +10,8 @@
 use std::fmt::Display;
 
 use dimensioned::si::{M, Meter};
-use log::{debug, info};
 use thiserror::Error;
+use tracing::{debug, info};
 
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception,
@@ -308,6 +308,7 @@ impl CourseBuilder {
         Ok(())
     }
 
+    #[tracing::instrument(level = "trace", skip(self))]
     fn build(mut self) -> Course {
         match &self.name {
             Some(name) => info!("Building course {}", name),

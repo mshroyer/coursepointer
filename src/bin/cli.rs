@@ -9,7 +9,9 @@ use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VAL
 use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M};
-use log::{Level, error, info, log_enabled, warn};
+use tracing::{Level, debug, enabled, error, info, warn};
+use tracing_subscriber::fmt::format::FmtSpan;
+use tracing_subscriber::{EnvFilter, fmt};
 
 pub const CLAP_STYLING: Styles = Styles::styled()
     .header(HEADER)
@@ -72,7 +74,7 @@ enum Commands {
 }
 
 fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
-    log::debug!("convert-gpx: {:?} -> {:?}", args.input, args.output);
+    debug!("convert-gpx: {:?} -> {:?}", args.input, args.output);
 
     if args.threshold < 0.0 {
         bail!("Threshold cannot be negative");
@@ -88,7 +90,7 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
     );
     info!("Opened GPX input file: {:?}", absolute(args.input)?);
 
-    if (args.force && log_enabled!(Level::Warn)) || (!args.force && log_enabled!(Level::Error)) {
+    if (args.force && enabled!(Level::WARN)) || (!args.force && enabled!(Level::ERROR)) {
         if args.output.exists() {
             if args.force {
                 warn!(
@@ -143,20 +145,19 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
     Ok(())
 }
 
-fn init_logging(rust_log: &Option<String>) {
-    let mut builder = env_logger::Builder::new();
-    if let Some(filters) = rust_log {
-        builder.parse_filters(&filters);
-    }
-    builder.init();
-}
-
 fn main() -> Result<()> {
     // Don't wrap in anyhow::Result so we preserve Clap's pretty formatting of usage
     // info.
     let args = Args::parse();
 
-    init_logging(&args.log);
+    fmt()
+        .with_env_filter(if let Some(arg_filter) = &args.log {
+            EnvFilter::new(arg_filter)
+        } else {
+            EnvFilter::from_default_env()
+        })
+        .with_span_events(FmtSpan::ENTER | FmtSpan::CLOSE)
+        .init();
 
     match args.cmd {
         Commands::ConvertGpx(sub_args) => convert_gpx_cmd(sub_args),

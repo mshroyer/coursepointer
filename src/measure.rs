@@ -8,8 +8,8 @@ use std::ops::{Add, AddAssign, Div, Mul};
 
 use approx::{AbsDiffEq, RelativeEq, relative_eq};
 use dimensioned::si::{Meter, Second};
-use log::debug;
 use num_traits::{Float, Num, NumCast, Pow, ToPrimitive};
+use tracing::debug;
 
 use crate::types::{Result, TypeError};
 

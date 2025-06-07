@@ -20,14 +20,14 @@ chrono = "0.4.41"
 num-traits = "0.2.19"
 quick-xml = "0.37.5"
 thiserror = "2.0.12"
-log = "0.4.27"
 anyhow = { version = "1.0.98", optional = true }
 clap = { version = "4.5.39", optional = true, features = ["derive"] }
-env_logger = { version = "0.11.8", optional = true }
 cxx = "1.0.158"
 approx = "0.5.1"
 dimensioned = { version = "0.8.0", features = ["approx"] }
 clap-cargo = { version = "0.15.2", optional = true }
+tracing = { version = "0.1.41", features = ["log"] }
+tracing-subscriber = { version = "0.3.19", optional = true, features = ["env-filter"] }
 
 [dev-dependencies]
 anyhow = "1.0.98"
@@ -37,7 +37,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 
 [features]
 default = ["cli"]
-cli = ["dep:anyhow", "dep:clap", "dep:clap-cargo", "dep:env_logger"]
+cli = ["dep:anyhow", "dep:clap", "dep:clap-cargo", "dep:tracing-subscriber"]
 full-geolib = []
 
 [build-dependencies]

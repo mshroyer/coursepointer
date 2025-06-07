@@ -17,12 +17,12 @@ use std::num::ParseFloatError;
 use std::{mem, str};
 
 use dimensioned::si::{M, Meter};
-use log::debug;
 use quick_xml::events::Event;
 use quick_xml::events::attributes::AttrError;
 use quick_xml::name::QName;
 use quick_xml::reader::Reader;
 use thiserror::Error;
+use tracing::debug;
 
 use crate::measure::{DEG, Degree};
 use crate::types::{GeoPoint, TypeError};

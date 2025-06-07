@@ -6,9 +6,9 @@ use std::sync::LazyLock;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
 use dimensioned::si::{M, Meter, MeterPerSecond, Second};
-use log::debug;
 use num_traits::cast::NumCast;
 use thiserror::Error;
+use tracing::debug;
 
 use crate::course::Course;
 use crate::measure::{Centimeter, Millisecond, Nanosecond, SEMI, Semicircle};
