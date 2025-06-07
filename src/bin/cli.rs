@@ -1,4 +1,5 @@
 use std::cmp::min;
+use std::fmt::Write;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::{PathBuf, absolute};
@@ -77,14 +78,14 @@ enum Commands {
 }
 
 #[instrument(level = "trace", skip_all)]
-fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
+fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<String> {
     debug!("convert-gpx args: {:?}", args);
 
     if args.threshold < 0.0 {
         bail!("Threshold cannot be negative");
     }
 
-    if args.speed < 0.001 {
+    if args.speed < 0.01 {
         bail!("Speeds too low can cause some Garmin devices to crash");
     }
 
@@ -144,41 +145,60 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
         _ => res.map_err(anyhow::Error::from),
     }?;
 
+    // Build a report to print after the tracing span surrounding this function
+    // has exited. If debug logging is enabled, this ensures the report to
+    // STDOUT will be printed after all the tracing stuff.
+    let mut r = String::new();
     match info.course_name {
-        Some(name) => println!(
+        Some(name) => writeln!(
+            &mut r,
             "Converted course {:?} of length {:.02}",
             name, info.total_distance
-        ),
-        None => println!(
-            "Converted unnamed course of length {:.02}",
+        )?,
+        None => writeln!(
+            &mut r,
+            "Converted an unnamed course of length {:.02}",
             info.total_distance
-        ),
-    }
-    println!(
-        "Processed {} waypoints, {} of which were identified as course points:",
+        )?,
+    };
+    writeln!(
+        &mut r,
+        "Processed {} waypoints, {} of which {}{}",
         info.num_waypoints,
-        info.course_points.len()
-    );
-    let max_course_points = 16usize;
-    for i in 0..min(max_course_points, info.course_points.len()) {
+        info.course_points.len(),
+        if info.course_points.len() == 1 {
+            "was identified as a course point"
+        } else {
+            "were identified as course points"
+        },
+        if info.course_points.len() > 0 {
+            ":"
+        } else {
+            ""
+        },
+    )?;
+    let max_listing = 16usize;
+    for i in 0..min(max_listing, info.course_points.len()) {
         let point = &info.course_points[i];
-        println!(
+        writeln!(
+            &mut r,
             "- {} at {:.02}{}",
             point.name,
             point.distance,
             if i == 0 { " along the course" } else { "" }
-        );
+        )?;
     }
-    if info.course_points.len() > max_course_points {
-        println!("(and others)");
+    if info.course_points.len() > max_listing {
+        writeln!(&mut r, "(and others)")?;
     }
-    println!(
+    writeln!(
+        &mut r,
         "Output is in {}",
         absolute(&args.output)
             .unwrap_or(args.output)
             .to_string_lossy()
-    );
-    Ok(())
+    )?;
+    Ok(r)
 }
 
 fn main() -> Result<()> {
@@ -200,7 +220,10 @@ fn main() -> Result<()> {
         tracing::subscriber::set_global_default(Registry::default().with(fmt_layer))?;
     }
 
-    match args.cmd {
+    let report = match args.cmd {
         Commands::ConvertGpx(sub_args) => convert_gpx_cmd(sub_args),
-    }
+    }?;
+
+    print!("{}", report);
+    Ok(())
 }
