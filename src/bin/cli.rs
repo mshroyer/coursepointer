@@ -155,6 +155,7 @@ fn main() -> Result<()> {
 
     // Enable the TRACE-level span tree layer for fmt logging level DEBUG.
     let fmt_layer = fmt::Layer::new()
+        .with_target(false)
         .with_span_events(FmtSpan::ENTER | FmtSpan::CLOSE)
         .with_filter(LevelFilter::from_level(args.log));
     if args.log >= Level::DEBUG {
