@@ -24,6 +24,13 @@ pub const CLAP_STYLING: Styles = Styles::styled()
 struct Args {
     #[command(subcommand)]
     cmd: Commands,
+
+    /// Configure log verbosity overriding the RUST_LOG environment variable
+    ///
+    /// Set to `error`, `warn`, `info`, `debug`, or `trace`, or use a more
+    /// complex filter expression as supported env_logger.
+    #[clap(long)]
+    log: Option<String>,
 }
 
 #[derive(Parser)]
@@ -118,12 +125,20 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
     Ok(())
 }
 
+fn init_logging(rust_log: &Option<String>) {
+    let mut builder = env_logger::Builder::new();
+    if let Some(filters) = rust_log {
+        builder.parse_filters(&filters);
+    }
+    builder.init();
+}
+
 fn main() -> Result<()> {
     // Don't wrap in anyhow::Result so we preserve Clap's pretty formatting of usage
     // info.
     let args = Args::parse();
 
-    env_logger::init();
+    init_logging(&args.log);
 
     match args.cmd {
         Commands::ConvertGpx(sub_args) => convert_gpx_cmd(sub_args),
