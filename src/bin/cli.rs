@@ -39,7 +39,7 @@ struct Args {
     log: Level,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 struct ConvertGpxArgs {
     /// GPX input path
     input: PathBuf,
@@ -78,7 +78,7 @@ enum Commands {
 
 #[instrument(level = "trace", skip_all)]
 fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
-    debug!("convert-gpx: {:?} -> {:?}", args.input, args.output);
+    debug!("convert-gpx args: {:?}", args);
 
     if args.threshold < 0.0 {
         bail!("Threshold cannot be negative");
