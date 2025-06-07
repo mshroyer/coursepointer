@@ -9,9 +9,11 @@ use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VAL
 use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M};
-use tracing::{Level, debug, enabled, error, info, warn};
+use tracing::level_filters::LevelFilter;
+use tracing::{Level, debug, enabled, error, info, instrument, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::{Layer, Registry, fmt};
 
 pub const CLAP_STYLING: Styles = Styles::styled()
     .header(HEADER)
@@ -28,12 +30,12 @@ struct Args {
     #[command(subcommand)]
     cmd: Commands,
 
-    /// Configure log verbosity overriding the RUST_LOG environment variable
+    /// Configure diagnostic logging level
     ///
-    /// Set to `error`, `warn`, `info`, `debug`, or `trace`, or use a more
-    /// complex filter expression as supported env_logger.
-    #[clap(long)]
-    log: Option<String>,
+    /// Set to DEBUG to see a performance summary following execution, but be
+    /// aware this has a non-negligible performance impact on debug builds.
+    #[clap(long, default_value_t = Level::ERROR)]
+    log: Level,
 }
 
 #[derive(Parser)]
@@ -73,6 +75,7 @@ enum Commands {
     ConvertGpx(ConvertGpxArgs),
 }
 
+#[instrument(level = "trace", skip_all)]
 fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
     debug!("convert-gpx: {:?} -> {:?}", args.input, args.output);
 
@@ -146,18 +149,22 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    // Don't wrap in anyhow::Result so we preserve Clap's pretty formatting of usage
-    // info.
+    // Intentionally avoid wrapping argument parsing errors in anyhow::Result so
+    // we preserve Clap's pretty formatting of usage info.
     let args = Args::parse();
 
-    fmt()
-        .with_env_filter(if let Some(arg_filter) = &args.log {
-            EnvFilter::new(arg_filter)
-        } else {
-            EnvFilter::from_default_env()
-        })
+    // Enable the TRACE-level span tree layer for fmt logging level DEBUG.
+    let fmt_layer = fmt::Layer::new()
         .with_span_events(FmtSpan::ENTER | FmtSpan::CLOSE)
-        .init();
+        .with_filter(LevelFilter::from_level(args.log));
+    if args.log >= Level::DEBUG {
+        let span_tree_layer = tracing_span_tree::SpanTree::default().aggregate(true);
+        tracing::subscriber::set_global_default(
+            Registry::default().with(fmt_layer).with(span_tree_layer),
+        )?;
+    } else {
+        tracing::subscriber::set_global_default(Registry::default().with(fmt_layer))?;
+    }
 
     match args.cmd {
         Commands::ConvertGpx(sub_args) => convert_gpx_cmd(sub_args),

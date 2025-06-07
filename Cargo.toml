@@ -28,6 +28,7 @@ dimensioned = { version = "0.8.0", features = ["approx"] }
 clap-cargo = { version = "0.15.2", optional = true }
 tracing = { version = "0.1.41", features = ["log"] }
 tracing-subscriber = { version = "0.3.19", optional = true, features = ["env-filter"] }
+tracing-span-tree = "0.1.1"
 
 [dev-dependencies]
 anyhow = "1.0.98"

@@ -647,7 +647,7 @@ impl<'a> CourseFile<'a> {
         }
     }
 
-    #[tracing::instrument(name = "encode_fit", level = "trace", skip_all)]
+    #[tracing::instrument(name = "encode_fit", level = "debug", skip_all)]
     pub fn encode<W: Write>(&self, mut w: W) -> Result<()> {
         // File header
         let mut hw = CheckSummingWrite::new(&mut w);

@@ -31,7 +31,7 @@ use chrono::Utc;
 use dimensioned::si::MeterPerSecond;
 pub use fit::FitEncodeError;
 use thiserror::Error;
-use tracing::{debug, span, Level};
+use tracing::{Level, debug, span};
 
 use crate::course::{CourseError, CourseSetBuilder};
 pub use crate::course::{CourseOptions, InterceptStrategy};
@@ -72,7 +72,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
     let mut builder = CourseSetBuilder::new(course_options);
 
     {
-        let span = span!(Level::TRACE, "read_input");
+        let span = span!(Level::DEBUG, "read_input");
         let _guard = span.enter();
         let mut num_items = 0usize;
         let mut skipped_items = 0usize;

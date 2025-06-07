@@ -132,7 +132,7 @@ impl CourseSetBuilder {
         Ok(CourseSet { courses })
     }
 
-    #[tracing::instrument(level = "trace", skip(self))]
+    #[tracing::instrument(level = "debug", skip_all)]
     fn process_waypoints(&mut self) -> Result<()> {
         for waypoint in &self.waypoints {
             for course in &mut self.courses {
