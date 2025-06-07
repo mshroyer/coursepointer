@@ -162,12 +162,22 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
     let max_course_points = 16usize;
     for i in 0..min(max_course_points, info.course_points.len()) {
         let point = &info.course_points[i];
-        println!("- {} at {:.02}", point.name, point.distance);
+        println!(
+            "- {} at {:.02}{}",
+            point.name,
+            point.distance,
+            if i == 0 { " along the course" } else { "" }
+        );
     }
     if info.course_points.len() > max_course_points {
         println!("(and others)");
     }
-    println!("Output is at {}", args.output.to_string_lossy());
+    println!(
+        "Output is in {}",
+        absolute(&args.output)
+            .unwrap_or(args.output)
+            .to_string_lossy()
+    );
     Ok(())
 }
 
