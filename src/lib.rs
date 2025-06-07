@@ -28,12 +28,12 @@ mod types;
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
-use dimensioned::si::MeterPerSecond;
+use dimensioned::si::{Meter, MeterPerSecond};
 pub use fit::FitEncodeError;
 use thiserror::Error;
 use tracing::{Level, debug, span};
 
-use crate::course::{CourseError, CourseSetBuilder};
+use crate::course::{CourseError, CoursePoint, CourseSetBuilder};
 pub use crate::course::{CourseOptions, InterceptStrategy};
 use crate::fit::CourseFile;
 use crate::gpx::{GpxItem, GpxReader};
@@ -49,6 +49,8 @@ pub enum CoursePointerError {
     Course(#[from] CourseError),
     #[error("Unexpected number of courses (tracks or routes) in input: {0}")]
     CourseCount(usize),
+    #[error("Course does not contain any records")]
+    EmptyRecords,
     #[error("FIT encoding error")]
     FitEncode(#[from] fit::FitEncodeError),
     #[error("Core type error")]
@@ -56,6 +58,13 @@ pub enum CoursePointerError {
 }
 
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
+
+pub struct ConversionInfo {
+    pub course_name: Option<String>,
+    pub total_distance: Meter<f64>,
+    pub num_waypoints: usize,
+    pub course_points: Vec<CoursePoint>,
+}
 
 /// Convert GPX into a FIT course file.
 ///
@@ -68,9 +77,10 @@ pub fn convert_gpx<R: BufRead, W: Write>(
     fit_output: W,
     course_options: CourseOptions,
     fit_speed: MeterPerSecond<f64>,
-) -> Result<()> {
+) -> Result<ConversionInfo> {
     let mut builder = CourseSetBuilder::new(course_options);
 
+    let mut num_waypoints = 0usize;
     {
         let span = span!(Level::DEBUG, "read_input");
         let _guard = span.enter();
@@ -94,6 +104,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                 }
 
                 GpxItem::Waypoint(wpt) => {
+                    num_waypoints += 1;
                     builder.add_waypoint(wpt);
                 }
 
@@ -109,15 +120,23 @@ pub fn convert_gpx<R: BufRead, W: Write>(
         );
     }
 
-    let course_set = builder.build()?;
+    let mut course_set = builder.build()?;
     if course_set.courses.len() != 1usize {
         return Err(CoursePointerError::CourseCount(course_set.courses.len()));
     }
-    let course = course_set.courses.first().unwrap();
-    let course_file = CourseFile::new(course, Utc::now(), fit_speed);
+    let course = course_set.courses.remove(0);
+    if course.records.is_empty() {
+        return Err(CoursePointerError::EmptyRecords);
+    }
+    let course_file = CourseFile::new(&course, Utc::now(), fit_speed);
     course_file.encode(fit_output)?;
 
-    Ok(())
+    Ok(ConversionInfo {
+        course_name: course.name.clone(),
+        total_distance: course.records.last().unwrap().cumulative_distance,
+        num_waypoints,
+        course_points: course.course_points,
+    })
 }
 
 /// CXX Generated FFI for GeographicLib

@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::{PathBuf, absolute};
@@ -116,7 +117,7 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
         }
         .context("Creating the <OUTPUT> file")?,
     );
-    info!("Created FIT output file: {:?}", absolute(args.output)?);
+    info!("Created FIT output file: {:?}", absolute(&args.output)?);
 
     let course_options = CourseOptions {
         threshold: args.threshold * M,
@@ -125,7 +126,7 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
     let fit_speed = args.speed * KILO * M / HR;
 
     let res = coursepointer::convert_gpx(gpx_file, fit_file, course_options, fit_speed);
-    match &res {
+    let info = match &res {
         Err(CoursePointerError::Gpx(_)) => {
             res.context("The <INPUT> is not a valid GPX file. Check that it is correct.")
         }
@@ -143,8 +144,30 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<()> {
         _ => res.map_err(anyhow::Error::from),
     }?;
 
-    println!("Done.");
-
+    match info.course_name {
+        Some(name) => println!(
+            "Converted course {:?} of length {:.02}",
+            name, info.total_distance
+        ),
+        None => println!(
+            "Converted unnamed course of length {:.02}",
+            info.total_distance
+        ),
+    }
+    println!(
+        "Processed {} waypoints, {} of which were identified as course points:",
+        info.num_waypoints,
+        info.course_points.len()
+    );
+    let max_course_points = 16usize;
+    for i in 0..min(max_course_points, info.course_points.len()) {
+        let point = &info.course_points[i];
+        println!("- {} at {:.02}", point.name, point.distance);
+    }
+    if info.course_points.len() > max_course_points {
+        println!("(and others)");
+    }
+    println!("Output is at {}", args.output.to_string_lossy());
     Ok(())
 }
 
