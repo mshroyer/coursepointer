@@ -49,4 +49,8 @@ resolver = "2"
 members = ["integration-stub"]
 
 [profile.release]
-lto = false
+# Uncomment to enable release build profiling, or set
+# CARGO_PROFILE_RELEASE_DEBUG to "true" to do this on a temporary basis.
+#debug = "line-tables-only"
+# Enable link-time optimization: Slower, but smaller binaries.
+#lto = true
