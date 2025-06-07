@@ -132,6 +132,7 @@ impl CourseSetBuilder {
         Ok(CourseSet { courses })
     }
 
+    #[tracing::instrument(level = "trace", skip(self))]
     fn process_waypoints(&mut self) -> Result<()> {
         for waypoint in &self.waypoints {
             for course in &mut self.courses {
@@ -308,7 +309,6 @@ impl CourseBuilder {
         Ok(())
     }
 
-    #[tracing::instrument(level = "trace", skip(self))]
     fn build(mut self) -> Course {
         match &self.name {
             Some(name) => info!("Building course {}", name),
