@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::fmt::Write;
+use std::fmt::{Display, Write};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::{PathBuf, absolute};
@@ -8,9 +8,11 @@ use anyhow::{Context, Result, bail};
 use clap::builder::styling::Styles;
 use clap::{ColorChoice, Parser, Subcommand, command};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
-use coursepointer::{CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy};
+use coursepointer::{
+    ConversionInfo, CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy, Mile,
+};
 use dimensioned::f64prefixes::KILO;
-use dimensioned::si::{HR, M};
+use dimensioned::si::{HR, M, Meter};
 use tracing::level_filters::LevelFilter;
 use tracing::{Level, debug, enabled, error, info, instrument, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
@@ -145,6 +147,13 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<String> {
         _ => res.map_err(anyhow::Error::from),
     }?;
 
+    generate_conversion_report::<Mile<f64>>(info, args.output)
+}
+
+fn generate_conversion_report<T>(info: ConversionInfo, output: PathBuf) -> Result<String>
+where
+    T: From<Meter<f64>> + Display,
+{
     // Build a report to print after the tracing span surrounding this function
     // has exited. If debug logging is enabled, this ensures the report to
     // STDOUT will be printed after all the tracing stuff.
@@ -152,13 +161,14 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<String> {
     match info.course_name {
         Some(name) => writeln!(
             &mut r,
-            "Converted course {:?} of length {:.02}",
-            name, info.total_distance
+            "Converted course {:?} of length {:.02}\n",
+            name,
+            T::from(info.total_distance)
         )?,
         None => writeln!(
             &mut r,
-            "Converted an unnamed course of length {:.02}",
-            info.total_distance
+            "Converted an unnamed course of length {:.02}\n",
+            T::from(info.total_distance)
         )?,
     };
     writeln!(
@@ -184,7 +194,7 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<String> {
             &mut r,
             "- {} at {:.02}{}",
             point.name,
-            point.distance,
+            T::from(point.distance),
             if i == 0 { " along the course" } else { "" }
         )?;
     }
@@ -193,10 +203,8 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<String> {
     }
     writeln!(
         &mut r,
-        "Output is in {}",
-        absolute(&args.output)
-            .unwrap_or(args.output)
-            .to_string_lossy()
+        "\nOutput is in {}",
+        absolute(&output).unwrap_or(output).to_string_lossy()
     )?;
     Ok(r)
 }

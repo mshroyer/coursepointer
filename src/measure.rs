@@ -4,6 +4,7 @@
 //! dimensionless angular types, as well as a special type for [`Centimeter`],
 //! which is used heavily in FIT encoding.
 
+use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div, Mul};
 
 use approx::{AbsDiffEq, RelativeEq, relative_eq};
@@ -147,11 +148,6 @@ macro_rules! __constant_mul_impl {
 unit_of_measure![DEG as Degree];
 unit_of_measure![SEMI as Semicircle];
 
-unit_of_measure![CM as Centimeter];
-
-unit_of_measure![MS as Millisecond];
-unit_of_measure![NS as Nanosecond];
-
 impl TryFrom<Degree<f64>> for Semicircle<i32> {
     type Error = TypeError;
 
@@ -176,6 +172,8 @@ impl From<Semicircle<i32>> for Degree<f64> {
     }
 }
 
+unit_of_measure![CM as Centimeter];
+
 impl<N> From<Meter<N>> for Centimeter<N>
 where
     N: Num + From<u8>,
@@ -185,6 +183,42 @@ where
     }
 }
 
+unit_of_measure![KM as Kilometer];
+
+impl From<Meter<f64>> for Kilometer<f64> {
+    fn from(value: Meter<f64>) -> Self {
+        Self::new(value.value_unsafe / 1_000.0)
+    }
+}
+
+impl<N> Display for Kilometer<N>
+where
+    N: Num + Display,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.02} km", self.value_unsafe)
+    }
+}
+
+unit_of_measure![MI as Mile];
+
+impl From<Meter<f64>> for Mile<f64> {
+    fn from(value: Meter<f64>) -> Self {
+        Self::new(value.value_unsafe / 1609.344)
+    }
+}
+
+impl<N> Display for Mile<N>
+where
+    N: Num + Display,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.02} mi", self.value_unsafe)
+    }
+}
+
+unit_of_measure![MS as Millisecond];
+
 impl<N> From<Second<N>> for Millisecond<N>
 where
     N: Num + From<u16>,
@@ -193,6 +227,8 @@ where
         Self::new(N::from(1_000) * value.value_unsafe)
     }
 }
+
+unit_of_measure![NS as Nanosecond];
 
 impl<N> From<Second<N>> for Nanosecond<N>
 where
@@ -206,8 +242,10 @@ where
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
+    use approx::assert_relative_eq;
+    use dimensioned::si::M;
 
-    use super::{DEG, Degree, SEMI, Semicircle};
+    use super::{DEG, Degree, KM, Kilometer, MI, Mile, SEMI, Semicircle};
 
     #[test]
     fn from_deg_min() -> Result<()> {
@@ -242,5 +280,19 @@ mod tests {
         let result: Semicircle<i32> = deg.try_into()?;
         assert_eq!(result, original);
         Ok(())
+    }
+
+    #[test]
+    fn kilometer_conversion() {
+        let meters = 1.0 * M;
+        let kilometers: Kilometer<f64> = meters.into();
+        assert_eq!(kilometers, 0.001 * KM);
+    }
+
+    #[test]
+    fn mile_conversion() {
+        let meters = 1_000.0 * M;
+        let miles: Mile<f64> = meters.into();
+        assert_relative_eq!(miles, 0.6213712 * MI, epsilon = 0.000001);
     }
 }
