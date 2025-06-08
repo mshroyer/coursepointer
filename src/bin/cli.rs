@@ -131,7 +131,9 @@ fn convert_gpx_cmd(args: &Args, sub_args: &ConvertGpxArgs) -> Result<String> {
     );
     info!("Opened GPX input file: {:?}", absolute(&sub_args.input)?);
 
-    if ((sub_args.force && enabled!(Level::WARN)) || (!sub_args.force && enabled!(Level::ERROR))) && sub_args.output.exists() {
+    if ((sub_args.force && enabled!(Level::WARN)) || (!sub_args.force && enabled!(Level::ERROR)))
+        && sub_args.output.exists()
+    {
         if sub_args.force {
             warn!(
                 "Output file exists and will be overwritten: {:?}",

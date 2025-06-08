@@ -7,8 +7,6 @@
 //! Once all the data has been added (for example, by parsing it from a GPX
 //! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
-use std::fmt::Display;
-
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 use tracing::{Level, debug, info, span};
@@ -40,8 +38,10 @@ type Result<T> = std::result::Result<T, CourseError>;
 /// Duplicate interception can happen in an out-and-back course, for example.
 /// This strategy determines what to do in the case that duplicate intercepts
 /// are available.
-#[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
+#[cfg_attr(feature = "cli", derive(clap::ValueEnum, strum::Display))]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "cli", strum(serialize_all = "kebab-case"))]
+#[cfg_attr(feature = "cli", clap(rename_all = "kebab-case"))]
 pub enum InterceptStrategy {
     /// The nearest intercept should be chosen as the course point.
     Nearest,
@@ -51,20 +51,6 @@ pub enum InterceptStrategy {
 
     /// All available intercepts should be chosen as duplicate course points.
     All,
-}
-
-impl Display for InterceptStrategy {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                InterceptStrategy::Nearest => "nearest",
-                InterceptStrategy::First => "first",
-                InterceptStrategy::All => "all",
-            }
-        )
-    }
 }
 
 /// Options for building a course.
