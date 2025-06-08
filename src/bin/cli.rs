@@ -131,19 +131,17 @@ fn convert_gpx_cmd(args: &Args, sub_args: &ConvertGpxArgs) -> Result<String> {
     );
     info!("Opened GPX input file: {:?}", absolute(&sub_args.input)?);
 
-    if (sub_args.force && enabled!(Level::WARN)) || (!sub_args.force && enabled!(Level::ERROR)) {
-        if sub_args.output.exists() {
-            if sub_args.force {
-                warn!(
-                    "Output file exists and will be overwritten: {:?}",
-                    sub_args.output
-                );
-            } else {
-                error!(
-                    "Output file already exists and may not be overwritten: {:?}",
-                    sub_args.output
-                );
-            }
+    if ((sub_args.force && enabled!(Level::WARN)) || (!sub_args.force && enabled!(Level::ERROR))) && sub_args.output.exists() {
+        if sub_args.force {
+            warn!(
+                "Output file exists and will be overwritten: {:?}",
+                sub_args.output
+            );
+        } else {
+            error!(
+                "Output file already exists and may not be overwritten: {:?}",
+                sub_args.output
+            );
         }
     }
     let fit_file = BufWriter::new(
@@ -226,7 +224,7 @@ where
         } else {
             "were identified as course points"
         },
-        if info.course_points.len() > 0 {
+        if !info.course_points.is_empty() {
             ":"
         } else {
             ""
@@ -276,7 +274,7 @@ fn main() -> Result<()> {
     }
 
     let report = match &args.cmd {
-        Commands::ConvertGpx(sub_args) => convert_gpx_cmd(&args, &sub_args),
+        Commands::ConvertGpx(sub_args) => convert_gpx_cmd(&args, sub_args),
     }?;
 
     print!("{}", report);
