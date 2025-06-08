@@ -6,7 +6,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use coursepointer::CourseOptions;
-use coursepointer::testonly::{CourseFile, CourseSetBuilder, DEG, GeoPoint};
+use coursepointer::internal::{CourseFile, CourseSetBuilder, DEG, GeoPoint};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::M;
 use dimensioned::si::f64consts::HR;
@@ -88,7 +88,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
 }
 
 fn show_profile_version() -> Result<()> {
-    println!("{}", coursepointer::testonly::PROFILE_VERSION);
+    println!("{}", coursepointer::internal::PROFILE_VERSION);
     Ok(())
 }
 

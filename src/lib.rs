@@ -21,8 +21,8 @@ mod course;
 mod fit;
 mod geographic;
 mod gpx;
+pub mod internal;
 mod measure;
-pub mod testonly;
 mod types;
 
 use std::io::{BufRead, Write};
