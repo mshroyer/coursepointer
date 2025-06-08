@@ -37,7 +37,7 @@ use crate::course::{CourseError, CoursePoint, CourseSetBuilder};
 pub use crate::course::{CourseOptions, InterceptStrategy};
 use crate::fit::CourseFile;
 use crate::gpx::{GpxItem, GpxReader};
-pub use crate::measure::Mile;
+pub use crate::measure::{Kilometer, Mile};
 use crate::types::TypeError;
 
 #[derive(Error, Debug)]

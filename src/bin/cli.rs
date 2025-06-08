@@ -2,17 +2,20 @@ use std::cmp::min;
 use std::fmt::{Display, Write};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use std::path::{PathBuf, absolute};
+use std::path::{Path, PathBuf, absolute};
 
 use anyhow::{Context, Result, bail};
 use clap::builder::styling::Styles;
-use clap::{ColorChoice, Parser, Subcommand, command};
+use clap::{ColorChoice, Parser, Subcommand, ValueEnum, command};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::{
-    ConversionInfo, CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy, Mile,
+    ConversionInfo, CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy,
+    Kilometer, Mile,
 };
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
+use strum::Display;
+use sys_locale::get_locale;
 use tracing::level_filters::LevelFilter;
 use tracing::{Level, debug, enabled, error, info, instrument, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
@@ -40,6 +43,37 @@ struct Args {
     /// aware this has a non-negligible performance impact on debug builds.
     #[clap(long, default_value_t = Level::ERROR)]
     log: Level,
+
+    /// The unit of distance that coursepointer should use on the command line.
+    #[clap(long, short = 'u', default_value_t = DistUnit::Autodetect)]
+    distance_unit: DistUnit,
+}
+
+#[derive(Copy, Clone, Display, ValueEnum)]
+#[strum(serialize_all = "kebab-case")]
+#[clap(rename_all = "kebab-case")]
+enum DistUnit {
+    Autodetect,
+    M,
+    Km,
+    Mi,
+}
+
+impl DistUnit {
+    fn get(self) -> DistUnit {
+        match self {
+            Self::Autodetect => Self::auto_detect(),
+            _ => self,
+        }
+    }
+
+    fn auto_detect() -> DistUnit {
+        let locale = get_locale().unwrap_or_else(|| String::from("en-US"));
+        match locale.as_str() {
+            "en-US" | "en-UK" => Self::Mi,
+            _ => Self::Km,
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -80,53 +114,53 @@ enum Commands {
 }
 
 #[instrument(level = "trace", skip_all)]
-fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<String> {
-    debug!("convert-gpx args: {:?}", args);
+fn convert_gpx_cmd(args: &Args, sub_args: &ConvertGpxArgs) -> Result<String> {
+    debug!("convert-gpx args: {:?}", sub_args);
 
-    if args.threshold < 0.0 {
+    if sub_args.threshold < 0.0 {
         bail!("Threshold cannot be negative");
     }
 
-    if args.speed < 0.01 {
+    if sub_args.speed < 0.01 {
         bail!("Speeds too low can cause some Garmin devices to crash");
     }
 
     let gpx_file = BufReader::new(
-        File::open(&args.input)
+        File::open(&sub_args.input)
             .context("Opening the GPX <INPUT> file. Check that it exists and can be accessed.")?,
     );
-    info!("Opened GPX input file: {:?}", absolute(args.input)?);
+    info!("Opened GPX input file: {:?}", absolute(&sub_args.input)?);
 
-    if (args.force && enabled!(Level::WARN)) || (!args.force && enabled!(Level::ERROR)) {
-        if args.output.exists() {
-            if args.force {
+    if (sub_args.force && enabled!(Level::WARN)) || (!sub_args.force && enabled!(Level::ERROR)) {
+        if sub_args.output.exists() {
+            if sub_args.force {
                 warn!(
                     "Output file exists and will be overwritten: {:?}",
-                    args.output
+                    sub_args.output
                 );
             } else {
                 error!(
                     "Output file already exists and may not be overwritten: {:?}",
-                    args.output
+                    sub_args.output
                 );
             }
         }
     }
     let fit_file = BufWriter::new(
-        if args.force {
-            File::create(&args.output)
+        if sub_args.force {
+            File::create(&sub_args.output)
         } else {
-            File::create_new(&args.output)
+            File::create_new(&sub_args.output)
         }
         .context("Creating the <OUTPUT> file")?,
     );
-    info!("Created FIT output file: {:?}", absolute(&args.output)?);
+    info!("Created FIT output file: {:?}", absolute(&sub_args.output)?);
 
     let course_options = CourseOptions {
-        threshold: args.threshold * M,
-        strategy: args.strategy,
+        threshold: sub_args.threshold * M,
+        strategy: sub_args.strategy,
     };
-    let fit_speed = args.speed * KILO * M / HR;
+    let fit_speed = sub_args.speed * KILO * M / HR;
 
     let res = coursepointer::convert_gpx(gpx_file, fit_file, course_options, fit_speed);
     let info = match &res {
@@ -147,10 +181,21 @@ fn convert_gpx_cmd(args: ConvertGpxArgs) -> Result<String> {
         _ => res.map_err(anyhow::Error::from),
     }?;
 
-    generate_conversion_report::<Mile<f64>>(info, args.output)
+    match args.distance_unit.get() {
+        DistUnit::M => generate_conversion_report::<Meter<f64>>(info, &sub_args.output),
+        DistUnit::Km => generate_conversion_report::<Kilometer<f64>>(info, &sub_args.output),
+        DistUnit::Mi => generate_conversion_report::<Mile<f64>>(info, &sub_args.output),
+        _ => {
+            error!(
+                "Failed to detect distance unit for report: {}",
+                args.distance_unit
+            );
+            Ok("".to_string())
+        }
+    }
 }
 
-fn generate_conversion_report<T>(info: ConversionInfo, output: PathBuf) -> Result<String>
+fn generate_conversion_report<T>(info: ConversionInfo, output: &Path) -> Result<String>
 where
     T: From<Meter<f64>> + Display,
 {
@@ -204,7 +249,9 @@ where
     writeln!(
         &mut r,
         "\nOutput is in {}",
-        absolute(&output).unwrap_or(output).to_string_lossy()
+        absolute(output)
+            .unwrap_or(output.to_path_buf())
+            .to_string_lossy()
     )?;
     Ok(r)
 }
@@ -228,8 +275,8 @@ fn main() -> Result<()> {
         tracing::subscriber::set_global_default(Registry::default().with(fmt_layer))?;
     }
 
-    let report = match args.cmd {
-        Commands::ConvertGpx(sub_args) => convert_gpx_cmd(sub_args),
+    let report = match &args.cmd {
+        Commands::ConvertGpx(sub_args) => convert_gpx_cmd(&args, &sub_args),
     }?;
 
     print!("{}", report);
