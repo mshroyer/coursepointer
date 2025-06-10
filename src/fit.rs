@@ -549,10 +549,65 @@ impl RecordMessage {
     }
 }
 
+/// Course point types
+///
+/// Names and numeric values manually copied from Profile.xlsx in FIT SDK 21.158.00.
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum CoursePointType {
     Generic = 0u8,
+    Summit = 1u8,
+    Valley = 2u8,
+    Water = 3u8,
+    Food = 4u8,
+    Danger = 5u8,
+    Left = 6u8,
+    Right = 7u8,
+    Straight = 8u8,
+    FirstAid = 9u8,
+    FourthCategory = 10u8,
+    ThirdCategory = 11u8,
+    SecondCategory = 12u8,
+    FirstCategory = 13u8,
+    HorsCategory = 14u8,
+    Sprint = 15u8,
+    LeftFork = 16u8,
+    RightFork = 17u8,
+    MiddleFork = 18u8,
+    SlightLeft = 19u8,
+    SharpLeft = 20u8,
+    SlightRight = 21u8,
+    SharpRight = 22u8,
+    UTurn = 23u8,
+    SegmentStart = 24u8,
+    SegmentEnd = 25u8,
+    Campsite = 27u8,
+    AidStation = 28u8,
+    RestArea = 29u8,
+    GeneralDistance = 30u8, // Used with UpAhead
+    Service = 31u8,
+    EnergyGel = 32u8,
+    SportsDrink = 33u8,
+    MileMarker = 34u8,
+    Checkpoint = 35u8,
+    Shelter = 36u8,
+    MeetingSpot = 37u8,
+    Overlook = 38u8,
+    Toilet = 39u8,
+    Shower = 40u8,
+    Gear = 41u8,
+    SharpCurve = 42u8,
+    SteepIncline = 43u8,
+    Tunnel = 44u8,
+    Bridge = 45u8,
+    Obstacle = 46u8,
+    Crossing = 47u8,
+    Store = 48u8,
+    Transition = 49u8,
+    Navaid = 50u8,
+    Transport = 51u8,
+    Alert = 52u8,
+    Info = 53u8,
 }
 
 struct CoursePointMessage {
