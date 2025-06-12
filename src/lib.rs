@@ -33,9 +33,9 @@ pub use fit::FitEncodeError;
 use thiserror::Error;
 use tracing::{Level, debug, span};
 
-use crate::course::{CourseError, CoursePoint, CourseSetBuilder};
+use crate::course::{CourseError, CoursePoint, CourseSetBuilder, Waypoint};
 pub use crate::course::{CourseOptions, InterceptStrategy};
-use crate::fit::CourseFile;
+use crate::fit::{CourseFile, CoursePointType};
 use crate::gpx::{GpxItem, GpxReader};
 pub use crate::measure::{Kilometer, Mile};
 use crate::types::TypeError;
@@ -106,7 +106,11 @@ pub fn convert_gpx<R: BufRead, W: Write>(
 
                 GpxItem::Waypoint(wpt) => {
                     num_waypoints += 1;
-                    builder.add_waypoint(wpt);
+                    builder.add_waypoint(Waypoint {
+                        point: wpt.point,
+                        point_type: CoursePointType::Generic,
+                        name: wpt.name,
+                    });
                 }
 
                 _ => {

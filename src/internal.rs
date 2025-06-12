@@ -4,7 +4,7 @@
 //! `integration-stub` binary crate, but they are not intended for use by
 //! external code. This module's API may change without semantic versioning!
 
-pub use crate::course::CourseSetBuilder;
-pub use crate::fit::{CourseFile, PROFILE_VERSION};
+pub use crate::course::{CourseOptions, CourseSetBuilder, Waypoint};
+pub use crate::fit::{CourseFile, CoursePointType, PROFILE_VERSION};
 pub use crate::measure::DEG;
 pub use crate::types::GeoPoint;

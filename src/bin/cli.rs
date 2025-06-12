@@ -5,16 +5,20 @@ use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf, absolute};
 
 use anyhow::{Context, Result, bail};
+use chrono::Utc;
 use clap::builder::styling::Styles;
 use clap::{ColorChoice, Parser, Subcommand, ValueEnum, command};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
+use coursepointer::internal::{
+    CourseFile, CoursePointType, CourseSetBuilder, DEG, GeoPoint, Waypoint,
+};
 use coursepointer::{
     ConversionInfo, CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy,
     Kilometer, Mile,
 };
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
-use strum::Display;
+use strum::{Display, IntoEnumIterator};
 use sys_locale::get_locale;
 use tracing::level_filters::LevelFilter;
 use tracing::{Level, debug, enabled, error, info, instrument, warn};
@@ -104,6 +108,24 @@ struct ConvertGpxArgs {
     strategy: InterceptStrategy,
 }
 
+#[derive(Parser, Debug)]
+struct SampleCoursePointsArgs {
+    /// FIT file output path
+    output: PathBuf,
+
+    /// Starting latitude
+    #[clap(long, default_value_t = 0.0)]
+    lat: f64,
+
+    /// Starting longitude
+    #[clap(long, default_value_t = 0.0)]
+    lon: f64,
+
+    /// Longitude increment between course points
+    #[clap(long, default_value_t = 0.1)]
+    increment: f64,
+}
+
 #[derive(Subcommand)]
 enum Commands {
     /// Convert a GPX file to a FIT file with course points
@@ -111,6 +133,9 @@ enum Commands {
     /// Given a GPX file containing a single track, converts the track to a
     /// Garmin FIT course file.
     ConvertGpx(ConvertGpxArgs),
+
+    /// Writes a course with samples of each course point type
+    SampleCoursePoints(SampleCoursePointsArgs),
 }
 
 #[instrument(level = "trace", skip_all)]
@@ -256,6 +281,35 @@ where
     Ok(r)
 }
 
+fn sample_course_points_cmd(sub_args: &SampleCoursePointsArgs) -> Result<String> {
+    let fit_output =
+        BufWriter::new(File::create(&sub_args.output).context("Creating the <OUTPUT> file")?);
+    let mut lon = sub_args.lon + sub_args.increment;
+    let mut builder = CourseSetBuilder::new(Default::default());
+    for cptype in CoursePointType::iter() {
+        builder.add_waypoint(Waypoint {
+            name: cptype.to_string(),
+            point_type: cptype,
+            point: GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?,
+        });
+        debug!("Added course point type: {:?}", cptype);
+        lon += sub_args.increment;
+    }
+    builder
+        .add_course()
+        .with_name("Sample Points".to_string())
+        .with_route_point(GeoPoint::new(sub_args.lat * DEG, sub_args.lon * DEG, None)?)?
+        .with_route_point(GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?)?;
+    let course_set = builder.build()?;
+    let course_file = CourseFile::new(
+        course_set.courses.get(0).unwrap(),
+        Utc::now(),
+        10.0 * KILO * M / HR,
+    );
+    course_file.encode(fit_output)?;
+    Ok("".to_string())
+}
+
 fn main() -> Result<()> {
     // Intentionally avoid wrapping argument parsing errors in anyhow::Result so
     // we preserve Clap's pretty formatting of usage info.
@@ -277,6 +331,7 @@ fn main() -> Result<()> {
 
     let report = match &args.cmd {
         Commands::ConvertGpx(sub_args) => convert_gpx_cmd(&args, sub_args),
+        Commands::SampleCoursePoints(sub_args) => sample_course_points_cmd(sub_args),
     }?;
 
     print!("{}", report);

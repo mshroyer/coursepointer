@@ -16,7 +16,6 @@ use crate::algorithm::{
 };
 use crate::fit::CoursePointType;
 use crate::geographic::{GeographicError, geodesic_inverse};
-use crate::gpx::Waypoint;
 use crate::types::{GeoPoint, GeoSegment};
 
 #[derive(Error, Debug)]
@@ -199,7 +198,7 @@ impl CourseSetBuilder {
         course_points.push(CoursePoint {
             point: sln.intercept_point,
             distance: sln.course_distance,
-            point_type: CoursePointType::Generic,
+            point_type: waypoint.point_type,
             name: waypoint.name.clone(),
         });
     }
@@ -359,6 +358,24 @@ pub struct Record {
     pub cumulative_distance: Meter<f64>,
 }
 
+/// A waypoint to be considered as a course point.
+///
+/// In contrast with [`GpxWaypoint`], this type specifies a FIT
+/// [`CoursePointType`] instead of a set of optional GPX attributes. And in
+/// contrast with a [`CoursePoint`], a Waypoint is not known to necessarily lie
+/// along the course and lacks a known course distance.
+pub struct Waypoint {
+    /// Position of the waypoint.
+    pub point: GeoPoint,
+
+    /// The type of course point this should be considered, if it does turn out
+    /// to be one.
+    pub point_type: CoursePointType,
+
+    /// Name.
+    pub name: String,
+}
+
 #[derive(Clone, PartialEq, Debug)]
 pub struct CoursePoint {
     /// Position of the point's interception with the course.
@@ -380,8 +397,8 @@ mod tests {
     use approx::assert_relative_eq;
     use dimensioned::si::M;
 
-    use crate::course::{CourseBuilder, CourseSetBuilder};
-    use crate::gpx::Waypoint;
+    use crate::course::{CourseBuilder, CourseSetBuilder, Waypoint};
+    use crate::fit::CoursePointType;
     use crate::{CourseOptions, geo_point, geo_points};
 
     #[test]
@@ -459,9 +476,7 @@ mod tests {
 
         builder.add_waypoint(Waypoint {
             name: "MyWaypoint".to_owned(),
-            cmt: None,
-            sym: None,
-            type_: None,
+            point_type: CoursePointType::Generic,
             point: geo_point!(35.951314, -94.973085),
         });
 

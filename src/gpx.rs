@@ -66,7 +66,7 @@ pub enum GpxItem {
     TrackOrRoutePoint(GeoPoint),
     /// A waypoint.  Global to the GPX document; not specifically associated
     /// with any track or route.
-    Waypoint(Waypoint),
+    Waypoint(GpxWaypoint),
 }
 
 impl TryFrom<NextPtFields> for GeoPoint {
@@ -85,7 +85,7 @@ impl TryFrom<NextPtFields> for GeoPoint {
 
 /// A GPX waypoint.
 #[derive(Clone, PartialEq, Debug)]
-pub struct Waypoint {
+pub struct GpxWaypoint {
     /// Waypoint name.
     pub name: String,
 
@@ -102,7 +102,7 @@ pub struct Waypoint {
     pub point: GeoPoint,
 }
 
-impl TryFrom<NextPtFields> for Waypoint {
+impl TryFrom<NextPtFields> for GpxWaypoint {
     type Error = GpxError;
 
     fn try_from(value: NextPtFields) -> Result<Self> {
@@ -344,7 +344,7 @@ where
                         [Tag::Gpx, Tag::Wpt] => {
                             debug!("Found waypoint with name: {:?}", self.next_pt_fields.name);
                             return Some(
-                                match Waypoint::try_from(mem::take(&mut self.next_pt_fields)) {
+                                match GpxWaypoint::try_from(mem::take(&mut self.next_pt_fields)) {
                                     Ok(p) => Ok(GpxItem::Waypoint(p)),
                                     Err(e) => Err(e),
                                 },
@@ -365,14 +365,14 @@ where
 mod tests {
     use quick_xml::Reader;
 
-    use super::{GpxError, GpxItem, GpxReader, Result, Waypoint};
+    use super::{GpxError, GpxItem, GpxReader, GpxWaypoint, Result};
     use crate::geo_points;
     use crate::measure::DEG;
     use crate::types::GeoPoint;
 
     macro_rules! waypoint {
         ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr ) => {
-            Waypoint {
+            GpxWaypoint {
                 name: $name.to_owned(),
                 cmt: $cmt.map(|s| s.to_owned()),
                 sym: $sym.map(|s| s.to_owned()),
@@ -381,7 +381,7 @@ mod tests {
             }
         };
         ( $name:expr, $cmt:expr, $sym:expr, $type_:expr, $lat:expr, $lon:expr, $ele:expr ) => {
-            Waypoint {
+            GpxWaypoint {
                 name: $name.to_owned(),
                 cmt: $cmt.map(|s| s.to_owned()),
                 sym: $sym.map(|s| s.to_owned()),

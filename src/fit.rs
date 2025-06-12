@@ -554,7 +554,7 @@ impl RecordMessage {
 /// Names and numeric values manually copied from Profile.xlsx in FIT SDK
 /// 21.158.00.
 #[repr(u8)]
-#[cfg_attr(feature = "cli", derive(strum::EnumIter))]
+#[cfg_attr(feature = "cli", derive(strum::Display, strum::EnumIter))]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum CoursePointType {
     Generic = 0u8,
