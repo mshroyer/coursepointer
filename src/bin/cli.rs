@@ -110,8 +110,9 @@ struct ConvertGpxArgs {
 
 #[derive(Parser, Debug)]
 struct SampleCoursePointsArgs {
-    /// FIT file output path
-    output: PathBuf,
+    /// Course name. This will be used as both the filename prefix and the FIT
+    /// course name.
+    name: String,
 
     /// Starting latitude
     #[clap(long, default_value_t = 0.0)]
@@ -124,6 +125,14 @@ struct SampleCoursePointsArgs {
     /// Longitude increment between course points
     #[clap(long, default_value_t = 0.1)]
     increment: f64,
+
+    /// Course point type to start with
+    #[clap(long, default_value_t = CoursePointType::Generic)]
+    start_type: CoursePointType,
+
+    /// Number of point types to put in this file
+    #[clap(long, short, default_value_t = 54)]
+    num_types: usize,
 }
 
 #[derive(Subcommand)]
@@ -282,11 +291,19 @@ where
 }
 
 fn sample_course_points_cmd(sub_args: &SampleCoursePointsArgs) -> Result<String> {
-    let fit_output =
-        BufWriter::new(File::create(&sub_args.output).context("Creating the <OUTPUT> file")?);
+    let mut output = sub_args.name.clone();
+    output += ".fit";
+    let fit_output = BufWriter::new(File::create(output).context("Creating the <OUTPUT> file")?);
     let mut lon = sub_args.lon + sub_args.increment;
     let mut builder = CourseSetBuilder::new(Default::default());
+    let mut n = 0usize;
     for cptype in CoursePointType::iter() {
+        if (cptype as u8) < (sub_args.start_type as u8) {
+            continue;
+        }
+        if n >= sub_args.num_types {
+            break;
+        }
         builder.add_waypoint(Waypoint {
             name: cptype.to_string(),
             point_type: cptype,
@@ -294,10 +311,11 @@ fn sample_course_points_cmd(sub_args: &SampleCoursePointsArgs) -> Result<String>
         });
         debug!("Added course point type: {:?}", cptype);
         lon += sub_args.increment;
+        n += 1;
     }
     builder
         .add_course()
-        .with_name("Sample Points".to_string())
+        .with_name(sub_args.name.clone())
         .with_route_point(GeoPoint::new(sub_args.lat * DEG, sub_args.lon * DEG, None)?)?
         .with_route_point(GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?)?;
     let course_set = builder.build()?;
