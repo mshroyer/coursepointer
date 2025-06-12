@@ -84,7 +84,6 @@ pub struct CourseSetBuilder {
     waypoints: Vec<Waypoint>,
 }
 
-#[allow(clippy::new_without_default)]
 impl CourseSetBuilder {
     pub fn new(options: CourseOptions) -> Self {
         Self {
@@ -94,19 +93,21 @@ impl CourseSetBuilder {
         }
     }
 
-    pub fn create_course(&mut self) {
+    pub fn add_course(&mut self) -> &mut CourseBuilder {
         self.courses.push(CourseBuilder::new());
+        self.last_course_mut().unwrap()
     }
 
-    pub fn current_mut(&mut self) -> Result<&mut CourseBuilder> {
+    pub fn last_course_mut(&mut self) -> Result<&mut CourseBuilder> {
         match self.courses.last_mut() {
             Some(course) => Ok(course),
             None => Err(CourseError::MissingCourse),
         }
     }
 
-    pub fn add_waypoint(&mut self, waypoint: Waypoint) {
+    pub fn add_waypoint(&mut self, waypoint: Waypoint) -> &mut Self {
         self.waypoints.push(waypoint);
+        self
     }
 
     pub fn build(mut self) -> Result<CourseSet> {
@@ -275,11 +276,12 @@ impl CourseBuilder {
         }
     }
 
-    pub fn set_name(&mut self, name: String) {
+    pub fn with_name(&mut self, name: String) -> &mut Self {
         self.name = Some(name);
+        self
     }
 
-    pub fn add_route_point(&mut self, point: GeoPoint) -> Result<()> {
+    pub fn with_route_point(&mut self, point: GeoPoint) -> Result<&mut Self> {
         match self.prev_point {
             Some(prev) => {
                 if prev == point {
@@ -294,7 +296,7 @@ impl CourseBuilder {
 
             None => self.prev_point = Some(point),
         }
-        Ok(())
+        Ok(self)
     }
 
     fn build(mut self) -> Course {
@@ -392,7 +394,7 @@ mod tests {
     #[test]
     fn test_course_builder_single_point() -> Result<()> {
         let mut builder = CourseBuilder::new();
-        builder.add_route_point(geo_point!(1.0, 2.0))?;
+        builder.with_route_point(geo_point!(1.0, 2.0))?;
         let record_points = builder
             .build()
             .records
@@ -409,8 +411,9 @@ mod tests {
     #[test]
     fn test_course_builder_two_points() -> Result<()> {
         let mut builder = CourseBuilder::new();
-        builder.add_route_point(geo_point!(1.0, 2.0))?;
-        builder.add_route_point(geo_point!(1.1, 2.2))?;
+        builder
+            .with_route_point(geo_point!(1.0, 2.0))?
+            .with_route_point(geo_point!(1.1, 2.2))?;
         let record_points = builder
             .build()
             .records
@@ -427,13 +430,14 @@ mod tests {
     #[test]
     fn test_repeated_points() -> Result<()> {
         let mut builder = CourseBuilder::new();
-        builder.add_route_point(geo_point!(1.0, 2.0))?;
-        builder.add_route_point(geo_point!(1.0, 2.0))?;
-        builder.add_route_point(geo_point!(1.1, 2.2))?;
-        builder.add_route_point(geo_point!(1.1, 2.2))?;
-        builder.add_route_point(geo_point!(1.2, 2.1))?;
-        builder.add_route_point(geo_point!(1.1, 2.2))?;
-        builder.add_route_point(geo_point!(1.1, 2.2))?;
+        builder
+            .with_route_point(geo_point!(1.0, 2.0))?
+            .with_route_point(geo_point!(1.0, 2.0))?
+            .with_route_point(geo_point!(1.1, 2.2))?
+            .with_route_point(geo_point!(1.1, 2.2))?
+            .with_route_point(geo_point!(1.2, 2.1))?
+            .with_route_point(geo_point!(1.1, 2.2))?
+            .with_route_point(geo_point!(1.1, 2.2))?;
 
         let course = builder.build();
         let record_points = course.records.iter().map(|r| r.point).collect::<Vec<_>>();
@@ -447,11 +451,11 @@ mod tests {
     #[test]
     fn test_intercept_long_segments() -> Result<()> {
         let mut builder = CourseSetBuilder::new(CourseOptions::default());
-        builder.create_course();
-        let course = builder.current_mut()?;
-        course.add_route_point(geo_point!(35.5252717091331, -101.2856451853322))?;
-        course.add_route_point(geo_point!(36.05200980326534, -90.02610043506964))?;
-        course.add_route_point(geo_point!(38.13369722302025, -78.51238236506529))?;
+        builder
+            .add_course()
+            .with_route_point(geo_point!(35.5252717091331, -101.2856451853322))?
+            .with_route_point(geo_point!(36.05200980326534, -90.02610043506964))?
+            .with_route_point(geo_point!(38.13369722302025, -78.51238236506529))?;
 
         builder.add_waypoint(Waypoint {
             name: "MyWaypoint".to_owned(),

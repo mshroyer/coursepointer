@@ -67,10 +67,10 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
 
     let mut fit_file = BufWriter::new(File::create(&out)?);
     let mut builder = CourseSetBuilder::new(CourseOptions::default());
-    builder.create_course();
-    builder.current_mut()?.set_name(spec.name);
+    builder.add_course();
+    builder.last_course_mut()?.with_name(spec.name);
     for point in &spec.records {
-        builder.current_mut()?.add_route_point(GeoPoint::new(
+        builder.last_course_mut()?.with_route_point(GeoPoint::new(
             point.lat * DEG,
             point.lon * DEG,
             None,

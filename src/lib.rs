@@ -93,15 +93,15 @@ pub fn convert_gpx<R: BufRead, W: Write>(
             num_items += 1;
             match item {
                 GpxItem::TrackOrRoute => {
-                    builder.create_course();
+                    builder.add_course();
                 }
 
                 GpxItem::TrackOrRouteName(name) => {
-                    builder.current_mut()?.set_name(name);
+                    builder.last_course_mut()?.with_name(name);
                 }
 
                 GpxItem::TrackOrRoutePoint(p) => {
-                    builder.current_mut()?.add_route_point(p)?;
+                    builder.last_course_mut()?.with_route_point(p)?;
                 }
 
                 GpxItem::Waypoint(wpt) => {
