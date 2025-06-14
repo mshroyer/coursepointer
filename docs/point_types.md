@@ -74,32 +74,44 @@ icon.
 
 ## RideWithGPS POIs
 
-| Type           | Icon                                            |
-|----------------|-------------------------------------------------|
-| Information    | ![Information](img/rwgps-information.png)       |
-| Caution        | ![Caution](img/rwgps-caution.png)               |
-| Hospital       | ![Hospital](img/rwgps-hospital.png)             |
-| First Aid      | ![First Aid](img/rwgps-first-aid.png)           |
-| Aid Station    | ![Aid Station](img/rwgps-aid-station.png)       |
-| Restroom       | ![Restroom](img/rwgps-restroom.png)             |
-| Shower         | ![Shower](img/rwgps-shower.png)                 |
-| Water          | ![Water](img/rwgps-water.png)                   |
-| Parking        | ![Parking](img/rwgps-parking.png)               |
-| Gas Station    | ![Gas Station](img/rwgps-gas-station.png)       |
-| Transit Center | ![Transit Center](img/rwgps-transit-center.png) |
-| Ferry          | ![Ferry](img/rwgps-ferry.png)                   |
-| Library        | ![Library](img/rwgps-library.png)               |
-| Monument       | ![Monument](img/rwgps-monument.png)             |
-| Viewpoint      | ![Viewpoint](img/rwgps-viewpoint.png)           |
-| Trailhead      | ![Trailhead](img/rwgps-trailhead.png)           |
-| Camping        | ![Camping](img/rwgps-camping.png)               |
-| Park           | ![Park](img/rwgps-park.png)                     |
-| Summit         | ![Summit](img/rwgps-summit.png)                 |
-| Rest Stop      | ![Rest Stop](img/rwgps-rest-stop.png)           |
-| Swimming       | ![Swimming](img/rwgps-swimming.png)             |
-| Geocache       | ![Geocache](img/rwgps-geocache.png)             |
-| Food           | ![Food](img/rwgps-food.png)                     |
-| Bar            | ![Bar](img/rwgps-bar.png)                       |
-| Coffee         | ![Coffee](img/rwgps-coffee.png)                 |
-| Winery         | ![Winery](img/rwgps-winery.png)                 |
-| Lodging        | ![Lodging](img/rwgps-lodging.png)               |
+| Type              | Icon                                                  |
+|-------------------|-------------------------------------------------------|
+| Information       | ![Information](img/rwgps-information.png)             |
+| Caution           | ![Caution](img/rwgps-caution.png)                     |
+| Hospital          | ![Hospital](img/rwgps-hospital.png)                   |
+| First Aid         | ![First Aid](img/rwgps-first-aid.png)                 |
+| Aid Station       | ![Aid Station](img/rwgps-aid-station.png)             |
+| Restroom          | ![Restroom](img/rwgps-restroom.png)                   |
+| Shower            | ![Shower](img/rwgps-shower.png)                       |
+| Water             | ![Water](img/rwgps-water.png)                         |
+| Parking           | ![Parking](img/rwgps-parking.png)                     |
+| Gas Station       | ![Gas Station](img/rwgps-gas-station.png)             |
+| Transit Center    | ![Transit Center](img/rwgps-transit-center.png)       |
+| Ferry             | ![Ferry](img/rwgps-ferry.png)                         |
+| Library           | ![Library](img/rwgps-library.png)                     |
+| Monument          | ![Monument](img/rwgps-monument.png)                   |
+| Viewpoint         | ![Viewpoint](img/rwgps-viewpoint.png)                 |
+| Trailhead         | ![Trailhead](img/rwgps-trailhead.png)                 |
+| Camping           | ![Camping](img/rwgps-camping.png)                     |
+| Park              | ![Park](img/rwgps-park.png)                           |
+| Summit            | ![Summit](img/rwgps-summit.png)                       |
+| Rest Stop         | ![Rest Stop](img/rwgps-rest-stop.png)                 |
+| Swimming          | ![Swimming](img/rwgps-swimming.png)                   |
+| Geocache          | ![Geocache](img/rwgps-geocache.png)                   |
+| Food              | ![Food](img/rwgps-food.png)                           |
+| Bar               | ![Bar](img/rwgps-bar.png)                             |
+| Coffee            | ![Coffee](img/rwgps-coffee.png)                       |
+| Winery            | ![Winery](img/rwgps-winery.png)                       |
+| Lodging           | ![Lodging](img/rwgps-lodging.png)                     |
+| Convenience Store | ![Convenience Store](img/rwgps-convenience-store.png) |
+| Shopping          | ![Shopping](img/rwgps-shopping.png)                   |
+| ATM               | ![ATM](img/rwgps-atm.png)                             |
+| Bike Shop         | ![Bike Shop](img/rwgps-bike-shop.png)                 |
+| Bike Parking      | ![Bike Parking](img/rwgps-bike-parking.png)           |
+| Bike Share        | ![Bike Share](img/rwgps-bike-share.png)               |
+| Start             | ![Start](img/rwgps-start.png)                         |
+| Stop              | ![Stop](img/rwgps-stop.png)                           |
+| Finish            | ![Finish](img/rwgps-finish.png)                       |
+| Segment Start     | ![Segment Start](img/rwgps-segment-start.png)         |
+| Segment End       | ![Segment End](img/rwgps-segment-end.png)             |
+| Control           | ![Control](img/rwgps-control.png)                     |
