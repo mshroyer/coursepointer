@@ -7,7 +7,7 @@ The real question is, how do these point types behave when loaded onto Garmin
 devices we care about?
 
 | Type            | Fenix 7                       |
-+-----------------+-------------------------------+
+|-----------------+-------------------------------|
 | Generic         | ![Generic](img/sample00a.png) |
 | Summit          | ![Summit](img/sample00b.png)  |
 | Valley          | ![Valley](img/sample00c.png)  |
