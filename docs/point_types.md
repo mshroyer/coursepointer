@@ -74,15 +74,24 @@ icon.
 
 ## RideWithGPS POIs
 
-| Type        | Icon                                      |
-|-------------|-------------------------------------------|
-| Information | ![Information](img/rwgps-information.png) |
-| Caution     | ![Caution](img/rwgps-caution.png)         |
-| Hospital    | ![Hospital](img/rwgps-hospital.png)       |
-| First Aid   | ![First Aid](img/rwgps-first-aid.png)     |
-| Aid Station | ![Aid Station](img/rwgps-aid-station.png) |
-| Restroom    | ![Restroom](img/rwgps-restroom.png)       |
-| Shower      | ![Shower](img/rwgps-shower.png)           |
-| Water       | ![Water](img/rwgps-water.png)             |
-| Parking     | ![Parking](img/rwgps-parking.png)         |
+| Type           | Icon                                            |
+|----------------|-------------------------------------------------|
+| Information    | ![Information](img/rwgps-information.png)       |
+| Caution        | ![Caution](img/rwgps-caution.png)               |
+| Hospital       | ![Hospital](img/rwgps-hospital.png)             |
+| First Aid      | ![First Aid](img/rwgps-first-aid.png)           |
+| Aid Station    | ![Aid Station](img/rwgps-aid-station.png)       |
+| Restroom       | ![Restroom](img/rwgps-restroom.png)             |
+| Shower         | ![Shower](img/rwgps-shower.png)                 |
+| Water          | ![Water](img/rwgps-water.png)                   |
+| Parking        | ![Parking](img/rwgps-parking.png)               |
+| Gas Station    | ![Gas Station](img/rwgps-gas-station.png)       |
+| Transit Center | ![Transit Center](img/rwgps-transit-center.png) |
+| Ferry          | ![Ferry](img/rwgps-ferry.png)                   |
+| Library        | ![Library](img/rwgps-library.png)               |
+| Monument       | ![Monument](img/rwgps-monument.png)             |
+| Viewpoint      | ![Viewpoint](img/rwgps-viewpoint.png)           |
+| Trailhead      | ![Trailhead](img/rwgps-trailhead.png)           |
+| Camping        | ![Camping](img/rwgps-camping.png)               |
+| Park           | ![Park](img/rwgps-park.png)                     |
 
