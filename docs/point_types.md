@@ -6,7 +6,14 @@ The canonical set of course point types is defined in `Profile.xlsx` in the
 The real question is, how do these point types behave when loaded onto Garmin
 devices we care about?
 
-Here are how different course point types appear in "Up Ahead" on a Fenix 7:
+Here are how different course point types appear in "Up Ahead" on a Fenix 7
+running software version 21.19.  There are a few different cases to consider.
+Types with an icon listed appear in Up Ahead with the designated icon, and
+also on the course map with a similar but monochrome icon.  Types marked with
+(1) are missing from Up Ahead, but while they also lack an icon on the map,
+the course point's name will appear in the appropriate location on the course
+map.  Finally, types marked with (2) are missing from Up Ahead but appear on
+the map with an appropriate icon.
 
 | Type            | Fenix 7                               |
 |-----------------|---------------------------------------|
@@ -16,9 +23,9 @@ Here are how different course point types appear in "Up Ahead" on a Fenix 7:
 | Water           | ![Water](img/sample00d.png)           |
 | Food            | ![Food](img/sample01a.png)            |
 | Danger          | ![Danger](img/sample01b.png)          |
-| Left            | N/A                                   |
-| Right           | N/A                                   |
-| Straight        | N/A                                   |
+| Left            | (1)                                   |
+| Right           | (1)                                   |
+| Straight        | (1)                                   |
 | FirstAid        | ![FirstAid](img/sample02a.png)        |
 | FourthCategory  | ![FourthCategory](img/sample02b.png)  |
 | ThirdCategory   | ![ThirdCategory](img/sample02c.png)   |
@@ -26,16 +33,16 @@ Here are how different course point types appear in "Up Ahead" on a Fenix 7:
 | FirstCategory   | ![FirstCategory](img/sample03b.png)   |
 | HorsCategory    | ![HorsCategory](img/sample03c.png)    |
 | Sprint          | ![Sprint](img/sample03d.png)          |
-| LeftFork        | N/A                                   |
-| RightFork       | N/A                                   |
-| MiddleFork      | N/A                                   |
-| SlightLeft      | N/A                                   |
-| SharpLeft       | N/A                                   |
-| SlightRight     | N/A                                   |
-| SharpRight      | N/A                                   |
-| UTurn           | N/A                                   |
-| SegmentStart    | N/A                                   |
-| SegmentEnd      | N/A                                   |
+| LeftFork        | (1)                                   |
+| RightFork       | (1)                                   |
+| MiddleFork      | (1)                                   |
+| SlightLeft      | (1)                                   |
+| SharpLeft       | (1)                                   |
+| SlightRight     | (1)                                   |
+| SharpRight      | (1)                                   |
+| UTurn           | (1)                                   |
+| SegmentStart    | (2)                                   |
+| SegmentEnd      | (2)                                   |
 | Campsite        | ![Campsite](img/sample06a.png)        |
 | AidStation      | ![AidStation](img/sample06b.png)      |
 | RestArea        | ![RestArea](img/sample07a.png)        |
@@ -49,7 +56,7 @@ Here are how different course point types appear in "Up Ahead" on a Fenix 7:
 | MeetingSpot     | ![MeetingSpot](img/sample09a.png)     |
 | Overlook        | ![Overlook](img/sample09b.png)        |
 | Toilet          | ![Toilet](img/sample09c.png)          |
-| Shower          | N/A                                   |
+| Shower          | (2)                                   |
 | Gear            | ![Gear](img/sample10a.png)            |
 | SharpCurve      | ![SharpCurve](img/sample10b.png)      |
 | SteepIncline    | ![SteepIncline](img/sample10c.png)    |
