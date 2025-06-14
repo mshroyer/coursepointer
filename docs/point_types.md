@@ -75,17 +75,18 @@ icon.
 ## RideWithGPS POIs
 
 Ride with GPS has various POI types.  When these are exported as GPX
-waypoints, they will correspond to certain `cmt` and `type` XML attributes;
-thanks to the new (if confusingly named) [Waypoints
+waypoints, they will correspond to certain `cmt` and `type` XML attributes.
+Thanks to the new (if confusingly named) [Waypoints
 feature](https://ridewithgps.com/news/11178-introducing-waypoints), when
 exported in a FIT file, they also will correspond to certain FIT course point
 types.
 
-This table shows how the different POI types map to GPX and FIT types.  The
-`type` XML attribute used in GPX exports seems to directly map to FIT course
-point types.
+This table shows how the different POI types map to GPX and FIT types as of
+2025-06-14.  The `cmt` XML attribute used in GPX exports corresponds to the
+RWGPS POI type, while the `type` attribute always equals the FIT course point
+type.
 
-| Type              | Icon                                                  | cmt attr            | type attr     | Course point  |
+| Type              | Icon                                                  | GPX cmt attr        | GPX type attr | FIT type      |
 |-------------------|-------------------------------------------------------|---------------------|---------------|---------------|
 | Information       | ![Information](img/rwgps-information.png)             | `generic`           | `generic`     | `generic`     |
 | Caution           | ![Caution](img/rwgps-caution.png)                     | `caution`           | `danger`      | `danger`      |
