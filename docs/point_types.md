@@ -9,7 +9,7 @@ devices we care about?
 Here are how different course point types appear in "Up Ahead" on a Fenix 7:
 
 | Type            | Fenix 7                               |
-|-----------------+---------------------------------------|
+|-----------------|---------------------------------------|
 | Generic         | ![Generic](img/sample00a.png)         |
 | Summit          | ![Summit](img/sample00b.png)          |
 | Valley          | ![Valley](img/sample00c.png)          |
