@@ -94,4 +94,12 @@ icon.
 | Trailhead      | ![Trailhead](img/rwgps-trailhead.png)           |
 | Camping        | ![Camping](img/rwgps-camping.png)               |
 | Park           | ![Park](img/rwgps-park.png)                     |
-
+| Summit         | ![Summit](img/rwgps-summit.png)                 |
+| Rest Stop      | ![Rest Stop](img/rwgps-rest-stop.png)           |
+| Swimming       | ![Swimming](img/rwgps-swimming.png)             |
+| Geocache       | ![Geocache](img/rwgps-geocache.png)             |
+| Food           | ![Food](img/rwgps-food.png)                     |
+| Bar            | ![Bar](img/rwgps-bar.png)                       |
+| Coffee         | ![Coffee](img/rwgps-coffee.png)                 |
+| Winery         | ![Winery](img/rwgps-winery.png)                 |
+| Lodging        | ![Lodging](img/rwgps-lodging.png)               |
