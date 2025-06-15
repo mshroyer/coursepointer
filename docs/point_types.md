@@ -5,6 +5,12 @@ The canonical set of course point types is defined in `Profile.xlsx` in the
 `course_point` enum in the Types tab.  But the real question is how these
 behave in practice on devices.
 
+This document's purpose is to identify:
+
+1. What subset of course point types is safe to use across devices.
+2. How to map exported waypoints from popular apps like Ride with GPS and Gaia
+   GPS to that subset.
+
 ## On Garmin devices
 
 Here's how different course points appear in "Up Ahead" on a Fenix 7 with
@@ -57,7 +63,7 @@ icon.
 | `meeting_spot`     | ![MeetingSpot](img/sample09a.png)     |
 | `overlook`         | ![Overlook](img/sample09b.png)        |
 | `toilet`           | ![Toilet](img/sample09c.png)          |
-| `shower`           | (2)                                   |
+| `shower`           | ![Shower](img/sample09d.png)          |
 | `gear`             | ![Gear](img/sample10a.png)            |
 | `sharp_curve`      | ![SharpCurve](img/sample10b.png)      |
 | `steep_incline`    | ![SteepIncline](img/sample10c.png)    |
@@ -71,6 +77,10 @@ icon.
 | `transport`        | ![Transport](img/sample12c.png)       |
 | `alert`            | ![Alert](img/sample12d.png)           |
 | `info`             | ![Info](img/sample13a.png)            |
+
+Bizarrely, the `shower` course point didn't show up at all my first time
+testing this, but then rendered the next time, with the exact same course file
+and firmware version.
 
 ## RideWithGPS POIs
 
@@ -128,7 +138,8 @@ type.
 | Segment End       | ![Segment End](img/rwgps-segment-end.png)             | `segment_end`       | `generic`     | `generic`     |
 | Control           | ![Control](img/rwgps-control.png)                     | `control`           | `checkpoint`  | `checkpoint`  |
 
-The full set of course point types used by Ride with GPS in FIT exports is:
+The full set of course point types used by Ride with GPS in FIT exports of
+custom POIs and Waypoints (setting aside cues) is then:
 
 - `generic`
 - `summit`
@@ -152,4 +163,4 @@ The full set of course point types used by Ride with GPS in FIT exports is:
 
 I might expect this would represent a safe, conservative set of course point
 types to use in FIT exports.  However, `shower`, which doesn't render on my
-Fenix 7, is included here.
+Fenix 7, is included here too.
