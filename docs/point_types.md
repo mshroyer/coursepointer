@@ -128,3 +128,28 @@ type.
 | Segment End       | ![Segment End](img/rwgps-segment-end.png)             | `segment_end`       | `generic`     | `generic`     |
 | Control           | ![Control](img/rwgps-control.png)                     | `control`           | `checkpoint`  | `checkpoint`  |
 
+The full set of course point types used by Ride with GPS in FIT exports is:
+
+- `generic`
+- `summit`
+- `water`
+- `food`
+- `danger`
+- `first_aid`
+- `campsite`
+- `aid_station`
+- `rest_area`
+- `service`
+- `checkpoint`
+- `shelter`
+- `overlook`
+- `toilet`
+- `shower`
+- `gear`
+- `store`
+- `transport`
+- `info`
+
+I might expect this would represent a safe, conservative set of course point
+types to use in FIT exports.  However, `shower`, which doesn't render on my
+Fenix 7, is included here.
