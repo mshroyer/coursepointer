@@ -3,6 +3,7 @@ name = "tools"
 version = "0.1.0"
 description = "Integration tests for coursepointer"
 dependencies = [
+    "defusedxml>=0.7.1",
     "fitdecode>=0.10.0",
     "garmin-fit-sdk>=21.158.0",
     "geographiclib>=2.0",
