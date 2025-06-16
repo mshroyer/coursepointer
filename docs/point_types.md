@@ -76,7 +76,7 @@ icon.
 | `navaid`           | yes     | ![Navaid](img/sample12b.png)          | ![Generic](img/edge1040sample12b.png) |
 | `transport`        | yes     | ![Transport](img/sample12c.png)       | ![Generic](img/edge1040sample12c.png) |
 | `alert`            | yes     | ![Alert](img/sample12d.png)           | ![Generic](img/edge1040sample12d.png) |
-| `info`             | yes     | ![Info](img/sample13a.png)            | ![Generic](img/edge1040sample13d.png) |
+| `info`             | yes     | ![Info](img/sample13a.png)            | ![Generic](img/edge1040sample13a.png) |
 
 Bizarrely, the `shower` course point didn't show up at all my first time
 testing this on my Fenix, but then rendered the next time, with the exact same
