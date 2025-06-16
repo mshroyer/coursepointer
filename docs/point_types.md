@@ -48,10 +48,10 @@ icon.
 | `slight_right`     | no      | (1)                                   | ![Generic](img/edge1040sample05b.png) |
 | `sharp_right`      | no      | (1)                                   | ![Generic](img/edge1040sample05c.png) |
 | `u_turn`           | no      | (1)                                   | ![Generic](img/edge1040sample05d.png) |
-| `segment_start`    | no      | (2)                                   | ![Generic](img/edge1040sample06a.png) |
-| `segment_end`      | no      | (2)                                   | ![Generic](img/edge1040sample06b.png) |
-| `campsite`         | yes     | ![Campsite](img/sample06a.png)        | ![Generic](img/edge1040sample06c.png) |
-| `aid_station`      | yes     | ![AidStation](img/sample06b.png)      | ![Generic](img/edge1040sample06d.png) |
+| `segment_start`    | no      | (2)                                   | (1)                                   |
+| `segment_end`      | no      | (2)                                   | ![Generic](img/edge1040sample06a.png) |
+| `campsite`         | yes     | ![Campsite](img/sample06a.png)        | ![Generic](img/edge1040sample06b.png) |
+| `aid_station`      | yes     | ![AidStation](img/sample06b.png)      | ![Generic](img/edge1040sample06c.png) |
 | `rest_area`        | yes     | ![RestArea](img/sample07a.png)        | ![Generic](img/edge1040sample07a.png) |
 | `general_distance` | yes     | ![GeneralDistance](img/sample07b.png) | ![Generic](img/edge1040sample07b.png) |
 | `service`          | yes     | ![Service](img/sample07c.png)         | ![Generic](img/edge1040sample07c.png) |
