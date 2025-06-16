@@ -242,7 +242,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-fast-food:`           | ![gaia-icon-34](img/gaia-icon-34.png)   | `fast-food-24`           | `food`            |
 | `:gaia-fence:`               | ![gaia-icon-35](img/gaia-icon-35.png)   | `fence`                  | `obstacle`        |
 | `:gaia-fire-lookout:`        | ![gaia-icon-36](img/gaia-icon-36.png)   | `fire-lookout`           | `overlook`        |
-| `:gaia-fire-station:`        | ![gaia-icon-37](img/gaia-icon-37.png)   | `fire-station-24`        | `shelter`         |
+| `:gaia-fire-station:`        | ![gaia-icon-37](img/gaia-icon-37.png)   | `fire-station-24`        | `first_aid`         |
 | `:gaia-fish:`                | ![gaia-icon-38](img/gaia-icon-38.png)   | `fish`                   | `food`            |
 | `:gaia-forest:`              | ![gaia-icon-39](img/gaia-icon-39.png)   | `forest`                 |                   |
 | `:gaia-fuel:`                | ![gaia-icon-40](img/gaia-icon-40.png)   | `fuel-24`                | `service`         |
@@ -327,7 +327,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-toilets:`             | ![gaia-icon-119](img/gaia-icon-119.png) | `toilets-24`             | `toilet`          |
 | `:gaia-track-deer:`          | ![gaia-icon-120](img/gaia-icon-120.png) | `track-deer`             |                   |
 | `:gaia-track-dog:`           | ![gaia-icon-121](img/gaia-icon-121.png) | `track-dog`              |                   |
-| `:gaia-trail-camera:`        | ![gaia-icon-122](img/gaia-icon-122.png) | `trail-camera`           |                   |
+| `:gaia-trail-camera:`        | ![gaia-icon-122](img/gaia-icon-122.png) | `trail-camera`           | `overlook`        |
 | `:gaia-trailhead:`           | ![gaia-icon-123](img/gaia-icon-123.png) | `trailhead`              | `navaid`          |
 | `:gaia-trash:`               | ![gaia-icon-124](img/gaia-icon-124.png) | `trash`                  |                   |
 | `:gaia-tree-fall:`           | ![gaia-icon-125](img/gaia-icon-125.png) | `tree-fall`              | `obstacle`        |
