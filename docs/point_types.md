@@ -218,7 +218,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-building:`            | ![gaia-icon-10](img/gaia-icon-10.png)   | `building-24`            | `shelter`         |
 | `:gaia-bus:`                 | ![gaia-icon-11](img/gaia-icon-11.png)   | `bus`                    | `transport`       |
 | `:gaia-cafe:`                | ![gaia-icon-12](img/gaia-icon-12.png)   | `cafe-24`                | `food`            |
-| `:gaia-cairn:`               | ![gaia-icon-13](img/gaia-icon-13.png)   | `cairn`                  | `overlook`        |
+| `:gaia-cairn:`               | ![gaia-icon-13](img/gaia-icon-13.png)   | `cairn`                  | `navaid`          |
 | `:gaia-camera:`              | ![gaia-icon-14](img/gaia-icon-14.png)   | `camera-24`              | `overlook`        |
 | `:gaia-campsite:`            | ![gaia-icon-15](img/gaia-icon-15.png)   | `campsite-24`            | `campsite`        |
 | `:gaia-canoe:`               | ![gaia-icon-16](img/gaia-icon-16.png)   | `canoe`                  |                   |
@@ -328,7 +328,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-track-deer:`          | ![gaia-icon-120](img/gaia-icon-120.png) | `track-deer`             |                   |
 | `:gaia-track-dog:`           | ![gaia-icon-121](img/gaia-icon-121.png) | `track-dog`              |                   |
 | `:gaia-trail-camera:`        | ![gaia-icon-122](img/gaia-icon-122.png) | `trail-camera`           |                   |
-| `:gaia-trailhead:`           | ![gaia-icon-123](img/gaia-icon-123.png) | `trailhead`              |                   |
+| `:gaia-trailhead:`           | ![gaia-icon-123](img/gaia-icon-123.png) | `trailhead`              | `navaid`          |
 | `:gaia-trash:`               | ![gaia-icon-124](img/gaia-icon-124.png) | `trash`                  |                   |
 | `:gaia-tree-fall:`           | ![gaia-icon-125](img/gaia-icon-125.png) | `tree-fall`              | `obstacle`        |
 | `:gaia-tree-stand:`          | ![gaia-icon-126](img/gaia-icon-126.png) | `tree-stand`             | `overlook`        |
