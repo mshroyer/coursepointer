@@ -60,6 +60,7 @@ def main():
     args = parser.parse_args()
 
     point_types = list(get_point_types(args.input))
+    point_types.sort(key=lambda pt: pt.name if pt.name != "pin" else "")
 
     name_len = len("name")
     sym_len = len("sym")
