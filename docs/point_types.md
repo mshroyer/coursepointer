@@ -22,61 +22,61 @@ point's name will appear in the correct map location.  Finally, types marked
 with (2) are missing from Up Ahead but appear on the map with an appropriate
 icon.
 
-| Type               | Fenix 7                               | Connect |
-|--------------------|---------------------------------------|---------|
-| `generic`          | ![Generic](img/sample00a.png)         | yes     |
-| `summit`           | ![Summit](img/sample00b.png)          | yes     |
-| `valley`           | ![Valley](img/sample00c.png)          | yes     |
-| `water`            | ![Water](img/sample00d.png)           | yes     |
-| `food`             | ![Food](img/sample01a.png)            | yes     |
-| `danger`           | ![Danger](img/sample01b.png)          | yes     |
-| `left`             | (1)                                   | no      |
-| `right`            | (1)                                   | no      |
-| `straight`         | (1)                                   | no      |
-| `first_aid`        | ![FirstAid](img/sample02a.png)        | yes     |
-| `fourth_category`  | ![FourthCategory](img/sample02b.png)  | yes     |
-| `third_category`   | ![ThirdCategory](img/sample02c.png)   | yes     |
-| `second_category`  | ![SecondCategory](img/sample03a.png)  | yes     |
-| `first_category`   | ![FirstCategory](img/sample03b.png)   | yes     |
-| `hors_category`    | ![HorsCategory](img/sample03c.png)    | yes     |
-| `sprint`           | ![Sprint](img/sample03d.png)          | yes     |
-| `left_fork`        | (1)                                   | no      |
-| `right_fork`       | (1)                                   | no      |
-| `middle_fork`      | (1)                                   | no      |
-| `slight_left`      | (1)                                   | no      |
-| `sharp_left`       | (1)                                   | no      |
-| `slight_right`     | (1)                                   | no      |
-| `sharp_right`      | (1)                                   | no      |
-| `u_turn`           | (1)                                   | no      |
-| `segment_start`    | (2)                                   | no      |
-| `segment_end`      | (2)                                   | no      |
-| `campsite`         | ![Campsite](img/sample06a.png)        | yes     |
-| `aid_station`      | ![AidStation](img/sample06b.png)      | yes     |
-| `rest_area`        | ![RestArea](img/sample07a.png)        | yes     |
-| `general_distance` | ![GeneralDistance](img/sample07b.png) | yes     |
-| `service`          | ![Service](img/sample07c.png)         | yes     |
-| `energy_gel`       | ![EnergyGel](img/sample07d.png)       | yes     |
-| `sports_drink`     | ![SportsDrink](img/sample08a.png)     | yes     |
-| `mile_marker`      | ![MileMarker](img/sample08b.png)      | yes     |
-| `checkpoint`       | ![Checkpoint](img/sample08c.png)      | yes     |
-| `shelter`          | ![Shelter](img/sample08d.png)         | yes     |
-| `meeting_spot`     | ![MeetingSpot](img/sample09a.png)     | yes     |
-| `overlook`         | ![Overlook](img/sample09b.png)        | yes     |
-| `toilet`           | ![Toilet](img/sample09c.png)          | yes     |
-| `shower`           | ![Shower](img/sample09d.png)          | yes     |
-| `gear`             | ![Gear](img/sample10a.png)            | yes     |
-| `sharp_curve`      | ![SharpCurve](img/sample10b.png)      | yes     |
-| `steep_incline`    | ![SteepIncline](img/sample10c.png)    | yes     |
-| `tunnel`           | ![Tunnel](img/sample10d.png)          | yes     |
-| `bridge`           | ![Bridge](img/sample11a.png)          | yes     |
-| `obstacle`         | ![Obstacle](img/sample11b.png)        | yes     |
-| `crossing`         | ![Crossing](img/sample11c.png)        | yes     |
-| `store`            | ![Store](img/sample11d.png)           | yes     |
-| `transition`       | ![Transition](img/sample12a.png)      | yes     |
-| `navaid`           | ![Navaid](img/sample12b.png)          | yes     |
-| `transport`        | ![Transport](img/sample12c.png)       | yes     |
-| `alert`            | ![Alert](img/sample12d.png)           | yes     |
-| `info`             | ![Info](img/sample13a.png)            | yes     |
+| Type               | Connect | Fenix 7                               | Edge 1040                             |
+|--------------------|---------|---------------------------------------|---------------------------------------|
+| `generic`          | yes     | ![Generic](img/sample00a.png)         | ![Generic](img/edge1040sample00a.png) |
+| `summit`           | yes     | ![Summit](img/sample00b.png)          | ![Generic](img/edge1040sample00b.png) |
+| `valley`           | yes     | ![Valley](img/sample00c.png)          | ![Generic](img/edge1040sample00c.png) |
+| `water`            | yes     | ![Water](img/sample00d.png)           | ![Generic](img/edge1040sample00d.png) |
+| `food`             | yes     | ![Food](img/sample01a.png)            |                                       |
+| `danger`           | yes     | ![Danger](img/sample01b.png)          |                                       |
+| `left`             | no      | (1)                                   |                                       |
+| `right`            | no      | (1)                                   |                                       |
+| `straight`         | no      | (1)                                   |                                       |
+| `first_aid`        | yes     | ![FirstAid](img/sample02a.png)        |                                       |
+| `fourth_category`  | yes     | ![FourthCategory](img/sample02b.png)  |                                       |
+| `third_category`   | yes     | ![ThirdCategory](img/sample02c.png)   |                                       |
+| `second_category`  | yes     | ![SecondCategory](img/sample03a.png)  |                                       |
+| `first_category`   | yes     | ![FirstCategory](img/sample03b.png)   |                                       |
+| `hors_category`    | yes     | ![HorsCategory](img/sample03c.png)    |                                       |
+| `sprint`           | yes     | ![Sprint](img/sample03d.png)          |                                       |
+| `left_fork`        | no      | (1)                                   |                                       |
+| `right_fork`       | no      | (1)                                   |                                       |
+| `middle_fork`      | no      | (1)                                   |                                       |
+| `slight_left`      | no      | (1)                                   |                                       |
+| `sharp_left`       | no      | (1)                                   |                                       |
+| `slight_right`     | no      | (1)                                   |                                       |
+| `sharp_right`      | no      | (1)                                   |                                       |
+| `u_turn`           | no      | (1)                                   |                                       |
+| `segment_start`    | no      | (2)                                   |                                       |
+| `segment_end`      | no      | (2)                                   |                                       |
+| `campsite`         | yes     | ![Campsite](img/sample06a.png)        |                                       |
+| `aid_station`      | yes     | ![AidStation](img/sample06b.png)      |                                       |
+| `rest_area`        | yes     | ![RestArea](img/sample07a.png)        |                                       |
+| `general_distance` | yes     | ![GeneralDistance](img/sample07b.png) |                                       |
+| `service`          | yes     | ![Service](img/sample07c.png)         |                                       |
+| `energy_gel`       | yes     | ![EnergyGel](img/sample07d.png)       |                                       |
+| `sports_drink`     | yes     | ![SportsDrink](img/sample08a.png)     |                                       |
+| `mile_marker`      | yes     | ![MileMarker](img/sample08b.png)      |                                       |
+| `checkpoint`       | yes     | ![Checkpoint](img/sample08c.png)      |                                       |
+| `shelter`          | yes     | ![Shelter](img/sample08d.png)         |                                       |
+| `meeting_spot`     | yes     | ![MeetingSpot](img/sample09a.png)     |                                       |
+| `overlook`         | yes     | ![Overlook](img/sample09b.png)        |                                       |
+| `toilet`           | yes     | ![Toilet](img/sample09c.png)          |                                       |
+| `shower`           | yes     | ![Shower](img/sample09d.png)          |                                       |
+| `gear`             | yes     | ![Gear](img/sample10a.png)            |                                       |
+| `sharp_curve`      | yes     | ![SharpCurve](img/sample10b.png)      |                                       |
+| `steep_incline`    | yes     | ![SteepIncline](img/sample10c.png)    |                                       |
+| `tunnel`           | yes     | ![Tunnel](img/sample10d.png)          |                                       |
+| `bridge`           | yes     | ![Bridge](img/sample11a.png)          |                                       |
+| `obstacle`         | yes     | ![Obstacle](img/sample11b.png)        |                                       |
+| `crossing`         | yes     | ![Crossing](img/sample11c.png)        |                                       |
+| `store`            | yes     | ![Store](img/sample11d.png)           |                                       |
+| `transition`       | yes     | ![Transition](img/sample12a.png)      |                                       |
+| `navaid`           | yes     | ![Navaid](img/sample12b.png)          |                                       |
+| `transport`        | yes     | ![Transport](img/sample12c.png)       |                                       |
+| `alert`            | yes     | ![Alert](img/sample12d.png)           |                                       |
+| `info`             | yes     | ![Info](img/sample13a.png)            |                                       |
 
 Bizarrely, the `shower` course point didn't show up at all my first time
 testing this on my Fenix, but then rendered the next time, with the exact same
@@ -87,6 +87,12 @@ imported into Garmin Connect, or can be created manually.  As of 2025-06-15,
 it's possible to create additional "Obstacle Start" (type number 54) and
 "Obstacle End" (type 55) which are absent from the current global
 `Profile.xlsx`.
+
+I did encounter some unexpected behavior when importing synthetically
+generated courses (which did not correspond to any real trail or road) into
+Connect.  Particularly, importing such FIT files containing more than four
+course points resulted in *no* course points appearing.  I haven't yet
+reproduced this behavior with conversions of "real" courses, however.
 
 ## RideWithGPS POIs
 
