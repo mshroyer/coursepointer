@@ -11,16 +11,18 @@ This document's purpose is to identify:
 2. How to map exported waypoints from popular apps like Ride with GPS and Gaia
    GPS to that subset.
 
-## On Garmin devices
+## On Garmin apps and devices
 
-Here's how different course points appear in "Up Ahead" on a Fenix 7 with
-software version 21.19.  There are a few different cases to consider.  Types
-listing an icon appear in Up Ahead with that icon, and also on the course map
-with a similar but monochrome icon.  Types marked with (1) are missing
-entirely from Up Ahead, but while they lack an icon on the map, the course
-point's name will appear in the correct map location.  Finally, types marked
-with (2) are missing from Up Ahead but appear on the map with an appropriate
-icon.
+Here's how different course points function in Garmin Connect and appear in
+"Up Ahead" on a Fenix 7 with software version 21.19, as well as an Edge 1040
+with software 27.14.
+
+There are a few different cases to consider: Types listing an icon appear in
+Up Ahead with that icon, and also on the course map with a similar but
+monochrome icon.  Types marked with (1) are missing entirely from Up Ahead,
+but while they lack an icon on the map, the course point's name will appear in
+the correct map location.  Finally, types marked with (2) are missing from Up
+Ahead but appear on the map with an appropriate icon.
 
 | Type               | Connect | Fenix 7                               | Edge 1040                             |
 |--------------------|---------|---------------------------------------|---------------------------------------|
@@ -150,6 +152,8 @@ type.
 | Segment End       | ![Segment End](img/rwgps-segment-end.png)             | `segment_end`       | `generic`     | `generic`     |
 | Control           | ![Control](img/rwgps-control.png)                     | `control`           | `checkpoint`  | `checkpoint`  |
 
+All POI types set `Dot` as `sym` in the GPX export.
+
 The full set of course point types used by Ride with GPS in FIT exports of
 custom POIs and Waypoints (setting aside cues) is then:
 
@@ -176,3 +180,229 @@ custom POIs and Waypoints (setting aside cues) is then:
 This might represent a safe, conservative set of course point types to use in
 FIT exports, as likely Ride with GPS has tested this more thoroughly than I
 have.
+
+## Gaia GPS Waypoints
+
+| Name          | Icon                                    |
+|---------------|-----------------------------------------|
+| pin           | ![gaia-icon-0](img/gaia-icon-0.png)     |
+| airport       | ![gaia-icon-1](img/gaia-icon-1.png)     |
+| attraction    | ![gaia-icon-2](img/gaia-icon-2.png)     |
+| beach         | ![gaia-icon-3](img/gaia-icon-3.png)     |
+| bear          | ![gaia-icon-4](img/gaia-icon-4.png)     |
+| bicycle       | ![gaia-icon-5](img/gaia-icon-5.png)     |
+| binoculars    | ![gaia-icon-6](img/gaia-icon-6.png)     |
+| bird          | ![gaia-icon-7](img/gaia-icon-7.png)     |
+| body-of-water | ![gaia-icon-8](img/gaia-icon-8.png)     |
+|               | ![gaia-icon-9](img/gaia-icon-9.png)     |
+|               | ![gaia-icon-10](img/gaia-icon-10.png)   |
+|               | ![gaia-icon-11](img/gaia-icon-11.png)   |
+|               | ![gaia-icon-12](img/gaia-icon-12.png)   |
+|               | ![gaia-icon-13](img/gaia-icon-13.png)   |
+|               | ![gaia-icon-14](img/gaia-icon-14.png)   |
+|               | ![gaia-icon-15](img/gaia-icon-15.png)   |
+|               | ![gaia-icon-16](img/gaia-icon-16.png)   |
+|               | ![gaia-icon-17](img/gaia-icon-17.png)   |
+|               | ![gaia-icon-18](img/gaia-icon-18.png)   |
+|               | ![gaia-icon-19](img/gaia-icon-19.png)   |
+|               | ![gaia-icon-20](img/gaia-icon-20.png)   |
+|               | ![gaia-icon-21](img/gaia-icon-21.png)   |
+|               | ![gaia-icon-22](img/gaia-icon-22.png)   |
+|               | ![gaia-icon-23](img/gaia-icon-23.png)   |
+|               | ![gaia-icon-24](img/gaia-icon-24.png)   |
+|               | ![gaia-icon-25](img/gaia-icon-25.png)   |
+|               | ![gaia-icon-26](img/gaia-icon-26.png)   |
+|               | ![gaia-icon-27](img/gaia-icon-27.png)   |
+|               | ![gaia-icon-28](img/gaia-icon-28.png)   |
+|               | ![gaia-icon-29](img/gaia-icon-29.png)   |
+|               | ![gaia-icon-30](img/gaia-icon-30.png)   |
+|               | ![gaia-icon-31](img/gaia-icon-31.png)   |
+|               | ![gaia-icon-32](img/gaia-icon-32.png)   |
+|               | ![gaia-icon-33](img/gaia-icon-33.png)   |
+|               | ![gaia-icon-34](img/gaia-icon-34.png)   |
+|               | ![gaia-icon-35](img/gaia-icon-35.png)   |
+|               | ![gaia-icon-36](img/gaia-icon-36.png)   |
+|               | ![gaia-icon-37](img/gaia-icon-37.png)   |
+|               | ![gaia-icon-38](img/gaia-icon-38.png)   |
+|               | ![gaia-icon-39](img/gaia-icon-39.png)   |
+|               | ![gaia-icon-40](img/gaia-icon-40.png)   |
+|               | ![gaia-icon-41](img/gaia-icon-41.png)   |
+|               | ![gaia-icon-42](img/gaia-icon-42.png)   |
+|               | ![gaia-icon-43](img/gaia-icon-43.png)   |
+|               | ![gaia-icon-44](img/gaia-icon-44.png)   |
+|               | ![gaia-icon-45](img/gaia-icon-45.png)   |
+|               | ![gaia-icon-46](img/gaia-icon-46.png)   |
+|               | ![gaia-icon-47](img/gaia-icon-47.png)   |
+|               | ![gaia-icon-48](img/gaia-icon-48.png)   |
+|               | ![gaia-icon-49](img/gaia-icon-49.png)   |
+|               | ![gaia-icon-50](img/gaia-icon-50.png)   |
+|               | ![gaia-icon-51](img/gaia-icon-51.png)   |
+|               | ![gaia-icon-52](img/gaia-icon-52.png)   |
+|               | ![gaia-icon-53](img/gaia-icon-53.png)   |
+|               | ![gaia-icon-54](img/gaia-icon-54.png)   |
+|               | ![gaia-icon-55](img/gaia-icon-55.png)   |
+|               | ![gaia-icon-56](img/gaia-icon-56.png)   |
+|               | ![gaia-icon-57](img/gaia-icon-57.png)   |
+|               | ![gaia-icon-58](img/gaia-icon-58.png)   |
+|               | ![gaia-icon-59](img/gaia-icon-59.png)   |
+|               | ![gaia-icon-60](img/gaia-icon-60.png)   |
+|               | ![gaia-icon-61](img/gaia-icon-61.png)   |
+|               | ![gaia-icon-62](img/gaia-icon-62.png)   |
+|               | ![gaia-icon-63](img/gaia-icon-63.png)   |
+|               | ![gaia-icon-64](img/gaia-icon-64.png)   |
+|               | ![gaia-icon-65](img/gaia-icon-65.png)   |
+|               | ![gaia-icon-66](img/gaia-icon-66.png)   |
+|               | ![gaia-icon-67](img/gaia-icon-67.png)   |
+|               | ![gaia-icon-68](img/gaia-icon-68.png)   |
+|               | ![gaia-icon-69](img/gaia-icon-69.png)   |
+|               | ![gaia-icon-70](img/gaia-icon-70.png)   |
+|               | ![gaia-icon-71](img/gaia-icon-71.png)   |
+|               | ![gaia-icon-72](img/gaia-icon-72.png)   |
+|               | ![gaia-icon-73](img/gaia-icon-73.png)   |
+|               | ![gaia-icon-74](img/gaia-icon-74.png)   |
+|               | ![gaia-icon-75](img/gaia-icon-75.png)   |
+|               | ![gaia-icon-76](img/gaia-icon-76.png)   |
+|               | ![gaia-icon-77](img/gaia-icon-77.png)   |
+|               | ![gaia-icon-78](img/gaia-icon-78.png)   |
+|               | ![gaia-icon-79](img/gaia-icon-79.png)   |
+|               | ![gaia-icon-80](img/gaia-icon-80.png)   |
+|               | ![gaia-icon-81](img/gaia-icon-81.png)   |
+|               | ![gaia-icon-82](img/gaia-icon-82.png)   |
+|               | ![gaia-icon-83](img/gaia-icon-83.png)   |
+|               | ![gaia-icon-84](img/gaia-icon-84.png)   |
+|               | ![gaia-icon-85](img/gaia-icon-85.png)   |
+|               | ![gaia-icon-86](img/gaia-icon-86.png)   |
+|               | ![gaia-icon-87](img/gaia-icon-87.png)   |
+|               | ![gaia-icon-88](img/gaia-icon-88.png)   |
+|               | ![gaia-icon-89](img/gaia-icon-89.png)   |
+|               | ![gaia-icon-90](img/gaia-icon-90.png)   |
+|               | ![gaia-icon-91](img/gaia-icon-91.png)   |
+|               | ![gaia-icon-92](img/gaia-icon-92.png)   |
+|               | ![gaia-icon-93](img/gaia-icon-93.png)   |
+|               | ![gaia-icon-94](img/gaia-icon-94.png)   |
+|               | ![gaia-icon-95](img/gaia-icon-95.png)   |
+|               | ![gaia-icon-96](img/gaia-icon-96.png)   |
+|               | ![gaia-icon-97](img/gaia-icon-97.png)   |
+|               | ![gaia-icon-98](img/gaia-icon-98.png)   |
+|               | ![gaia-icon-99](img/gaia-icon-99.png)   |
+|               | ![gaia-icon-100](img/gaia-icon-100.png) |
+|               | ![gaia-icon-101](img/gaia-icon-101.png) |
+|               | ![gaia-icon-102](img/gaia-icon-102.png) |
+|               | ![gaia-icon-103](img/gaia-icon-103.png) |
+|               | ![gaia-icon-104](img/gaia-icon-104.png) |
+|               | ![gaia-icon-105](img/gaia-icon-105.png) |
+|               | ![gaia-icon-106](img/gaia-icon-106.png) |
+|               | ![gaia-icon-107](img/gaia-icon-107.png) |
+|               | ![gaia-icon-108](img/gaia-icon-108.png) |
+|               | ![gaia-icon-109](img/gaia-icon-109.png) |
+|               | ![gaia-icon-110](img/gaia-icon-110.png) |
+|               | ![gaia-icon-111](img/gaia-icon-111.png) |
+|               | ![gaia-icon-112](img/gaia-icon-112.png) |
+|               | ![gaia-icon-113](img/gaia-icon-113.png) |
+|               | ![gaia-icon-114](img/gaia-icon-114.png) |
+|               | ![gaia-icon-115](img/gaia-icon-115.png) |
+|               | ![gaia-icon-116](img/gaia-icon-116.png) |
+|               | ![gaia-icon-117](img/gaia-icon-117.png) |
+|               | ![gaia-icon-118](img/gaia-icon-118.png) |
+|               | ![gaia-icon-119](img/gaia-icon-119.png) |
+|               | ![gaia-icon-120](img/gaia-icon-120.png) |
+|               | ![gaia-icon-121](img/gaia-icon-121.png) |
+|               | ![gaia-icon-122](img/gaia-icon-122.png) |
+|               | ![gaia-icon-123](img/gaia-icon-123.png) |
+|               | ![gaia-icon-124](img/gaia-icon-124.png) |
+|               | ![gaia-icon-125](img/gaia-icon-125.png) |
+|               | ![gaia-icon-126](img/gaia-icon-126.png) |
+|               | ![gaia-icon-127](img/gaia-icon-127.png) |
+|               | ![gaia-icon-128](img/gaia-icon-128.png) |
+|               | ![gaia-icon-129](img/gaia-icon-129.png) |
+|               | ![gaia-icon-130](img/gaia-icon-130.png) |
+|               | ![gaia-icon-131](img/gaia-icon-131.png) |
+|               | ![gaia-icon-132](img/gaia-icon-132.png) |
+|               | ![gaia-icon-133](img/gaia-icon-133.png) |
+|               | ![gaia-icon-134](img/gaia-icon-134.png) |
+|               | ![gaia-icon-135](img/gaia-icon-135.png) |
+|               | ![gaia-icon-134](img/gaia-icon-134.png) |
+|               | ![gaia-icon-135](img/gaia-icon-135.png) |
+|               | ![gaia-icon-136](img/gaia-icon-136.png) |
+|               | ![gaia-icon-137](img/gaia-icon-137.png) |
+|               | ![gaia-icon-138](img/gaia-icon-138.png) |
+|               | ![gaia-icon-139](img/gaia-icon-139.png) |
+|               | ![gaia-icon-140](img/gaia-icon-140.png) |
+|               | ![gaia-icon-141](img/gaia-icon-141.png) |
+|               | ![gaia-icon-142](img/gaia-icon-142.png) |
+|               | ![gaia-icon-143](img/gaia-icon-143.png) |
+|               | ![gaia-icon-144](img/gaia-icon-144.png) |
+|               | ![gaia-icon-145](img/gaia-icon-145.png) |
+|               | ![gaia-icon-146](img/gaia-icon-146.png) |
+|               | ![gaia-icon-147](img/gaia-icon-147.png) |
+|               | ![gaia-icon-148](img/gaia-icon-148.png) |
+|               | ![gaia-icon-149](img/gaia-icon-149.png) |
+|               | ![gaia-icon-150](img/gaia-icon-150.png) |
+|               | ![gaia-icon-151](img/gaia-icon-151.png) |
+|               | ![gaia-icon-152](img/gaia-icon-152.png) |
+|               | ![gaia-icon-153](img/gaia-icon-153.png) |
+|               | ![gaia-icon-154](img/gaia-icon-154.png) |
+|               | ![gaia-icon-155](img/gaia-icon-155.png) |
+|               | ![gaia-icon-156](img/gaia-icon-156.png) |
+|               | ![gaia-icon-157](img/gaia-icon-157.png) |
+|               | ![gaia-icon-158](img/gaia-icon-158.png) |
+|               | ![gaia-icon-159](img/gaia-icon-159.png) |
+|               | ![gaia-icon-160](img/gaia-icon-160.png) |
+|               | ![gaia-icon-161](img/gaia-icon-161.png) |
+|               | ![gaia-icon-162](img/gaia-icon-162.png) |
+|               | ![gaia-icon-163](img/gaia-icon-163.png) |
+|               | ![gaia-icon-164](img/gaia-icon-164.png) |
+|               | ![gaia-icon-165](img/gaia-icon-165.png) |
+|               | ![gaia-icon-166](img/gaia-icon-166.png) |
+|               | ![gaia-icon-167](img/gaia-icon-167.png) |
+|               | ![gaia-icon-168](img/gaia-icon-168.png) |
+|               | ![gaia-icon-169](img/gaia-icon-169.png) |
+|               | ![gaia-icon-170](img/gaia-icon-170.png) |
+|               | ![gaia-icon-171](img/gaia-icon-171.png) |
+|               | ![gaia-icon-172](img/gaia-icon-172.png) |
+|               | ![gaia-icon-173](img/gaia-icon-173.png) |
+|               | ![gaia-icon-174](img/gaia-icon-174.png) |
+|               | ![gaia-icon-175](img/gaia-icon-175.png) |
+|               | ![gaia-icon-176](img/gaia-icon-176.png) |
+|               | ![gaia-icon-177](img/gaia-icon-177.png) |
+|               | ![gaia-icon-178](img/gaia-icon-178.png) |
+|               | ![gaia-icon-179](img/gaia-icon-179.png) |
+|               | ![gaia-icon-180](img/gaia-icon-180.png) |
+|               | ![gaia-icon-181](img/gaia-icon-181.png) |
+|               | ![gaia-icon-182](img/gaia-icon-182.png) |
+|               | ![gaia-icon-183](img/gaia-icon-183.png) |
+|               | ![gaia-icon-184](img/gaia-icon-184.png) |
+|               | ![gaia-icon-185](img/gaia-icon-185.png) |
+|               | ![gaia-icon-186](img/gaia-icon-186.png) |
+|               | ![gaia-icon-187](img/gaia-icon-187.png) |
+|               | ![gaia-icon-188](img/gaia-icon-188.png) |
+|               | ![gaia-icon-189](img/gaia-icon-189.png) |
+|               | ![gaia-icon-190](img/gaia-icon-190.png) |
+|               | ![gaia-icon-191](img/gaia-icon-191.png) |
+|               | ![gaia-icon-192](img/gaia-icon-192.png) |
+|               | ![gaia-icon-193](img/gaia-icon-193.png) |
+|               | ![gaia-icon-194](img/gaia-icon-194.png) |
+|               | ![gaia-icon-195](img/gaia-icon-195.png) |
+|               | ![gaia-icon-196](img/gaia-icon-196.png) |
+|               | ![gaia-icon-197](img/gaia-icon-197.png) |
+|               | ![gaia-icon-198](img/gaia-icon-198.png) |
+|               | ![gaia-icon-199](img/gaia-icon-199.png) |
+|               | ![gaia-icon-200](img/gaia-icon-200.png) |
+|               | ![gaia-icon-201](img/gaia-icon-201.png) |
+|               | ![gaia-icon-202](img/gaia-icon-202.png) |
+|               | ![gaia-icon-203](img/gaia-icon-203.png) |
+|               | ![gaia-icon-204](img/gaia-icon-204.png) |
+|               | ![gaia-icon-205](img/gaia-icon-205.png) |
+|               | ![gaia-icon-206](img/gaia-icon-206.png) |
+|               | ![gaia-icon-207](img/gaia-icon-207.png) |
+|               | ![gaia-icon-208](img/gaia-icon-208.png) |
+|               | ![gaia-icon-209](img/gaia-icon-209.png) |
+|               | ![gaia-icon-210](img/gaia-icon-210.png) |
+|               | ![gaia-icon-211](img/gaia-icon-211.png) |
+|               | ![gaia-icon-212](img/gaia-icon-212.png) |
+|               | ![gaia-icon-213](img/gaia-icon-213.png) |
+|               | ![gaia-icon-214](img/gaia-icon-214.png) |
+|               | ![gaia-icon-215](img/gaia-icon-215.png) |
+|               | ![gaia-icon-216](img/gaia-icon-216.png) |
+|               | ![gaia-icon-217](img/gaia-icon-217.png) |
+
