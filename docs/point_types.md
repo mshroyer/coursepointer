@@ -228,96 +228,187 @@ have.
 | fuel                | ![gaia-icon-40](img/gaia-icon-40.png)   |
 | garden              | ![gaia-icon-41](img/gaia-icon-41.png)   |
 | gate                | ![gaia-icon-42](img/gaia-icon-42.png)   |
-| generic             | ![gaia-icon-43](img/gaia-icon-43.png)   |
-| geyser              | ![gaia-icon-44](img/gaia-icon-44.png)   |
-| ghost-town          | ![gaia-icon-45](img/gaia-icon-45.png)   |
-| golf                | ![gaia-icon-46](img/gaia-icon-46.png)   |
-| grass               | ![gaia-icon-47](img/gaia-icon-47.png)   |
-| ground-blind        | ![gaia-icon-48](img/gaia-icon-48.png)   |
-| harbor              | ![gaia-icon-49](img/gaia-icon-49.png)   |
-| heart               | ![gaia-icon-50](img/gaia-icon-50.png)   |
-| helipad             | ![gaia-icon-51](img/gaia-icon-51.png)   |
-| heliport            | ![gaia-icon-52](img/gaia-icon-52.png)   |
-| horse               | ![gaia-icon-53](img/gaia-icon-53.png)   |
-| hospital            | ![gaia-icon-54](img/gaia-icon-54.png)   |
-| hotspring           | ![gaia-icon-55](img/gaia-icon-55.png)   |
-| information         | ![gaia-icon-56](img/gaia-icon-56.png)   |
-| known-route         | ![gaia-icon-57](img/gaia-icon-57.png)   |
-| lake                | ![gaia-icon-58](img/gaia-icon-58.png)   |
-| lighthouse          | ![gaia-icon-59](img/gaia-icon-59.png)   |
-| lodging             | ![gaia-icon-60](img/gaia-icon-60.png)   |
-| logging             | ![gaia-icon-61](img/gaia-icon-61.png)   |
-| market              | ![gaia-icon-62](img/gaia-icon-62.png)   |
-| marsh               | ![gaia-icon-63](img/gaia-icon-63.png)   |
-| mine                | ![gaia-icon-64](img/gaia-icon-64.png)   |
-| minefield           | ![gaia-icon-65](img/gaia-icon-65.png)   |
-| mobilephone         | ![gaia-icon-66](img/gaia-icon-66.png)   |
-| moose               | ![gaia-icon-67](img/gaia-icon-67.png)   |
-| mud                 | ![gaia-icon-68](img/gaia-icon-68.png)   |
-| museum              | ![gaia-icon-69](img/gaia-icon-69.png)   |
-| mushroom            | ![gaia-icon-70](img/gaia-icon-70.png)   |
-| natural-spring      | ![gaia-icon-71](img/gaia-icon-71.png)   |
-| no-admittance-1     | ![gaia-icon-72](img/gaia-icon-72.png)   |
-| no-admittance-2     | ![gaia-icon-73](img/gaia-icon-73.png)   |
-| number-0            | ![gaia-icon-74](img/gaia-icon-74.png)   |
-| number-1            | ![gaia-icon-75](img/gaia-icon-75.png)   |
-| number-2            | ![gaia-icon-76](img/gaia-icon-76.png)   |
-| number-3            | ![gaia-icon-77](img/gaia-icon-77.png)   |
-| number-4            | ![gaia-icon-78](img/gaia-icon-78.png)   |
-| number-5            | ![gaia-icon-79](img/gaia-icon-79.png)   |
-| number-6            | ![gaia-icon-80](img/gaia-icon-80.png)   |
-| number-7            | ![gaia-icon-81](img/gaia-icon-81.png)   |
-| number-8            | ![gaia-icon-82](img/gaia-icon-82.png)   |
-| number-9            | ![gaia-icon-83](img/gaia-icon-83.png)   |
-| off-road            | ![gaia-icon-84](img/gaia-icon-84.png)   |
-| oil-well            | ![gaia-icon-85](img/gaia-icon-85.png)   |
-| park                | ![gaia-icon-86](img/gaia-icon-86.png)   |
-| parking             | ![gaia-icon-87](img/gaia-icon-87.png)   |
-| peak                | ![gaia-icon-88](img/gaia-icon-88.png)   |
-| petroglyph          | ![gaia-icon-89](img/gaia-icon-89.png)   |
-| picnic              | ![gaia-icon-90](img/gaia-icon-90.png)   |
-| pitch               | ![gaia-icon-91](img/gaia-icon-91.png)   |
-| playground          | ![gaia-icon-92](img/gaia-icon-92.png)   |
-| police              | ![gaia-icon-93](img/gaia-icon-93.png)   |
-| polling-place       | ![gaia-icon-94](img/gaia-icon-94.png)   |
-| potable-water       | ![gaia-icon-95](img/gaia-icon-95.png)   |
-| prison              | ![gaia-icon-96](img/gaia-icon-96.png)   |
-| rail                | ![gaia-icon-97](img/gaia-icon-97.png)   |
-| railroad            | ![gaia-icon-98](img/gaia-icon-98.png)   |
-| ranger-station      | ![gaia-icon-99](img/gaia-icon-99.png)   |
-| reef                | ![gaia-icon-100](img/gaia-icon-100.png) |
-| restaurant          | ![gaia-icon-101](img/gaia-icon-101.png) |
-| resupply            | ![gaia-icon-102](img/gaia-icon-102.png) |
-| ruins               | ![gaia-icon-103](img/gaia-icon-103.png) |
-| rv-park             | ![gaia-icon-104](img/gaia-icon-104.png) |
-| saddle              | ![gaia-icon-105](img/gaia-icon-105.png) |
-| sand-dune           | ![gaia-icon-106](img/gaia-icon-106.png) |
-| scat                | ![gaia-icon-107](img/gaia-icon-107.png) |
-| scrub               | ![gaia-icon-108](img/gaia-icon-108.png) |
-| shelter             | ![gaia-icon-109](img/gaia-icon-109.png) |
-| shower              | ![gaia-icon-110](img/gaia-icon-110.png) |
-| skiing              | ![gaia-icon-111](img/gaia-icon-111.png) |
-| snowflake           | ![gaia-icon-112](img/gaia-icon-112.png) |
-| snowmobile          | ![gaia-icon-113](img/gaia-icon-113.png) |
-| square              | ![gaia-icon-114](img/gaia-icon-114.png) |
-| star                | ![gaia-icon-115](img/gaia-icon-115.png) |
-| steps               | ![gaia-icon-116](img/gaia-icon-116.png) |
-| stone               | ![gaia-icon-117](img/gaia-icon-117.png) |
-| suitcase            | ![gaia-icon-118](img/gaia-icon-118.png) |
-| swimming            | ![gaia-icon-119](img/gaia-icon-119.png) |
-| toilets             | ![gaia-icon-120](img/gaia-icon-120.png) |
-| track-deer          | ![gaia-icon-121](img/gaia-icon-121.png) |
-| track-dog           | ![gaia-icon-122](img/gaia-icon-122.png) |
-| trail-camera        | ![gaia-icon-123](img/gaia-icon-123.png) |
-| trailhead           | ![gaia-icon-124](img/gaia-icon-124.png) |
-| trash               | ![gaia-icon-125](img/gaia-icon-125.png) |
-| tree-fall           | ![gaia-icon-126](img/gaia-icon-126.png) |
-| tree-stand          | ![gaia-icon-127](img/gaia-icon-127.png) |
-| triangle            | ![gaia-icon-128](img/gaia-icon-128.png) |
-| turkey              | ![gaia-icon-129](img/gaia-icon-129.png) |
-| volcano             | ![gaia-icon-130](img/gaia-icon-130.png) |
-| water               | ![gaia-icon-131](img/gaia-icon-131.png) |
-| waterfall           | ![gaia-icon-132](img/gaia-icon-132.png) |
-| wetland             | ![gaia-icon-133](img/gaia-icon-133.png) |
-| wood                |                                         |
+| geyser              | ![gaia-icon-43](img/gaia-icon-43.png)   |
+| ghost-town          | ![gaia-icon-44](img/gaia-icon-44.png)   |
+| golf                | ![gaia-icon-45](img/gaia-icon-45.png)   |
+| grass               | ![gaia-icon-46](img/gaia-icon-46.png)   |
+| ground-blind        | ![gaia-icon-47](img/gaia-icon-47.png)   |
+| harbor              | ![gaia-icon-48](img/gaia-icon-48.png)   |
+| heart               | ![gaia-icon-49](img/gaia-icon-49.png)   |
+| helipad             | ![gaia-icon-50](img/gaia-icon-50.png)   |
+| heliport            | ![gaia-icon-51](img/gaia-icon-51.png)   |
+| horse               | ![gaia-icon-52](img/gaia-icon-52.png)   |
+| hospital            | ![gaia-icon-53](img/gaia-icon-53.png)   |
+| hotspring           | ![gaia-icon-54](img/gaia-icon-54.png)   |
+| information         | ![gaia-icon-55](img/gaia-icon-55.png)   |
+| known-route         | ![gaia-icon-56](img/gaia-icon-56.png)   |
+| lake                | ![gaia-icon-57](img/gaia-icon-57.png)   |
+| lighthouse          | ![gaia-icon-58](img/gaia-icon-58.png)   |
+| lodging             | ![gaia-icon-59](img/gaia-icon-59.png)   |
+| logging             | ![gaia-icon-60](img/gaia-icon-60.png)   |
+| market              | ![gaia-icon-61](img/gaia-icon-61.png)   |
+| marsh               | ![gaia-icon-62](img/gaia-icon-62.png)   |
+| mine                | ![gaia-icon-63](img/gaia-icon-63.png)   |
+| minefield           | ![gaia-icon-64](img/gaia-icon-64.png)   |
+| mobilephone         | ![gaia-icon-65](img/gaia-icon-65.png)   |
+| moose               | ![gaia-icon-66](img/gaia-icon-66.png)   |
+| mud                 | ![gaia-icon-67](img/gaia-icon-67.png)   |
+| museum              | ![gaia-icon-68](img/gaia-icon-68.png)   |
+| mushroom            | ![gaia-icon-69](img/gaia-icon-69.png)   |
+| natural-spring      | ![gaia-icon-70](img/gaia-icon-70.png)   |
+| no-admittance-1     | ![gaia-icon-71](img/gaia-icon-71.png)   |
+| no-admittance-2     | ![gaia-icon-72](img/gaia-icon-72.png)   |
+| number-0            | ![gaia-icon-73](img/gaia-icon-73.png)   |
+| number-1            | ![gaia-icon-74](img/gaia-icon-74.png)   |
+| number-2            | ![gaia-icon-75](img/gaia-icon-75.png)   |
+| number-3            | ![gaia-icon-76](img/gaia-icon-76.png)   |
+| number-4            | ![gaia-icon-77](img/gaia-icon-77.png)   |
+| number-5            | ![gaia-icon-78](img/gaia-icon-78.png)   |
+| number-6            | ![gaia-icon-79](img/gaia-icon-79.png)   |
+| number-7            | ![gaia-icon-80](img/gaia-icon-80.png)   |
+| number-8            | ![gaia-icon-81](img/gaia-icon-81.png)   |
+| number-9            | ![gaia-icon-82](img/gaia-icon-82.png)   |
+| off-road            | ![gaia-icon-83](img/gaia-icon-83.png)   |
+| oil-well            | ![gaia-icon-84](img/gaia-icon-84.png)   |
+| park                | ![gaia-icon-85](img/gaia-icon-85.png)   |
+| parking             | ![gaia-icon-86](img/gaia-icon-86.png)   |
+| peak                | ![gaia-icon-87](img/gaia-icon-87.png)   |
+| petroglyph          | ![gaia-icon-88](img/gaia-icon-88.png)   |
+| picnic              | ![gaia-icon-89](img/gaia-icon-89.png)   |
+| pitch               | ![gaia-icon-90](img/gaia-icon-90.png)   |
+| playground          | ![gaia-icon-91](img/gaia-icon-91.png)   |
+| police              | ![gaia-icon-92](img/gaia-icon-92.png)   |
+| polling-place       | ![gaia-icon-93](img/gaia-icon-93.png)   |
+| potable-water       | ![gaia-icon-94](img/gaia-icon-94.png)   |
+| prison              | ![gaia-icon-95](img/gaia-icon-95.png)   |
+| rail                | ![gaia-icon-96](img/gaia-icon-96.png)   |
+| railroad            | ![gaia-icon-97](img/gaia-icon-97.png)   |
+| ranger-station      | ![gaia-icon-98](img/gaia-icon-98.png)   |
+| reef                | ![gaia-icon-99](img/gaia-icon-99.png)   |
+| restaurant          | ![gaia-icon-100](img/gaia-icon-100.png) |
+| resupply            | ![gaia-icon-101](img/gaia-icon-101.png) |
+| ruins               | ![gaia-icon-102](img/gaia-icon-102.png) |
+| rv-park             | ![gaia-icon-103](img/gaia-icon-103.png) |
+| saddle              | ![gaia-icon-104](img/gaia-icon-104.png) |
+| sand-dune           | ![gaia-icon-105](img/gaia-icon-105.png) |
+| scat                | ![gaia-icon-106](img/gaia-icon-106.png) |
+| scrub               | ![gaia-icon-107](img/gaia-icon-107.png) |
+| shelter             | ![gaia-icon-108](img/gaia-icon-108.png) |
+| shower              | ![gaia-icon-109](img/gaia-icon-109.png) |
+| skiing              | ![gaia-icon-110](img/gaia-icon-110.png) |
+| snowflake           | ![gaia-icon-111](img/gaia-icon-111.png) |
+| snowmobile          | ![gaia-icon-112](img/gaia-icon-112.png) |
+| square              | ![gaia-icon-113](img/gaia-icon-113.png) |
+| star                | ![gaia-icon-114](img/gaia-icon-114.png) |
+| steps               | ![gaia-icon-115](img/gaia-icon-115.png) |
+| stone               | ![gaia-icon-116](img/gaia-icon-116.png) |
+| suitcase            | ![gaia-icon-117](img/gaia-icon-117.png) |
+| swimming            | ![gaia-icon-118](img/gaia-icon-118.png) |
+| toilets             | ![gaia-icon-119](img/gaia-icon-119.png) |
+| track-deer          | ![gaia-icon-120](img/gaia-icon-120.png) |
+| track-dog           | ![gaia-icon-121](img/gaia-icon-121.png) |
+| trail-camera        | ![gaia-icon-122](img/gaia-icon-122.png) |
+| trailhead           | ![gaia-icon-123](img/gaia-icon-123.png) |
+| trash               | ![gaia-icon-124](img/gaia-icon-124.png) |
+| tree-fall           | ![gaia-icon-125](img/gaia-icon-125.png) |
+| tree-stand          | ![gaia-icon-126](img/gaia-icon-126.png) |
+| triangle            | ![gaia-icon-127](img/gaia-icon-127.png) |
+| turkey              | ![gaia-icon-128](img/gaia-icon-128.png) |
+| volcano             | ![gaia-icon-129](img/gaia-icon-129.png) |
+| water               | ![gaia-icon-130](img/gaia-icon-130.png) |
+| waterfall           | ![gaia-icon-131](img/gaia-icon-131.png) |
+| wetland             | ![gaia-icon-132](img/gaia-icon-132.png) |
+| wood                | ![gaia-icon-133](img/gaia-icon-133.png) |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
