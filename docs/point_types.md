@@ -28,55 +28,55 @@ icon.
 | `summit`           | yes     | ![Summit](img/sample00b.png)          | ![Generic](img/edge1040sample00b.png) |
 | `valley`           | yes     | ![Valley](img/sample00c.png)          | ![Generic](img/edge1040sample00c.png) |
 | `water`            | yes     | ![Water](img/sample00d.png)           | ![Generic](img/edge1040sample00d.png) |
-| `food`             | yes     | ![Food](img/sample01a.png)            |                                       |
-| `danger`           | yes     | ![Danger](img/sample01b.png)          |                                       |
-| `left`             | no      | (1)                                   |                                       |
-| `right`            | no      | (1)                                   |                                       |
-| `straight`         | no      | (1)                                   |                                       |
-| `first_aid`        | yes     | ![FirstAid](img/sample02a.png)        |                                       |
-| `fourth_category`  | yes     | ![FourthCategory](img/sample02b.png)  |                                       |
-| `third_category`   | yes     | ![ThirdCategory](img/sample02c.png)   |                                       |
-| `second_category`  | yes     | ![SecondCategory](img/sample03a.png)  |                                       |
-| `first_category`   | yes     | ![FirstCategory](img/sample03b.png)   |                                       |
-| `hors_category`    | yes     | ![HorsCategory](img/sample03c.png)    |                                       |
-| `sprint`           | yes     | ![Sprint](img/sample03d.png)          |                                       |
-| `left_fork`        | no      | (1)                                   |                                       |
-| `right_fork`       | no      | (1)                                   |                                       |
-| `middle_fork`      | no      | (1)                                   |                                       |
-| `slight_left`      | no      | (1)                                   |                                       |
-| `sharp_left`       | no      | (1)                                   |                                       |
-| `slight_right`     | no      | (1)                                   |                                       |
-| `sharp_right`      | no      | (1)                                   |                                       |
-| `u_turn`           | no      | (1)                                   |                                       |
-| `segment_start`    | no      | (2)                                   |                                       |
-| `segment_end`      | no      | (2)                                   |                                       |
-| `campsite`         | yes     | ![Campsite](img/sample06a.png)        |                                       |
-| `aid_station`      | yes     | ![AidStation](img/sample06b.png)      |                                       |
-| `rest_area`        | yes     | ![RestArea](img/sample07a.png)        |                                       |
-| `general_distance` | yes     | ![GeneralDistance](img/sample07b.png) |                                       |
-| `service`          | yes     | ![Service](img/sample07c.png)         |                                       |
-| `energy_gel`       | yes     | ![EnergyGel](img/sample07d.png)       |                                       |
-| `sports_drink`     | yes     | ![SportsDrink](img/sample08a.png)     |                                       |
-| `mile_marker`      | yes     | ![MileMarker](img/sample08b.png)      |                                       |
-| `checkpoint`       | yes     | ![Checkpoint](img/sample08c.png)      |                                       |
-| `shelter`          | yes     | ![Shelter](img/sample08d.png)         |                                       |
-| `meeting_spot`     | yes     | ![MeetingSpot](img/sample09a.png)     |                                       |
-| `overlook`         | yes     | ![Overlook](img/sample09b.png)        |                                       |
-| `toilet`           | yes     | ![Toilet](img/sample09c.png)          |                                       |
-| `shower`           | yes     | ![Shower](img/sample09d.png)          |                                       |
-| `gear`             | yes     | ![Gear](img/sample10a.png)            |                                       |
-| `sharp_curve`      | yes     | ![SharpCurve](img/sample10b.png)      |                                       |
-| `steep_incline`    | yes     | ![SteepIncline](img/sample10c.png)    |                                       |
-| `tunnel`           | yes     | ![Tunnel](img/sample10d.png)          |                                       |
-| `bridge`           | yes     | ![Bridge](img/sample11a.png)          |                                       |
-| `obstacle`         | yes     | ![Obstacle](img/sample11b.png)        |                                       |
-| `crossing`         | yes     | ![Crossing](img/sample11c.png)        |                                       |
-| `store`            | yes     | ![Store](img/sample11d.png)           |                                       |
-| `transition`       | yes     | ![Transition](img/sample12a.png)      |                                       |
-| `navaid`           | yes     | ![Navaid](img/sample12b.png)          |                                       |
-| `transport`        | yes     | ![Transport](img/sample12c.png)       |                                       |
-| `alert`            | yes     | ![Alert](img/sample12d.png)           |                                       |
-| `info`             | yes     | ![Info](img/sample13a.png)            |                                       |
+| `food`             | yes     | ![Food](img/sample01a.png)            | ![Generic](img/edge1040sample01a.png) |
+| `danger`           | yes     | ![Danger](img/sample01b.png)          | ![Generic](img/edge1040sample01b.png) |
+| `left`             | no      | (1)                                   | ![Generic](img/edge1040sample01c.png) |
+| `right`            | no      | (1)                                   | ![Generic](img/edge1040sample01d.png) |
+| `straight`         | no      | (1)                                   | ![Generic](img/edge1040sample02a.png) |
+| `first_aid`        | yes     | ![FirstAid](img/sample02a.png)        | ![Generic](img/edge1040sample02b.png) |
+| `fourth_category`  | yes     | ![FourthCategory](img/sample02b.png)  | ![Generic](img/edge1040sample02c.png) |
+| `third_category`   | yes     | ![ThirdCategory](img/sample02c.png)   | ![Generic](img/edge1040sample02d.png) |
+| `second_category`  | yes     | ![SecondCategory](img/sample03a.png)  | ![Generic](img/edge1040sample03a.png) |
+| `first_category`   | yes     | ![FirstCategory](img/sample03b.png)   | ![Generic](img/edge1040sample03b.png) |
+| `hors_category`    | yes     | ![HorsCategory](img/sample03c.png)    | ![Generic](img/edge1040sample03c.png) |
+| `sprint`           | yes     | ![Sprint](img/sample03d.png)          | ![Generic](img/edge1040sample03d.png) |
+| `left_fork`        | no      | (1)                                   | ![Generic](img/edge1040sample04a.png) |
+| `right_fork`       | no      | (1)                                   | ![Generic](img/edge1040sample04b.png) |
+| `middle_fork`      | no      | (1)                                   | ![Generic](img/edge1040sample04c.png) |
+| `slight_left`      | no      | (1)                                   | ![Generic](img/edge1040sample04d.png) |
+| `sharp_left`       | no      | (1)                                   | ![Generic](img/edge1040sample05a.png) |
+| `slight_right`     | no      | (1)                                   | ![Generic](img/edge1040sample05b.png) |
+| `sharp_right`      | no      | (1)                                   | ![Generic](img/edge1040sample05c.png) |
+| `u_turn`           | no      | (1)                                   | ![Generic](img/edge1040sample05d.png) |
+| `segment_start`    | no      | (2)                                   | ![Generic](img/edge1040sample06a.png) |
+| `segment_end`      | no      | (2)                                   | ![Generic](img/edge1040sample06b.png) |
+| `campsite`         | yes     | ![Campsite](img/sample06a.png)        | ![Generic](img/edge1040sample06c.png) |
+| `aid_station`      | yes     | ![AidStation](img/sample06b.png)      | ![Generic](img/edge1040sample06d.png) |
+| `rest_area`        | yes     | ![RestArea](img/sample07a.png)        | ![Generic](img/edge1040sample07a.png) |
+| `general_distance` | yes     | ![GeneralDistance](img/sample07b.png) | ![Generic](img/edge1040sample07b.png) |
+| `service`          | yes     | ![Service](img/sample07c.png)         | ![Generic](img/edge1040sample07c.png) |
+| `energy_gel`       | yes     | ![EnergyGel](img/sample07d.png)       | ![Generic](img/edge1040sample07d.png) |
+| `sports_drink`     | yes     | ![SportsDrink](img/sample08a.png)     | ![Generic](img/edge1040sample08a.png) |
+| `mile_marker`      | yes     | ![MileMarker](img/sample08b.png)      | ![Generic](img/edge1040sample08b.png) |
+| `checkpoint`       | yes     | ![Checkpoint](img/sample08c.png)      | ![Generic](img/edge1040sample08c.png) |
+| `shelter`          | yes     | ![Shelter](img/sample08d.png)         | ![Generic](img/edge1040sample08d.png) |
+| `meeting_spot`     | yes     | ![MeetingSpot](img/sample09a.png)     | ![Generic](img/edge1040sample09a.png) |
+| `overlook`         | yes     | ![Overlook](img/sample09b.png)        | ![Generic](img/edge1040sample09b.png) |
+| `toilet`           | yes     | ![Toilet](img/sample09c.png)          | ![Generic](img/edge1040sample09c.png) |
+| `shower`           | yes     | ![Shower](img/sample09d.png)          | ![Generic](img/edge1040sample09d.png) |
+| `gear`             | yes     | ![Gear](img/sample10a.png)            | ![Generic](img/edge1040sample10a.png) |
+| `sharp_curve`      | yes     | ![SharpCurve](img/sample10b.png)      | ![Generic](img/edge1040sample10b.png) |
+| `steep_incline`    | yes     | ![SteepIncline](img/sample10c.png)    | ![Generic](img/edge1040sample10c.png) |
+| `tunnel`           | yes     | ![Tunnel](img/sample10d.png)          | ![Generic](img/edge1040sample10d.png) |
+| `bridge`           | yes     | ![Bridge](img/sample11a.png)          | ![Generic](img/edge1040sample11a.png) |
+| `obstacle`         | yes     | ![Obstacle](img/sample11b.png)        | ![Generic](img/edge1040sample11b.png) |
+| `crossing`         | yes     | ![Crossing](img/sample11c.png)        | ![Generic](img/edge1040sample11c.png) |
+| `store`            | yes     | ![Store](img/sample11d.png)           | ![Generic](img/edge1040sample11d.png) |
+| `transition`       | yes     | ![Transition](img/sample12a.png)      | ![Generic](img/edge1040sample12a.png) |
+| `navaid`           | yes     | ![Navaid](img/sample12b.png)          | ![Generic](img/edge1040sample12b.png) |
+| `transport`        | yes     | ![Transport](img/sample12c.png)       | ![Generic](img/edge1040sample12c.png) |
+| `alert`            | yes     | ![Alert](img/sample12d.png)           | ![Generic](img/edge1040sample12d.png) |
+| `info`             | yes     | ![Info](img/sample13a.png)            | ![Generic](img/edge1040sample13d.png) |
 
 Bizarrely, the `shower` course point didn't show up at all my first time
 testing this on my Fenix, but then rendered the next time, with the exact same
