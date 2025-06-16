@@ -247,7 +247,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-forest:`              | ![gaia-icon-39](img/gaia-icon-39.png)   | `forest`                 |                   |
 | `:gaia-fuel:`                | ![gaia-icon-40](img/gaia-icon-40.png)   | `fuel-24`                | `service`         |
 | `:gaia-garden:`              | ![gaia-icon-41](img/gaia-icon-41.png)   | `garden-24`              | `overlook`        |
-| `:gaia-gate:`                | ![gaia-icon-42](img/gaia-icon-42.png)   | `gate`                   |                   |
+| `:gaia-gate:`                | ![gaia-icon-42](img/gaia-icon-42.png)   | `gate`                   | `obstacle`        |
 | `:gaia-geyser:`              | ![gaia-icon-43](img/gaia-icon-43.png)   | `geyser`                 | `overlook`        |
 | `:gaia-ghost-town:`          | ![gaia-icon-44](img/gaia-icon-44.png)   | `ghost-town`             | `overlook`        |
 | `:gaia-golf:`                | ![gaia-icon-45](img/gaia-icon-45.png)   | `golf-24`                |                   |
@@ -338,4 +338,4 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-water:`               | ![gaia-icon-130](img/gaia-icon-130.png) | `water-24`               | `water`           |
 | `:gaia-waterfall:`           | ![gaia-icon-131](img/gaia-icon-131.png) | `waterfall`              | `overlook`        |
 | `:gaia-wetland:`             | ![gaia-icon-132](img/gaia-icon-132.png) | `wetland-24`             |                   |
-| `:gaia-wood:`                | ![gaia-icon-133](img/gaia-icon-133.png) | `wood`                   |                   |
+| `:gaia-wood:`                | ![gaia-icon-133](img/gaia-icon-133.png) | `wood`                   | `service`         |
