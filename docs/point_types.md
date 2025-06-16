@@ -198,19 +198,22 @@ The Course Point column contains my interpretation of the course point type
 this Gaia GPS waypoint type best maps onto, with a blank defaulting to the
 `generic` type.  Of note, I abuse the `overlook` type to represent any sort of
 "oh cool look at that" waypoint, give its rendering as a camera icon on the
-devices I've tested.
+devices I've tested.  I also take liberties drawing meaning from waypoints'
+icons rather than their names, such as mapping numbers 1 through 4 to climb
+category course points, or "steps" to "steep climb", because they'll render
+similarly on devices as to on Gaia GPS.
 
 | Type                         | Icon                                    | Sym                      | Course Point      |
 |------------------------------|-----------------------------------------|--------------------------|-------------------|
 | `:gaia-pin:`                 | ![gaia-icon-0](img/gaia-icon-0.png)     | None                     |                   |
 | `:gaia-airport:`             | ![gaia-icon-1](img/gaia-icon-1.png)     | `airport-24`             | `transport`       |
 | `:gaia-attraction:`          | ![gaia-icon-2](img/gaia-icon-2.png)     | `attraction`             |                   |
-| `:gaia-beach:`               | ![gaia-icon-3](img/gaia-icon-3.png)     | `beach`                  | `rest_area`       |
+| `:gaia-beach:`               | ![gaia-icon-3](img/gaia-icon-3.png)     | `beach`                  |                   |
 | `:gaia-bear:`                | ![gaia-icon-4](img/gaia-icon-4.png)     | `bear`                   | `danger`          |
 | `:gaia-bicycle:`             | ![gaia-icon-5](img/gaia-icon-5.png)     | `bicycle-24`             | `transport`       |
 | `:gaia-binoculars:`          | ![gaia-icon-6](img/gaia-icon-6.png)     | `binoculars`             | `overlook`        |
 | `:gaia-bird:`                | ![gaia-icon-7](img/gaia-icon-7.png)     | `bird`                   |                   |
-| `:gaia-body-of-water:`       | ![gaia-icon-8](img/gaia-icon-8.png)     | `water`                  |                   |
+| `:gaia-body-of-water:`       | ![gaia-icon-8](img/gaia-icon-8.png)     | `water`                  | `water`           |
 | `:gaia-bridge:`              | ![gaia-icon-9](img/gaia-icon-9.png)     | `bridge`                 | `bridge`          |
 | `:gaia-building:`            | ![gaia-icon-10](img/gaia-icon-10.png)   | `building-24`            | `shelter`         |
 | `:gaia-bus:`                 | ![gaia-icon-11](img/gaia-icon-11.png)   | `bus`                    | `transport`       |
@@ -240,7 +243,7 @@ devices I've tested.
 | `:gaia-fence:`               | ![gaia-icon-35](img/gaia-icon-35.png)   | `fence`                  | `obstacle`        |
 | `:gaia-fire-lookout:`        | ![gaia-icon-36](img/gaia-icon-36.png)   | `fire-lookout`           | `overlook`        |
 | `:gaia-fire-station:`        | ![gaia-icon-37](img/gaia-icon-37.png)   | `fire-station-24`        | `shelter`         |
-| `:gaia-fish:`                | ![gaia-icon-38](img/gaia-icon-38.png)   | `fish`                   |                   |
+| `:gaia-fish:`                | ![gaia-icon-38](img/gaia-icon-38.png)   | `fish`                   | `food`            |
 | `:gaia-forest:`              | ![gaia-icon-39](img/gaia-icon-39.png)   | `forest`                 |                   |
 | `:gaia-fuel:`                | ![gaia-icon-40](img/gaia-icon-40.png)   | `fuel-24`                | `service`         |
 | `:gaia-garden:`              | ![gaia-icon-41](img/gaia-icon-41.png)   | `garden-24`              | `overlook`        |
@@ -288,22 +291,22 @@ devices I've tested.
 | `:gaia-off-road:`            | ![gaia-icon-83](img/gaia-icon-83.png)   | `off-road`               |                   |
 | `:gaia-oil-well:`            | ![gaia-icon-84](img/gaia-icon-84.png)   | `oil-well-24`            |                   |
 | `:gaia-park:`                | ![gaia-icon-85](img/gaia-icon-85.png)   | `park-24`                | `rest_area`       |
-| `:gaia-parking:`             | ![gaia-icon-86](img/gaia-icon-86.png)   | `parking-24`             |                   |
+| `:gaia-parking:`             | ![gaia-icon-86](img/gaia-icon-86.png)   | `parking-24`             | `transport`       |
 | `:gaia-peak:`                | ![gaia-icon-87](img/gaia-icon-87.png)   | `peak`                   | `summit`          |
 | `:gaia-petroglyph:`          | ![gaia-icon-88](img/gaia-icon-88.png)   | `petroglyph`             | `overlook`        |
 | `:gaia-picnic:`              | ![gaia-icon-89](img/gaia-icon-89.png)   | `picnic`                 | `rest_area`       |
 | `:gaia-pitch:`               | ![gaia-icon-90](img/gaia-icon-90.png)   | `pitch-24`               |                   |
 | `:gaia-playground:`          | ![gaia-icon-91](img/gaia-icon-91.png)   | `playground-24`          | `rest_area`       |
 | `:gaia-police:`              | ![gaia-icon-92](img/gaia-icon-92.png)   | `police`                 | `service`         |
-| `:gaia-polling-place:`       | ![gaia-icon-93](img/gaia-icon-93.png)   | `polling-place-24`       | `service`         |
+| `:gaia-polling-place:`       | ![gaia-icon-93](img/gaia-icon-93.png)   | `polling-place-24`       |                   |
 | `:gaia-potable-water:`       | ![gaia-icon-94](img/gaia-icon-94.png)   | `potable-water`          | `water`           |
 | `:gaia-prison:`              | ![gaia-icon-95](img/gaia-icon-95.png)   | `prison-24`              |                   |
 | `:gaia-rail:`                | ![gaia-icon-96](img/gaia-icon-96.png)   | `rail-24`                | `transport`       |
 | `:gaia-railroad:`            | ![gaia-icon-97](img/gaia-icon-97.png)   | `railroad`               |                   |
-| `:gaia-ranger-station:`      | ![gaia-icon-98](img/gaia-icon-98.png)   | `ranger-station`         |                   |
+| `:gaia-ranger-station:`      | ![gaia-icon-98](img/gaia-icon-98.png)   | `ranger-station`         | `service`         |
 | `:gaia-reef:`                | ![gaia-icon-99](img/gaia-icon-99.png)   | `reef`                   |                   |
 | `:gaia-restaurant:`          | ![gaia-icon-100](img/gaia-icon-100.png) | `restaurant-24`          | `food`            |
-| `:gaia-resupply:`            | ![gaia-icon-101](img/gaia-icon-101.png) | `resupply`               | `store`            |
+| `:gaia-resupply:`            | ![gaia-icon-101](img/gaia-icon-101.png) | `resupply`               | `store`           |
 | `:gaia-ruins:`               | ![gaia-icon-102](img/gaia-icon-102.png) | `ruins`                  | `overlook`        |
 | `:gaia-rv-park:`             | ![gaia-icon-103](img/gaia-icon-103.png) | `rv-park`                | `rest_area`       |
 | `:gaia-saddle:`              | ![gaia-icon-104](img/gaia-icon-104.png) | `saddle`                 | `gear`            |
@@ -317,7 +320,7 @@ devices I've tested.
 | `:gaia-snowmobile:`          | ![gaia-icon-112](img/gaia-icon-112.png) | `snowmobile`             | `transport`       |
 | `:gaia-square:`              | ![gaia-icon-113](img/gaia-icon-113.png) | `square-24`              |                   |
 | `:gaia-star:`                | ![gaia-icon-114](img/gaia-icon-114.png) | `star-24`                |                   |
-| `:gaia-steps:`               | ![gaia-icon-115](img/gaia-icon-115.png) | `steps`                  |                   |
+| `:gaia-steps:`               | ![gaia-icon-115](img/gaia-icon-115.png) | `steps`                  | `steep_incline`   |
 | `:gaia-stone:`               | ![gaia-icon-116](img/gaia-icon-116.png) | `stone`                  |                   |
 | `:gaia-suitcase:`            | ![gaia-icon-117](img/gaia-icon-117.png) | `suitcase-24`            |                   |
 | `:gaia-swimming:`            | ![gaia-icon-118](img/gaia-icon-118.png) | `swimming-24`            |                   |
@@ -328,7 +331,7 @@ devices I've tested.
 | `:gaia-trailhead:`           | ![gaia-icon-123](img/gaia-icon-123.png) | `trailhead`              |                   |
 | `:gaia-trash:`               | ![gaia-icon-124](img/gaia-icon-124.png) | `trash`                  |                   |
 | `:gaia-tree-fall:`           | ![gaia-icon-125](img/gaia-icon-125.png) | `tree-fall`              | `obstacle`        |
-| `:gaia-tree-stand:`          | ![gaia-icon-126](img/gaia-icon-126.png) | `tree-stand`             |                   |
+| `:gaia-tree-stand:`          | ![gaia-icon-126](img/gaia-icon-126.png) | `tree-stand`             | `overlook`        |
 | `:gaia-triangle:`            | ![gaia-icon-127](img/gaia-icon-127.png) | `triangle-24`            |                   |
 | `:gaia-turkey:`              | ![gaia-icon-128](img/gaia-icon-128.png) | `turkey`                 |                   |
 | `:gaia-volcano:`             | ![gaia-icon-129](img/gaia-icon-129.png) | `volcano`                | `overlook`        |
