@@ -31,6 +31,7 @@ tracing-subscriber = { version = "0.3.19", optional = true, features = ["env-fil
 tracing-span-tree = "0.1.1"
 strum = { version = "0.27.1", features = ["derive"] }
 sys-locale = { version = "0.3.2", optional = true }
+phf = { version = "0.11.3", features = ["macros"] }
 
 [dev-dependencies]
 anyhow = "1.0.98"
