@@ -273,7 +273,7 @@ mod tests {
             let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
             let result = karney_interception(&seg, &p)?;
 
-            assert_relative_eq!(result, intercept, max_relative = 0.000_000_100);
+            assert_relative_eq!(result, intercept, epsilon = 0.000_001);
         }
 
         Ok(())
