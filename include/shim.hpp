@@ -26,6 +26,10 @@ void gnomonic_reverse(
     double lat0, double lon0, double x, double y,
     double& lat, double& lon);
 
+void geocentric_forward(
+    double lat, double lon, double h,
+    double& x, double& y, double& z);
+
 }  // namespace CoursePointer
 
 #endif  // !defined COURSEPOINTER_GEO_SHIM_H

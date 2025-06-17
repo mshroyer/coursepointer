@@ -1,6 +1,8 @@
+#include <GeographicLib/Geocentric.hpp>
 #include <GeographicLib/Geodesic.hpp>
 #include <GeographicLib/Gnomonic.hpp>
 
+using GeographicLib::Geocentric;
 using GeographicLib::Geodesic;
 using GeographicLib::Gnomonic;
 
@@ -35,6 +37,13 @@ void gnomonic_reverse(
     double& lat, double& lon) {
   static auto gnomonic = Gnomonic(Geodesic::WGS84());
   gnomonic.Reverse(lat0, lon0, x, y, lat, lon);
+}
+
+void geocentric_forward(
+    double lat, double lon, double h,
+    double& x, double& y, double& z) {
+  static auto geocentric = Geocentric::WGS84();
+  geocentric.Forward(lat, lon, h, x, y, z);
 }
 
 }  // namespace CoursePointer

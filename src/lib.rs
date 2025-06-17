@@ -198,5 +198,14 @@ mod ffi {
             lat: &mut f64,
             lon: &mut f64,
         ) -> Result<()>;
+
+        fn geocentric_forward(
+            lat: f64,
+            lon: f64,
+            h: f64,
+            x: &mut f64,
+            y: &mut f64,
+            z: &mut f64,
+        ) -> Result<()>;
     }
 }

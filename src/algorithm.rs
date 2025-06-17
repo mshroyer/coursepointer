@@ -191,6 +191,8 @@ impl FromGeoPoints<GeographicError> for GeoSegment {
             point2,
             geo_distance: inverse.geo_distance,
             azimuth1: inverse.azimuth1,
+            xyz1: geocentric_forward(&point1)?,
+            xyz2: geocentric_forward(&point2)?,
         })
     }
 }

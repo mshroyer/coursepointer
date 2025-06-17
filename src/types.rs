@@ -120,11 +120,20 @@ impl RelativeEq for GeoPoint {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
+pub struct GeoXYZ {
+    pub x: Meter<f64>,
+    pub y: Meter<f64>,
+    pub z: Meter<f64>,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GeoSegment {
     pub point1: GeoPoint,
     pub point2: GeoPoint,
     pub geo_distance: Meter<f64>,
     pub azimuth1: Degree<f64>,
+    pub xyz1: GeoXYZ,
+    pub xyz2: GeoXYZ,
 }
 
 /// A point on a 2D projection.

@@ -6,7 +6,7 @@ use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
 use crate::measure::{DEG, Degree};
-use crate::types::{GeoPoint, TypeError, XYPoint};
+use crate::types::{GeoPoint, GeoXYZ, TypeError, XYPoint};
 
 #[derive(Error, Debug)]
 pub enum GeographicError {
@@ -130,6 +130,25 @@ pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint
         &mut lon_deg,
     )?;
     Ok(GeoPoint::new(lat_deg * DEG, lon_deg * DEG, None)?)
+}
+
+pub fn geocentric_forward(point: &GeoPoint) -> Result<GeoXYZ> {
+    let mut x = 0.0;
+    let mut y = 0.0;
+    let mut z = 0.0;
+    crate::ffi::geocentric_forward(
+        point.lat().value_unsafe,
+        point.lon().value_unsafe,
+        0.0,
+        &mut x,
+        &mut y,
+        &mut z
+    )?;
+    Ok(GeoXYZ {
+        x: x * M,
+        y: y * M,
+        z: z * M,
+    })
 }
 
 #[cfg(test)]

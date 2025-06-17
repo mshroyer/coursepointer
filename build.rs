@@ -46,6 +46,7 @@ mod sources {
         let filenames = vec![
             "DST.cpp",
             "EllipticFunction.cpp",
+            "Geocentric.cpp",
             "Geodesic.cpp",
             "GeodesicExact.cpp",
             "GeodesicLine.cpp",
