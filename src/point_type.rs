@@ -29,6 +29,7 @@ pub fn get_course_point_type(creator: GpxCreator, waypoint: &GpxWaypoint) -> Cou
 }
 
 static GAIAGPS_SYMS: phf::Map<&'static str, CoursePointType> = phf_map! {
+    "airport-24" => CoursePointType::Transport,
     "bear" => CoursePointType::Danger,
     "bicycle-24" => CoursePointType::Transport,
     "binoculars" => CoursePointType::Overlook,
