@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use phf::phf_map;
-
+use tracing::warn;
 use crate::fit::CoursePointType;
 use crate::gpx::GpxWaypoint;
 
@@ -52,7 +52,6 @@ static GAIAGPS_SYMS: phf::Map<&'static str, CoursePointType> = phf_map! {
     "fire-station-24" => CoursePointType::FirstAid,
     "fish" => CoursePointType::Food,
     "fuel-24" => CoursePointType::Service,
-    "garden-24" => CoursePointType::Overlook,
     "gate" => CoursePointType::Obstacle,
     "geyser" => CoursePointType::Overlook,
     "ghost-town" => CoursePointType::Overlook,
@@ -62,15 +61,13 @@ static GAIAGPS_SYMS: phf::Map<&'static str, CoursePointType> = phf_map! {
     "hospital-24" => CoursePointType::AidStation,
     "information" => CoursePointType::Info,
     "known-route" => CoursePointType::Transition,
-    "lake" => CoursePointType::Overlook,
-    "lighthouse-24" => CoursePointType::Shelter,
+    "lighthouse-24" => CoursePointType::Overlook,
     "lodging-24" => CoursePointType::Shelter,
     "market" => CoursePointType::Store,
     "minefield-24" => CoursePointType::Danger,
     "moose" => CoursePointType::Danger,
     "mud" => CoursePointType::Obstacle,
     "museum" => CoursePointType::Info,
-    "natural-spring" => CoursePointType::Overlook,
     "no-admittance-1" => CoursePointType::Obstacle,
     "no-admittance-2" => CoursePointType::Obstacle,
     "number-1" => CoursePointType::FirstCategory,
@@ -86,7 +83,7 @@ static GAIAGPS_SYMS: phf::Map<&'static str, CoursePointType> = phf_map! {
     "police" => CoursePointType::Service,
     "potable-water" => CoursePointType::Water,
     "rail-24" => CoursePointType::Transport,
-    "ranger-station" => CoursePointType::Service,
+    "ranger-station" => CoursePointType::Shelter,
     "restaurant-24" => CoursePointType::Food,
     "resupply" => CoursePointType::Store,
     "ruins" => CoursePointType::Overlook,
@@ -113,14 +110,20 @@ fn get_gaiagps_point_type(waypoint: &GpxWaypoint) -> CoursePointType {
             Some(p) => *p,
             None => CoursePointType::Generic,
         },
-        None => CoursePointType::Generic,
+        None => {
+            warn!("Gaia GPS GPX missing waypoint sym");
+            CoursePointType::Generic
+        }
     }
 }
 
 fn get_ridewithgps_point_type(waypoint: &GpxWaypoint) -> CoursePointType {
     match &waypoint.type_ {
-        Some(t) => CoursePointType::from_str(t).unwrap_or_else(|e| CoursePointType::Generic),
-        None => CoursePointType::Generic,
+        Some(t) => CoursePointType::from_str(t).unwrap_or_else(|_| CoursePointType::Generic),
+        None => {
+            warn!("Ride with GPS GPX missing waypoint type");
+            CoursePointType::Generic
+        }
     }
 }
 

@@ -36,9 +36,10 @@ use tracing::{Level, debug, span};
 
 use crate::course::{CourseError, CoursePoint, CourseSetBuilder, Waypoint};
 pub use crate::course::{CourseOptions, InterceptStrategy};
-use crate::fit::{CourseFile, CoursePointType};
+use crate::fit::CourseFile;
 use crate::gpx::{GpxItem, GpxReader};
 pub use crate::measure::{Kilometer, Mile};
+use crate::point_type::{get_course_point_type, get_gpx_creator, GpxCreator};
 use crate::types::TypeError;
 
 #[derive(Error, Debug)]
@@ -88,11 +89,16 @@ pub fn convert_gpx<R: BufRead, W: Write>(
         let _guard = span.enter();
         let mut num_items = 0usize;
         let mut skipped_items = 0usize;
+        let mut creator = GpxCreator::Unknown;
         let gpx_reader = GpxReader::from_reader(gpx_input);
         for item in gpx_reader {
             let item = item?;
             num_items += 1;
             match item {
+                GpxItem::Creator(s) => {
+                    creator = get_gpx_creator(s.as_str());
+                }
+
                 GpxItem::TrackOrRoute => {
                     builder.add_course();
                 }
@@ -109,7 +115,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                     num_waypoints += 1;
                     builder.add_waypoint(Waypoint {
                         point: wpt.point,
-                        point_type: CoursePointType::Generic,
+                        point_type: get_course_point_type(creator, &wpt),
                         name: wpt.name,
                     });
                 }

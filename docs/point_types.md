@@ -246,7 +246,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-fish:`                | ![gaia-icon-38](img/gaia-icon-38.png)   | `fish`                   | `food`            |
 | `:gaia-forest:`              | ![gaia-icon-39](img/gaia-icon-39.png)   | `forest`                 |                   |
 | `:gaia-fuel:`                | ![gaia-icon-40](img/gaia-icon-40.png)   | `fuel-24`                | `service`         |
-| `:gaia-garden:`              | ![gaia-icon-41](img/gaia-icon-41.png)   | `garden-24`              | `overlook`        |
+| `:gaia-garden:`              | ![gaia-icon-41](img/gaia-icon-41.png)   | `garden-24`              |                   |
 | `:gaia-gate:`                | ![gaia-icon-42](img/gaia-icon-42.png)   | `gate`                   | `obstacle`        |
 | `:gaia-geyser:`              | ![gaia-icon-43](img/gaia-icon-43.png)   | `geyser`                 | `overlook`        |
 | `:gaia-ghost-town:`          | ![gaia-icon-44](img/gaia-icon-44.png)   | `ghost-town`             | `overlook`        |
@@ -262,8 +262,8 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-hotspring:`           | ![gaia-icon-54](img/gaia-icon-54.png)   | `hotspring`              |                   |
 | `:gaia-information:`         | ![gaia-icon-55](img/gaia-icon-55.png)   | `information`            | `info`            |
 | `:gaia-known-route:`         | ![gaia-icon-56](img/gaia-icon-56.png)   | `known-route`            | `transition`      |
-| `:gaia-lake:`                | ![gaia-icon-57](img/gaia-icon-57.png)   | `lake`                   | `overlook`        |
-| `:gaia-lighthouse:`          | ![gaia-icon-58](img/gaia-icon-58.png)   | `lighthouse-24`          | `shelter`         |
+| `:gaia-lake:`                | ![gaia-icon-57](img/gaia-icon-57.png)   | `lake`                   |                   |
+| `:gaia-lighthouse:`          | ![gaia-icon-58](img/gaia-icon-58.png)   | `lighthouse-24`          | `overlook`        |
 | `:gaia-lodging:`             | ![gaia-icon-59](img/gaia-icon-59.png)   | `lodging-24`             | `shelter`         |
 | `:gaia-logging:`             | ![gaia-icon-60](img/gaia-icon-60.png)   | `logging-24`             |                   |
 | `:gaia-market:`              | ![gaia-icon-61](img/gaia-icon-61.png)   | `market`                 | `store`           |
@@ -275,7 +275,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-mud:`                 | ![gaia-icon-67](img/gaia-icon-67.png)   | `mud`                    | `obstacle`        |
 | `:gaia-museum:`              | ![gaia-icon-68](img/gaia-icon-68.png)   | `museum`                 | `info`            |
 | `:gaia-mushroom:`            | ![gaia-icon-69](img/gaia-icon-69.png)   | `mushroom`               |                   |
-| `:gaia-natural-spring:`      | ![gaia-icon-70](img/gaia-icon-70.png)   | `natural-spring`         | `overlook`        |
+| `:gaia-natural-spring:`      | ![gaia-icon-70](img/gaia-icon-70.png)   | `natural-spring`         |                   |
 | `:gaia-no-admittance-1:`     | ![gaia-icon-71](img/gaia-icon-71.png)   | `no-admittance-1`        | `obstacle`        |
 | `:gaia-no-admittance-2:`     | ![gaia-icon-72](img/gaia-icon-72.png)   | `no-admittance-2`        | `obstacle`        |
 | `:gaia-number-0:`            | ![gaia-icon-73](img/gaia-icon-73.png)   | `number-0`               |                   |
@@ -303,7 +303,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-prison:`              | ![gaia-icon-95](img/gaia-icon-95.png)   | `prison-24`              |                   |
 | `:gaia-rail:`                | ![gaia-icon-96](img/gaia-icon-96.png)   | `rail-24`                | `transport`       |
 | `:gaia-railroad:`            | ![gaia-icon-97](img/gaia-icon-97.png)   | `railroad`               |                   |
-| `:gaia-ranger-station:`      | ![gaia-icon-98](img/gaia-icon-98.png)   | `ranger-station`         | `service`         |
+| `:gaia-ranger-station:`      | ![gaia-icon-98](img/gaia-icon-98.png)   | `ranger-station`         | `shelter`         |
 | `:gaia-reef:`                | ![gaia-icon-99](img/gaia-icon-99.png)   | `reef`                   |                   |
 | `:gaia-restaurant:`          | ![gaia-icon-100](img/gaia-icon-100.png) | `restaurant-24`          | `food`            |
 | `:gaia-resupply:`            | ![gaia-icon-101](img/gaia-icon-101.png) | `resupply`               | `store`           |
