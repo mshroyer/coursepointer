@@ -7,13 +7,13 @@
 
 use std::ops::{Mul, Sub};
 
-use dimensioned::si::{M, Meter};
+use dimensioned::si::{Meter, M};
 use thiserror::Error;
 use tracing::instrument;
 
 use crate::geographic::{
-    GeographicError, geocentric_forward, geodesic_direct, geodesic_inverse, gnomonic_forward,
-    gnomonic_reverse,
+    geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
+    GeographicError,
 };
 use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, GeoSegmentPoint, XyPoint, XyzPoint};
 
@@ -102,11 +102,24 @@ where
     Ok(intercept)
 }
 
-pub fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Result<Meter<f64>> {
-    Ok(0.0 * M)
+/// Returns a floor for geodesic interception distance
+pub fn intercept_distance_floor(
+    segment: &GeoSegment<GeoAndXyzPoint>,
+    point: &XyzPoint,
+) -> Result<Meter<f64>> {
+    let dist = cartesian_intercept_distance(segment, point)?;
+    let depth = max_chord_depth(segment);
+
+    // Hypotenuse between the maximum chord depth between the points and the
+    // cartesian intercept distance.
+    Ok((dist * dist - depth * depth).value_unsafe.sqrt() * M)
 }
 
-pub fn cartesian_intercept_distance(
+fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Meter<f64> {
+    norm3(subtract_xyzpoints(&segment.point1.xyz, &segment.point2.xyz)) * M
+}
+
+fn cartesian_intercept_distance(
     segment: &GeoSegment<GeoAndXyzPoint>,
     point: &XyzPoint,
 ) -> Result<Meter<f64>> {
@@ -310,12 +323,12 @@ mod tests {
     use serde::Deserialize;
 
     use super::{
-        FromGeoPoints, NearbySegment, cartesian_intercept_distance, find_nearby_segments,
-        karney_interception,
+        cartesian_intercept_distance, find_nearby_segments, intercept_distance_floor, karney_interception,
+        FromGeoPoints, NearbySegment,
     };
     use crate::geographic::{geocentric_forward, geodesic_inverse};
     use crate::measure::DEG;
-    use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment};
+    use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, XyzPoint};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {
@@ -478,6 +491,38 @@ mod tests {
                 intercept_distance.value_unsafe,
                 max_relative = 0.001
             );
+        }
+
+        #[test]
+        fn test_intercept_distance_floor() -> Result<()> {
+            let intercepts_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("testdata")
+                .join("intercepts.csv");
+
+            let mut rdr = csv::ReaderBuilder::new()
+                .has_headers(false)
+                .from_path(intercepts_path)?;
+            for case in rdr.deserialize() {
+                let datum: InterceptsDatum = case?;
+                let geo_start: GeoAndXyzPoint =
+                    GeoPoint::new(datum.geo_start_lat * DEG, datum.geo_start_lon * DEG, None)?
+                        .try_into()?;
+                let geo_end: GeoAndXyzPoint =
+                    GeoPoint::new(datum.geo_end_lat * DEG, datum.geo_end_lon * DEG, None)?
+                        .try_into()?;
+                let p = GeoPoint::new(datum.p_lat * DEG, datum.p_lon * DEG, None)?;
+                let intercept =
+                    GeoPoint::new(datum.intercept_lat * DEG, datum.intercept_lon * DEG, None)?;
+                let geo_point = GeoPoint::new(datum.p_lat * DEG, datum.p_lon * DEG, None)?;
+                let intercept_distance = geodesic_inverse(&geo_point, &intercept)?.geo_distance;
+
+                let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
+                let result = intercept_distance_floor(&seg, &XyzPoint::try_from(p)?)?;
+
+                assert!(result <= intercept_distance);
+            }
+
+            Ok(())
         }
 
         Ok(())

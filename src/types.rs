@@ -1,8 +1,7 @@
-use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
-use dimensioned::si::{M, Meter};
+use crate::measure::{Degree, DEG};
+use approx::{abs_diff_eq, relative_eq, AbsDiffEq, RelativeEq};
+use dimensioned::si::{Meter, M};
 use thiserror::Error;
-use crate::geographic::{geocentric_forward, GeographicError};
-use crate::measure::{DEG, Degree};
 
 #[derive(Error, Debug)]
 pub enum TypeError {
