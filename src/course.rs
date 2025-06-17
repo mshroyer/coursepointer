@@ -7,6 +7,8 @@
 //! Once all the data has been added (for example, by parsing it from a GPX
 //! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
+use std::cmp::Ordering;
+
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 use tracing::{Level, debug, info, span};
@@ -140,13 +142,14 @@ impl CourseSetBuilder {
 
                     slns.push(InterceptSolution {
                         intercept_point: intercept,
-                        intercept_distance: distance,
+                        intercept_distance: InterceptDistance::Near(distance),
                         course_distance: course_distance + offset,
                     });
                     course_distance += segment.geo_distance;
                 }
 
-                let mut near_segments = find_nearby_segments(&slns, self.options.threshold);
+                let mut near_segments =
+                    find_nearby_segments(&slns, InterceptDistance::Near(self.options.threshold));
                 info!(
                     intercepts = near_segments.len(),
                     "Processed {:?}", waypoint.name,
@@ -213,15 +216,36 @@ struct InterceptSolution {
     intercept_point: GeoPoint,
 
     /// The geodesic distance between the intercept point and the waypoint.
-    intercept_distance: Meter<f64>,
+    intercept_distance: InterceptDistance,
 
     /// The distance along the entire course at which this point of interception
     /// appears.
     course_distance: Meter<f64>,
 }
 
-impl NearbySegment<Meter<f64>> for &InterceptSolution {
-    fn waypoint_distance(&self) -> Meter<f64> {
+#[derive(Clone, Copy, PartialEq, Debug)]
+enum InterceptDistance {
+    Near(Meter<f64>),
+    Far,
+}
+
+impl PartialOrd for InterceptDistance {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self {
+            InterceptDistance::Near(self_near) => match other {
+                InterceptDistance::Near(other_near) => self_near.partial_cmp(&other_near),
+                InterceptDistance::Far => Some(Ordering::Less),
+            },
+            InterceptDistance::Far => match other {
+                InterceptDistance::Near(_) => Some(Ordering::Greater),
+                InterceptDistance::Far => None,
+            },
+        }
+    }
+}
+
+impl NearbySegment<InterceptDistance> for &InterceptSolution {
+    fn waypoint_distance(&self) -> InterceptDistance {
         self.intercept_distance
     }
 }
@@ -402,7 +426,7 @@ mod tests {
     use approx::assert_relative_eq;
     use dimensioned::si::M;
 
-    use crate::course::{CourseBuilder, CourseSetBuilder, Waypoint};
+    use crate::course::{CourseBuilder, CourseSetBuilder, InterceptDistance, Waypoint};
     use crate::fit::CoursePointType;
     use crate::{CourseOptions, geo_point, geo_points};
 
@@ -496,5 +520,20 @@ mod tests {
             max_relative = 0.0001 * M
         );
         Ok(())
+    }
+
+    #[test]
+    fn test_intercept_distance_ordering() {
+        assert!(InterceptDistance::Near(10.0 * M) < InterceptDistance::Near(12.0 * M));
+        assert!(InterceptDistance::Near(15.0 * M) > InterceptDistance::Near(12.0 * M));
+        assert!(InterceptDistance::Far > InterceptDistance::Near(12.0 * M));
+        assert!(InterceptDistance::Near(10.0 * M) < InterceptDistance::Far);
+        assert!(!(InterceptDistance::Far < InterceptDistance::Far));
+        assert!(!(InterceptDistance::Far > InterceptDistance::Far));
+        assert_eq!(InterceptDistance::Far, InterceptDistance::Far);
+        assert_eq!(
+            InterceptDistance::Near(10.0 * M),
+            InterceptDistance::Near(10.0 * M)
+        );
     }
 }
