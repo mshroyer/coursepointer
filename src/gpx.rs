@@ -51,6 +51,9 @@ type Result<T> = std::result::Result<T, GpxError>;
 /// An item parsed from a GPX document.
 #[derive(Clone, PartialEq, Debug)]
 pub enum GpxItem {
+    /// GPX attribute optionally identifying the software used to create the
+    /// file.
+    Creator(String),
     /// Indicates the start of a GPX track or route.  Subsequent
     /// `TrackOrRouteName`, `TrackSegment`, and `TrackOrRoutePoint` items belong
     /// to this track or route.
@@ -249,6 +252,22 @@ where
                     self.tag_path.push(tag);
 
                     match self.tag_path.as_slice() {
+                        [Tag::Gpx] => {
+                            for attr in elt.attributes() {
+                                match (|| {
+                                    let a = attr?;
+                                    if a.key == QName(b"creator") {
+                                        return Ok(Some(str::from_utf8(&a.value)?.to_string()));
+                                    }
+                                    Ok(None)
+                                })() {
+                                    Err(e) => return Some(Err(e)),
+                                    Ok(Some(s)) => return Some(Ok(GpxItem::Creator(s))),
+                                    _ => (),
+                                }
+                            }
+                        }
+
                         [Tag::Gpx, Tag::Trk] | [Tag::Gpx, Tag::Rte] => {
                             debug!("Found start of track or route at path: {:?}", self.tag_path);
                             return Some(Ok(GpxItem::TrackOrRoute));
@@ -751,6 +770,40 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(result, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_creator() -> Result<()> {
+        let xml = r#"
+<gpx creator="MyGPSApp">
+  <metadata>
+    <name>TR017-Coyote</name>
+    <link href="https://ridewithgps.com/routes/50344071">
+      <text>TR017-Coyote</text>
+    </link>
+    <time>2025-04-15T16:09:37Z</time>
+  </metadata>
+  <wpt lat="37.40147999999951" lon="-122.12117999999951">
+    <name>Hetch Hetchy Trail</name>
+    <cmt>trailhead</cmt>
+    <sym>Dot</sym>
+    <type>info</type>
+  </wpt>
+  "#;
+
+        let reader = GpxReader::from_text(xml);
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let result = items
+            .iter()
+            .filter_map(|ele| match ele {
+                GpxItem::Creator(c) => Some(c.clone()),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(result, vec!["MyGPSApp".to_string()]);
 
         Ok(())
     }
