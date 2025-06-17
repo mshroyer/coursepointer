@@ -135,18 +135,24 @@ impl CourseSetBuilder {
                 let mut course_distance = 0.0 * M;
                 for segment in &course.segments {
                     let floor = intercept_distance_floor(segment, &waypoint.point)?;
-                    let intercept = karney_interception(segment, &waypoint.point)?;
-                    let distance = geodesic_inverse(&waypoint.point.geo, &intercept)?.geo_distance;
-                    if distance.value_unsafe.is_nan() {
-                        return Err(CourseError::NaNDistance);
-                    }
-                    let offset = geodesic_inverse(&segment.point1.geo, &intercept)?.geo_distance;
+                    if floor > self.options.threshold {
+                        slns.push(InterceptSolution::Far);
+                    } else {
+                        let intercept = karney_interception(segment, &waypoint.point)?;
+                        let distance =
+                            geodesic_inverse(&waypoint.point.geo, &intercept)?.geo_distance;
+                        if distance.value_unsafe.is_nan() {
+                            return Err(CourseError::NaNDistance);
+                        }
+                        let offset =
+                            geodesic_inverse(&segment.point1.geo, &intercept)?.geo_distance;
 
-                    slns.push(InterceptSolution::Near(NearIntercept {
-                        intercept_point: intercept,
-                        intercept_distance: distance,
-                        course_distance: course_distance + offset,
-                    }));
+                        slns.push(InterceptSolution::Near(NearIntercept {
+                            intercept_point: intercept,
+                            intercept_distance: distance,
+                            course_distance: course_distance + offset,
+                        }));
+                    }
                     course_distance += segment.geo_distance;
                 }
 
