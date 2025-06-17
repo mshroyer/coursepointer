@@ -263,16 +263,8 @@ impl PartialOrd for InterceptSolution {
     }
 }
 
-// // The InterceptSolution itself is comparable, so we can just provide a
-// // reference to it as our unit of comparison.
-// impl <'a> NearbySegment<&'a InterceptSolution> for &'a InterceptSolution {
-//     fn waypoint_distance(self) -> &'a InterceptSolution {
-//         self
-//     }
-// }
-
 impl NearbySegment<Meter<f64>> for &InterceptSolution {
-    fn waypoint_distance(&self) -> Meter<f64> {
+    fn waypoint_distance(self) -> Meter<f64> {
         match self {
             InterceptSolution::Near(near) => near.intercept_distance,
             InterceptSolution::Far => f64::INFINITY * M,

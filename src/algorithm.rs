@@ -149,10 +149,11 @@ fn cartesian_intercept_distance(
 /// A segment of a course whose distance from a waypoint has been measured.
 pub trait NearbySegment<D>
 where
+    Self: Copy,
     D: Copy + PartialOrd,
 {
     /// The segment's minimum geodesic distance from the waypoint.
-    fn waypoint_distance(&self) -> D;
+    fn waypoint_distance(self) -> D;
 }
 
 /// Identifies the course segments within some threshold distance of a waypoint.
@@ -401,7 +402,7 @@ mod tests {
     }
 
     impl NearbySegment<i32> for (char, i32) {
-        fn waypoint_distance(&self) -> i32 {
+        fn waypoint_distance(self) -> i32 {
             self.1
         }
     }
