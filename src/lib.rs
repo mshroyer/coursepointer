@@ -23,6 +23,7 @@ mod geographic;
 mod gpx;
 pub mod internal;
 mod measure;
+mod point_type;
 mod types;
 
 use std::io::{BufRead, Write};

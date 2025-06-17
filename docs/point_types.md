@@ -242,7 +242,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-fast-food:`           | ![gaia-icon-34](img/gaia-icon-34.png)   | `fast-food-24`           | `food`            |
 | `:gaia-fence:`               | ![gaia-icon-35](img/gaia-icon-35.png)   | `fence`                  | `obstacle`        |
 | `:gaia-fire-lookout:`        | ![gaia-icon-36](img/gaia-icon-36.png)   | `fire-lookout`           | `overlook`        |
-| `:gaia-fire-station:`        | ![gaia-icon-37](img/gaia-icon-37.png)   | `fire-station-24`        | `first_aid`         |
+| `:gaia-fire-station:`        | ![gaia-icon-37](img/gaia-icon-37.png)   | `fire-station-24`        | `first_aid`       |
 | `:gaia-fish:`                | ![gaia-icon-38](img/gaia-icon-38.png)   | `fish`                   | `food`            |
 | `:gaia-forest:`              | ![gaia-icon-39](img/gaia-icon-39.png)   | `forest`                 |                   |
 | `:gaia-fuel:`                | ![gaia-icon-40](img/gaia-icon-40.png)   | `fuel-24`                | `service`         |

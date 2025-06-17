@@ -7,6 +7,7 @@ use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, Utc};
 use dimensioned::si::{M, Meter, MeterPerSecond, Second};
 use num_traits::cast::NumCast;
+use strum::EnumString;
 use thiserror::Error;
 use tracing::debug;
 
@@ -558,8 +559,9 @@ impl RecordMessage {
     feature = "cli",
     derive(strum::Display, strum::EnumIter, clap::ValueEnum)
 )]
-#[cfg_attr(feature = "cli", strum(serialize_all = "kebab-case"))]
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[cfg_attr(feature = "cli", strum(serialize_all = "snake_case"))]
+#[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
+#[derive(Clone, Copy, PartialEq, EnumString, Debug)]
 pub enum CoursePointType {
     // 00
     Generic = 0u8,

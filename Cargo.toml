@@ -29,7 +29,7 @@ clap-cargo = { version = "0.15.2", optional = true }
 tracing = { version = "0.1.41", features = ["log"] }
 tracing-subscriber = { version = "0.3.19", optional = true, features = ["env-filter"] }
 tracing-span-tree = "0.1.1"
-strum = { version = "0.27.1", features = ["derive"], optional = true }
+strum = { version = "0.27.1", features = ["derive"] }
 sys-locale = { version = "0.3.2", optional = true }
 
 [dev-dependencies]
@@ -40,7 +40,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 
 [features]
 default = ["cli"]
-cli = ["dep:anyhow", "dep:clap", "dep:clap-cargo", "dep:strum", "dep:sys-locale", "dep:tracing-subscriber"]
+cli = ["dep:anyhow", "dep:clap", "dep:clap-cargo", "dep:sys-locale", "dep:tracing-subscriber"]
 full-geolib = []
 
 [build-dependencies]
