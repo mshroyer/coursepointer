@@ -320,7 +320,7 @@ fn sample_course_points_cmd(sub_args: &SampleCoursePointsArgs) -> Result<String>
         .with_route_point(GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?)?;
     let course_set = builder.build()?;
     let course_file = CourseFile::new(
-        course_set.courses.get(0).unwrap(),
+        course_set.courses.first().unwrap(),
         Utc::now(),
         10.0 * KILO * M / HR,
     );

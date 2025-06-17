@@ -23,8 +23,8 @@ pub fn get_gpx_creator(creator: &str) -> GpxCreator {
 
 pub fn get_course_point_type(creator: GpxCreator, waypoint: &GpxWaypoint) -> CoursePointType {
     match creator {
-        GpxCreator::GaiaGps => get_gaiagps_point_type(&waypoint),
-        GpxCreator::RideWithGps => get_ridewithgps_point_type(&waypoint),
+        GpxCreator::GaiaGps => get_gaiagps_point_type(waypoint),
+        GpxCreator::RideWithGps => get_ridewithgps_point_type(waypoint),
         GpxCreator::Unknown => CoursePointType::Generic,
     }
 }
@@ -121,7 +121,7 @@ fn get_gaiagps_point_type(waypoint: &GpxWaypoint) -> CoursePointType {
 
 fn get_ridewithgps_point_type(waypoint: &GpxWaypoint) -> CoursePointType {
     match &waypoint.type_ {
-        Some(t) => CoursePointType::from_str(t).unwrap_or_else(|_| CoursePointType::Generic),
+        Some(t) => CoursePointType::from_str(t).unwrap_or(CoursePointType::Generic),
         None => {
             warn!("Ride with GPS GPX missing waypoint type");
             CoursePointType::Generic
