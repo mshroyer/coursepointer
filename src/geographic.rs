@@ -6,7 +6,7 @@ use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
 use crate::measure::{DEG, Degree};
-use crate::types::{GeoAndXyzPoint, GeoPoint, XyzPoint, TypeError, XyPoint};
+use crate::types::{GeoAndXyzPoint, GeoPoint, TypeError, XyPoint, XyzPoint};
 
 #[derive(Error, Debug)]
 pub enum GeographicError {
@@ -142,7 +142,7 @@ pub fn geocentric_forward(point: &GeoPoint) -> Result<XyzPoint> {
         0.0,
         &mut x,
         &mut y,
-        &mut z
+        &mut z,
     )?;
     Ok(XyzPoint {
         x: x * M,
@@ -164,10 +164,7 @@ impl TryFrom<GeoPoint> for GeoAndXyzPoint {
 
     fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
         let xyz = geocentric_forward(&value)?;
-        Ok(GeoAndXyzPoint {
-            geo: value,
-            xyz,
-        })
+        Ok(GeoAndXyzPoint { geo: value, xyz })
     }
 }
 

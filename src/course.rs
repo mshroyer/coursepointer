@@ -140,21 +140,26 @@ impl CourseSetBuilder {
                     }
                     let offset = geodesic_inverse(&segment.point1.geo, &intercept)?.geo_distance;
 
-                    slns.push(InterceptSolution {
+                    slns.push(InterceptSolution::Near(NearIntercept {
                         intercept_point: intercept,
-                        intercept_distance: InterceptDistance::Near(distance),
+                        intercept_distance: distance,
                         course_distance: course_distance + offset,
-                    });
+                    }));
                     course_distance += segment.geo_distance;
                 }
 
-                let mut near_segments =
-                    find_nearby_segments(&slns, InterceptDistance::Near(self.options.threshold));
+                let mut near_intercepts = find_nearby_segments(&slns, self.options.threshold)
+                    .iter()
+                    .filter_map(|sln| match sln {
+                        InterceptSolution::Near(near) => Some(near),
+                        InterceptSolution::Far => None,
+                    })
+                    .collect::<Vec<_>>();
                 info!(
-                    intercepts = near_segments.len(),
+                    intercepts = near_intercepts.len(),
                     "Processed {:?}", waypoint.name,
                 );
-                for seg in &near_segments {
+                for seg in &near_intercepts {
                     info!(
                         intercept_dist = ?seg.intercept_distance,
                         course_dist = %seg.course_distance,
@@ -162,17 +167,17 @@ impl CourseSetBuilder {
                     );
                 }
 
-                if !near_segments.is_empty() {
+                if !near_intercepts.is_empty() {
                     match self.options.strategy {
                         InterceptStrategy::Nearest => {
-                            near_segments.sort_by(|a, b| {
+                            near_intercepts.sort_by(|a, b| {
                                 a.intercept_distance
                                     .partial_cmp(&b.intercept_distance)
                                     .unwrap()
                             });
                             Self::add_course_point(
                                 &mut course.course_points,
-                                near_segments[0],
+                                near_intercepts[0],
                                 waypoint,
                             );
                         }
@@ -180,13 +185,13 @@ impl CourseSetBuilder {
                         InterceptStrategy::First => {
                             Self::add_course_point(
                                 &mut course.course_points,
-                                near_segments[0],
+                                near_intercepts[0],
                                 waypoint,
                             );
                         }
 
                         InterceptStrategy::All => {
-                            for sln in near_segments {
+                            for sln in near_intercepts {
                                 Self::add_course_point(&mut course.course_points, sln, waypoint);
                             }
                         }
@@ -199,7 +204,7 @@ impl CourseSetBuilder {
 
     fn add_course_point(
         course_points: &mut Vec<CoursePoint>,
-        sln: &InterceptSolution,
+        sln: &NearIntercept,
         waypoint: &Waypoint,
     ) {
         course_points.push(CoursePoint {
@@ -211,42 +216,67 @@ impl CourseSetBuilder {
     }
 }
 
-struct InterceptSolution {
+#[derive(Clone, Copy, Debug)]
+struct NearIntercept {
     /// The point of interception.
     intercept_point: GeoPoint,
 
     /// The geodesic distance between the intercept point and the waypoint.
-    intercept_distance: InterceptDistance,
+    intercept_distance: Meter<f64>,
 
     /// The distance along the entire course at which this point of interception
     /// appears.
     course_distance: Meter<f64>,
 }
 
+impl PartialEq for NearIntercept {
+    fn eq(&self, other: &Self) -> bool {
+        self.intercept_distance.eq(&other.intercept_distance)
+    }
+}
+
+impl PartialOrd for NearIntercept {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.intercept_distance
+            .partial_cmp(&other.intercept_distance)
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Debug)]
-enum InterceptDistance {
-    Near(Meter<f64>),
+enum InterceptSolution {
+    Near(NearIntercept),
     Far,
 }
 
-impl PartialOrd for InterceptDistance {
+impl PartialOrd for InterceptSolution {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self {
-            InterceptDistance::Near(self_near) => match other {
-                InterceptDistance::Near(other_near) => self_near.partial_cmp(&other_near),
-                InterceptDistance::Far => Some(Ordering::Less),
+            InterceptSolution::Near(self_near) => match other {
+                InterceptSolution::Near(other_near) => self_near.partial_cmp(&other_near),
+                InterceptSolution::Far => Some(Ordering::Less),
             },
-            InterceptDistance::Far => match other {
-                InterceptDistance::Near(_) => Some(Ordering::Greater),
-                InterceptDistance::Far => None,
+            InterceptSolution::Far => match other {
+                InterceptSolution::Near(_) => Some(Ordering::Greater),
+                InterceptSolution::Far => None,
             },
         }
     }
 }
 
-impl NearbySegment<InterceptDistance> for &InterceptSolution {
-    fn waypoint_distance(&self) -> InterceptDistance {
-        self.intercept_distance
+// // The InterceptSolution itself is comparable, so we can just provide a
+// // reference to it as our unit of comparison.
+// impl <'a> NearbySegment<&'a InterceptSolution> for &'a InterceptSolution {
+//     fn waypoint_distance(self) -> &'a InterceptSolution {
+//         self
+//     }
+// }
+
+impl NearbySegment<Meter<f64>> for &InterceptSolution {
+    fn waypoint_distance(&self) -> Meter<f64> {
+        match self {
+            InterceptSolution::Near(near) => near.intercept_distance,
+            InterceptSolution::Far => f64::INFINITY * M,
+        }
     }
 }
 
@@ -424,10 +454,13 @@ pub struct CoursePoint {
 mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
-    use dimensioned::si::M;
+    use dimensioned::si::{M, Meter};
 
-    use crate::course::{CourseBuilder, CourseSetBuilder, InterceptDistance, Waypoint};
+    use crate::course::{
+        CourseBuilder, CourseSetBuilder, InterceptSolution, NearIntercept, Waypoint,
+    };
     use crate::fit::CoursePointType;
+    use crate::types::GeoPoint;
     use crate::{CourseOptions, geo_point, geo_points};
 
     #[test]
@@ -524,16 +557,24 @@ mod tests {
 
     #[test]
     fn test_intercept_distance_ordering() {
-        assert!(InterceptDistance::Near(10.0 * M) < InterceptDistance::Near(12.0 * M));
-        assert!(InterceptDistance::Near(15.0 * M) > InterceptDistance::Near(12.0 * M));
-        assert!(InterceptDistance::Far > InterceptDistance::Near(12.0 * M));
-        assert!(InterceptDistance::Near(10.0 * M) < InterceptDistance::Far);
-        assert!(!(InterceptDistance::Far < InterceptDistance::Far));
-        assert!(!(InterceptDistance::Far > InterceptDistance::Far));
-        assert_eq!(InterceptDistance::Far, InterceptDistance::Far);
+        fn near(distance: Meter<f64>) -> NearIntercept {
+            NearIntercept {
+                intercept_point: GeoPoint::default(),
+                intercept_distance: distance,
+                course_distance: 0.0 * M,
+            }
+        }
+
+        assert!(InterceptSolution::Near(near(10.0 * M)) < InterceptSolution::Near(near(12.0 * M)));
+        assert!(InterceptSolution::Near(near(15.0 * M)) > InterceptSolution::Near(near(12.0 * M)));
+        assert!(InterceptSolution::Far > InterceptSolution::Near(near(12.0 * M)));
+        assert!(InterceptSolution::Near(near(10.0 * M)) < InterceptSolution::Far);
+        assert!(!(InterceptSolution::Far < InterceptSolution::Far));
+        assert!(!(InterceptSolution::Far > InterceptSolution::Far));
+        assert_eq!(InterceptSolution::Far, InterceptSolution::Far);
         assert_eq!(
-            InterceptDistance::Near(10.0 * M),
-            InterceptDistance::Near(10.0 * M)
+            InterceptSolution::Near(near(10.0 * M)),
+            InterceptSolution::Near(near(10.0 * M))
         );
     }
 }
