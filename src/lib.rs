@@ -37,6 +37,7 @@ use tracing::{Level, debug, span};
 use crate::course::{CourseError, CoursePoint, CourseSetBuilder, Waypoint};
 pub use crate::course::{CourseOptions, InterceptStrategy};
 use crate::fit::CourseFile;
+use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
 pub use crate::measure::{Kilometer, Mile};
 use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};
@@ -58,6 +59,8 @@ pub enum CoursePointerError {
     FitEncode(#[from] fit::FitEncodeError),
     #[error("Core type error")]
     Type(#[from] TypeError),
+    #[error("Geographic calculation error")]
+    Geographic(#[from] GeographicError),
 }
 
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
@@ -114,7 +117,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                 GpxItem::Waypoint(wpt) => {
                     num_waypoints += 1;
                     builder.add_waypoint(Waypoint {
-                        point: wpt.point,
+                        point: wpt.point.try_into()?,
                         point_type: get_course_point_type(creator, &wpt),
                         name: wpt.name,
                     });

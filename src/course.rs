@@ -14,7 +14,8 @@ use thiserror::Error;
 use tracing::{Level, debug, info, span};
 
 use crate::algorithm::{
-    AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception,
+    AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
+    karney_interception,
 };
 use crate::fit::CoursePointType;
 use crate::geographic::{GeographicError, geodesic_inverse};
@@ -133,8 +134,9 @@ impl CourseSetBuilder {
                 let mut slns = Vec::new();
                 let mut course_distance = 0.0 * M;
                 for segment in &course.segments {
+                    let floor = intercept_distance_floor(segment, &waypoint.point)?;
                     let intercept = karney_interception(segment, &waypoint.point)?;
-                    let distance = geodesic_inverse(&waypoint.point, &intercept)?.geo_distance;
+                    let distance = geodesic_inverse(&waypoint.point.geo, &intercept)?.geo_distance;
                     if distance.value_unsafe.is_nan() {
                         return Err(CourseError::NaNDistance);
                     }
@@ -417,7 +419,7 @@ pub struct Record {
 /// along the course and lacks a known course distance.
 pub struct Waypoint {
     /// Position of the waypoint.
-    pub point: GeoPoint,
+    pub point: GeoAndXyzPoint,
 
     /// The type of course point this should be considered, if it does turn out
     /// to be one.
@@ -531,7 +533,7 @@ mod tests {
         builder.add_waypoint(Waypoint {
             name: "MyWaypoint".to_owned(),
             point_type: CoursePointType::Generic,
-            point: geo_point!(35.951314, -94.973085),
+            point: geo_point!(35.951314, -94.973085).try_into()?,
         });
 
         let course_set = builder.build()?;

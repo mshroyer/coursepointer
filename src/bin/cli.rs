@@ -307,7 +307,7 @@ fn sample_course_points_cmd(sub_args: &SampleCoursePointsArgs) -> Result<String>
         builder.add_waypoint(Waypoint {
             name: cptype.to_string(),
             point_type: cptype,
-            point: GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?,
+            point: GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?.try_into()?,
         });
         debug!("Added course point type: {:?}", cptype);
         lon += sub_args.increment;

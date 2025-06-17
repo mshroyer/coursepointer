@@ -14,7 +14,9 @@ use tracing::instrument;
 use crate::geographic::{
     GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
 };
-use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, GeoSegmentPoint, XyPoint, XyzPoint};
+use crate::types::{
+    GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint, HasXyzPoint, XyPoint, XyzPoint,
+};
 
 #[derive(Error, Debug)]
 pub enum AlgorithmError {
@@ -59,9 +61,9 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 ///
 /// For a more detailed description, see: <http://arxiv.org/abs/1102.1215>
 #[instrument(level = "trace", skip_all)]
-pub fn karney_interception<P>(segment: &GeoSegment<P>, point: &GeoPoint) -> Result<GeoPoint>
+pub fn karney_interception<P>(segment: &GeoSegment<P>, point: &P) -> Result<GeoPoint>
 where
-    P: GeoSegmentPoint,
+    P: HasGeoPoint,
 {
     // Start with an initial guess of an intercept at the geodesic's midpoint:
     let mut intercept = geodesic_direct(
@@ -74,7 +76,7 @@ where
     for _ in 0..10 {
         let start = gnomonic_forward(&intercept, &segment.point1.geo())?;
         let end = gnomonic_forward(&intercept, &segment.point2.geo())?;
-        let p = gnomonic_forward(&intercept, point)?;
+        let p = gnomonic_forward(&intercept, point.geo())?;
         let b = subtract_xypoints(&end, &start);
         let a = subtract_xypoints(&p, &start);
 
@@ -102,10 +104,13 @@ where
 }
 
 /// Returns a floor for geodesic interception distance
-pub fn intercept_distance_floor(
+pub fn intercept_distance_floor<P>(
     segment: &GeoSegment<GeoAndXyzPoint>,
-    point: &XyzPoint,
-) -> Result<Meter<f64>> {
+    point: &P,
+) -> Result<Meter<f64>>
+where
+    P: HasXyzPoint,
+{
     let dist = cartesian_intercept_distance(segment, point)?;
     let depth = max_chord_depth(segment);
 
@@ -119,16 +124,22 @@ const WGS84_F: f64 = 1.0 / 298.257223563;
 const WGS84_B: f64 = WGS84_A * (1.0 - WGS84_F);
 
 fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Meter<f64> {
-    let chord_length = norm3(subtract_xyzpoints(&segment.point1.xyz, &segment.point2.xyz));
+    let chord_length = norm3(subtract_xyzpoints(
+        &segment.point1.xyz(),
+        &segment.point2.xyz(),
+    ));
     WGS84_A * (1.0 - (1.0 - chord_length * chord_length / (4.0 * WGS84_B * WGS84_B)).sqrt()) * M
 }
 
-fn cartesian_intercept_distance(
+fn cartesian_intercept_distance<P>(
     segment: &GeoSegment<GeoAndXyzPoint>,
-    point: &XyzPoint,
-) -> Result<Meter<f64>> {
-    let b = subtract_xyzpoints(&segment.point2.xyz, &segment.point1.xyz);
-    let a = subtract_xyzpoints(point, &segment.point1.xyz);
+    point: &P,
+) -> Result<Meter<f64>>
+where
+    P: HasXyzPoint,
+{
+    let b = subtract_xyzpoints(&segment.point2.xyz(), &segment.point1.xyz());
+    let a = subtract_xyzpoints(point, segment.point1.xyz());
     let intercept = if dot3(a, b) <= 0.0 {
         Vec3 {
             x: 0.0,
@@ -223,14 +234,14 @@ where
 pub trait FromGeoPoints<P>
 where
     Self: Sized,
-    P: GeoSegmentPoint,
+    P: HasGeoPoint,
 {
     fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError>;
 }
 
 impl<P> FromGeoPoints<P> for GeoSegment<P>
 where
-    P: GeoSegmentPoint,
+    P: HasGeoPoint,
 {
     fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError> {
         let inverse = geodesic_inverse(point1.geo(), point2.geo())?;
@@ -302,11 +313,15 @@ impl Sub<Vec3> for Vec3 {
     }
 }
 
-fn subtract_xyzpoints(a: &XyzPoint, b: &XyzPoint) -> Vec3 {
+fn subtract_xyzpoints<P, Q>(a: &P, b: &Q) -> Vec3
+where
+    P: HasXyzPoint,
+    Q: HasXyzPoint,
+{
     Vec3 {
-        x: a.x.value_unsafe - b.x.value_unsafe,
-        y: a.y.value_unsafe - b.y.value_unsafe,
-        z: a.z.value_unsafe - b.z.value_unsafe,
+        x: a.xyz().x.value_unsafe - b.xyz().x.value_unsafe,
+        y: a.xyz().y.value_unsafe - b.xyz().y.value_unsafe,
+        z: a.xyz().z.value_unsafe - b.xyz().z.value_unsafe,
     }
 }
 

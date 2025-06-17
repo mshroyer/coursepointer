@@ -133,30 +133,48 @@ pub struct GeoAndXyzPoint {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct GeoSegment<P: GeoSegmentPoint> {
+pub struct GeoSegment<P: HasGeoPoint> {
     pub point1: P,
     pub point2: P,
     pub geo_distance: Meter<f64>,
     pub azimuth1: Degree<f64>,
 }
 
-/// A point that can be used in a [`GeoSegment`].
-///
-/// At minimum, this must be able to produce a reference to a [`GeoPoint`]
-/// indicating the point's latitude and longitude.
-pub trait GeoSegmentPoint {
+pub trait HasGeoPoint {
     fn geo(&self) -> &GeoPoint;
 }
 
-impl GeoSegmentPoint for GeoPoint {
+impl HasGeoPoint for GeoPoint {
     fn geo(&self) -> &GeoPoint {
         &self
     }
 }
 
-impl GeoSegmentPoint for GeoAndXyzPoint {
+impl HasGeoPoint for GeoAndXyzPoint {
     fn geo(&self) -> &GeoPoint {
         &self.geo
+    }
+}
+
+pub trait HasXyzPoint {
+    fn xyz(&self) -> &XyzPoint;
+}
+
+impl HasXyzPoint for XyzPoint {
+    fn xyz(&self) -> &XyzPoint {
+        &self
+    }
+}
+
+impl<'a> HasXyzPoint for &'a XyzPoint {
+    fn xyz(&self) -> &'a XyzPoint {
+        self
+    }
+}
+
+impl HasXyzPoint for GeoAndXyzPoint {
+    fn xyz(&self) -> &XyzPoint {
+        &self.xyz
     }
 }
 
