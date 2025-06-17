@@ -16,7 +16,7 @@ use crate::algorithm::{
 };
 use crate::fit::CoursePointType;
 use crate::geographic::{GeographicError, geodesic_inverse};
-use crate::types::{GeoPoint, GeoSegment};
+use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment};
 
 #[derive(Error, Debug)]
 pub enum CourseError {
@@ -136,7 +136,7 @@ impl CourseSetBuilder {
                     if distance.value_unsafe.is_nan() {
                         return Err(CourseError::NaNDistance);
                     }
-                    let offset = geodesic_inverse(&segment.point1, &intercept)?.geo_distance;
+                    let offset = geodesic_inverse(&segment.point1.geo, &intercept)?.geo_distance;
 
                     slns.push(InterceptSolution {
                         intercept_point: intercept,
@@ -260,8 +260,8 @@ impl Course {
 }
 
 pub struct CourseBuilder {
-    segments: Vec<GeoSegment>,
-    prev_point: Option<GeoPoint>,
+    segments: Vec<GeoSegment<GeoAndXyzPoint>>,
+    prev_point: Option<GeoAndXyzPoint>,
     name: Option<String>,
     course_points: Vec<CoursePoint>,
     num_releated_points_skipped: usize,
@@ -285,19 +285,20 @@ impl CourseBuilder {
     }
 
     pub fn with_route_point(&mut self, point: GeoPoint) -> Result<&mut Self> {
+        let with_xyz = GeoAndXyzPoint::try_from(point)?;
         match self.prev_point {
             Some(prev) => {
-                if prev == point {
+                if prev == with_xyz {
                     self.num_releated_points_skipped += 1
                 } else {
                     // TODO: Investigate using elevation-corrected distances
                     self.segments
-                        .push(GeoSegment::from_geo_points(prev, point)?);
-                    self.prev_point = Some(point);
+                        .push(GeoSegment::from_geo_points(prev, with_xyz)?);
+                    self.prev_point = Some(with_xyz);
                 }
             }
 
-            None => self.prev_point = Some(point),
+            None => self.prev_point = Some(with_xyz),
         }
         Ok(self)
     }
@@ -311,11 +312,11 @@ impl CourseBuilder {
         let mut cumulative_distance = 0.0 * M;
         match (self.segments.first(), self.prev_point) {
             (Some(first), _) => records.push(Record {
-                point: first.point1,
+                point: first.point1.geo,
                 cumulative_distance,
             }),
             (None, Some(point)) => records.push(Record {
-                point,
+                point: point.geo,
                 cumulative_distance,
             }),
             (None, None) => (),
@@ -324,7 +325,7 @@ impl CourseBuilder {
         for segment in self.segments {
             cumulative_distance += segment.geo_distance;
             records.push(Record {
-                point: segment.point2,
+                point: segment.point2.geo,
                 cumulative_distance,
             });
         }

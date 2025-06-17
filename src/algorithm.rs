@@ -5,17 +5,17 @@
 //! of the route. This module implements algorithms to do that, building on the
 //! C++ version of GeographicLib.
 
-use std::error::Error;
-use std::ops::Mul;
+use std::ops::{Mul, Sub};
 
-use dimensioned::si::M;
+use dimensioned::si::{M, Meter};
 use thiserror::Error;
 use tracing::instrument;
 
 use crate::geographic::{
-    GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
+    GeographicError, geocentric_forward, geodesic_direct, geodesic_inverse, gnomonic_forward,
+    gnomonic_reverse,
 };
-use crate::types::{GeoPoint, GeoSegment, XYPoint};
+use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, GeoSegmentPoint, XyPoint, XyzPoint};
 
 #[derive(Error, Debug)]
 pub enum AlgorithmError {
@@ -60,18 +60,21 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 ///
 /// For a more detailed description, see: <http://arxiv.org/abs/1102.1215>
 #[instrument(level = "trace", skip_all)]
-pub fn karney_interception(segment: &GeoSegment, point: &GeoPoint) -> Result<GeoPoint> {
+pub fn karney_interception<P>(segment: &GeoSegment<P>, point: &GeoPoint) -> Result<GeoPoint>
+where
+    P: GeoSegmentPoint,
+{
     // Start with an initial guess of an intercept at the geodesic's midpoint:
     let mut intercept = geodesic_direct(
-        &segment.point1,
+        &segment.point1.geo(),
         segment.azimuth1,
         segment.geo_distance / 2.0,
     )?
     .point2;
 
     for _ in 0..10 {
-        let start = gnomonic_forward(&intercept, &segment.point1)?;
-        let end = gnomonic_forward(&intercept, &segment.point2)?;
+        let start = gnomonic_forward(&intercept, &segment.point1.geo())?;
+        let end = gnomonic_forward(&intercept, &segment.point2.geo())?;
         let p = gnomonic_forward(&intercept, point)?;
         let b = subtract_xypoints(&end, &start);
         let a = subtract_xypoints(&p, &start);
@@ -89,7 +92,7 @@ pub fn karney_interception(segment: &GeoSegment, point: &GeoPoint) -> Result<Geo
 
         intercept = gnomonic_reverse(
             &intercept,
-            &XYPoint {
+            &XyPoint {
                 x: (start.x.value_unsafe + v.x) * M,
                 y: (start.y.value_unsafe + v.y) * M,
             },
@@ -97,6 +100,33 @@ pub fn karney_interception(segment: &GeoSegment, point: &GeoPoint) -> Result<Geo
     }
 
     Ok(intercept)
+}
+
+pub fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Result<Meter<f64>> {
+    Ok(0.0 * M)
+}
+
+pub fn cartesian_intercept_distance(
+    segment: &GeoSegment<GeoAndXyzPoint>,
+    point: &XyzPoint,
+) -> Result<Meter<f64>> {
+    let b = subtract_xyzpoints(&segment.point2.xyz, &segment.point1.xyz);
+    let a = subtract_xyzpoints(point, &segment.point1.xyz);
+    let intercept = if dot3(a, b) <= 0.0 {
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    } else {
+        let a_proj = b * (dot3(a, b) / dot3(b, b));
+        if dot3(a_proj, a_proj) < dot3(b, b) {
+            a_proj
+        } else {
+            b
+        }
+    };
+    Ok(norm3(a - intercept) * M)
 }
 
 /// A segment of a course whose distance from a waypoint has been measured.
@@ -172,27 +202,25 @@ where
     result
 }
 
-pub trait FromGeoPoints<E>
+pub trait FromGeoPoints<P>
 where
     Self: Sized,
-    E: Error,
+    P: GeoSegmentPoint,
 {
-    fn from_geo_points(point1: GeoPoint, point2: GeoPoint) -> std::result::Result<Self, E>;
+    fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError>;
 }
 
-impl FromGeoPoints<GeographicError> for GeoSegment {
-    fn from_geo_points(
-        point1: GeoPoint,
-        point2: GeoPoint,
-    ) -> std::result::Result<Self, GeographicError> {
-        let inverse = geodesic_inverse(&point1, &point2)?;
+impl<P> FromGeoPoints<P> for GeoSegment<P>
+where
+    P: GeoSegmentPoint,
+{
+    fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError> {
+        let inverse = geodesic_inverse(point1.geo(), point2.geo())?;
         Ok(GeoSegment {
             point1,
             point2,
             geo_distance: inverse.geo_distance,
             azimuth1: inverse.azimuth1,
-            xyz1: geocentric_forward(&point1)?,
-            xyz2: geocentric_forward(&point2)?,
         })
     }
 }
@@ -206,15 +234,15 @@ pub struct Vec2 {
 impl Mul<f64> for Vec2 {
     type Output = Self;
 
-    fn mul(self, other: f64) -> Self {
+    fn mul(self, rhs: f64) -> Self {
         Self {
-            x: self.x * other,
-            y: self.y * other,
+            x: self.x * rhs,
+            y: self.y * rhs,
         }
     }
 }
 
-fn subtract_xypoints(a: &XYPoint, b: &XYPoint) -> Vec2 {
+fn subtract_xypoints(a: &XyPoint, b: &XyPoint) -> Vec2 {
     Vec2 {
         x: a.x.value_unsafe - b.x.value_unsafe,
         y: a.y.value_unsafe - b.y.value_unsafe,
@@ -225,17 +253,69 @@ fn dot2(a: Vec2, b: Vec2) -> f64 {
     a.x * b.x + a.y * b.y
 }
 
+#[derive(Clone, Copy, Debug)]
+struct Vec3 {
+    x: f64,
+    y: f64,
+    z: f64,
+}
+
+impl Mul<f64> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+        }
+    }
+}
+
+impl Sub<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+fn subtract_xyzpoints(a: &XyzPoint, b: &XyzPoint) -> Vec3 {
+    Vec3 {
+        x: a.x.value_unsafe - b.x.value_unsafe,
+        y: a.y.value_unsafe - b.y.value_unsafe,
+        z: a.z.value_unsafe - b.z.value_unsafe,
+    }
+}
+
+fn dot3(a: Vec3, b: Vec3) -> f64 {
+    a.x * b.x + a.y * b.y + a.z * b.z
+}
+
+fn norm3(vec: Vec3) -> f64 {
+    dot3(vec, vec).sqrt()
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
 
     use anyhow::Result;
     use approx::assert_relative_eq;
+    use dimensioned::si::M;
     use serde::Deserialize;
 
-    use super::{FromGeoPoints, NearbySegment, find_nearby_segments, karney_interception};
+    use super::{
+        FromGeoPoints, NearbySegment, cartesian_intercept_distance, find_nearby_segments,
+        karney_interception,
+    };
+    use crate::geographic::{geocentric_forward, geodesic_inverse};
     use crate::measure::DEG;
-    use crate::types::{GeoPoint, GeoSegment};
+    use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment};
 
     #[derive(Deserialize)]
     struct InterceptsDatum {
@@ -362,5 +442,44 @@ mod tests {
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
         assert_eq!(result, vec!['d']);
+    }
+
+    #[test]
+    fn test_cartesian_intercept_distance() -> Result<()> {
+        let intercepts_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("testdata")
+            .join("intercepts_near.csv");
+
+        let mut rdr = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_path(intercepts_path)?;
+        for case in rdr.deserialize() {
+            let datum: InterceptsDatum = case?;
+            let geo_start: GeoAndXyzPoint =
+                GeoPoint::new(datum.geo_start_lat * DEG, datum.geo_start_lon * DEG, None)?
+                    .try_into()?;
+            let geo_end: GeoAndXyzPoint =
+                GeoPoint::new(datum.geo_end_lat * DEG, datum.geo_end_lon * DEG, None)?
+                    .try_into()?;
+            let intercept =
+                GeoPoint::new(datum.intercept_lat * DEG, datum.intercept_lon * DEG, None)?;
+            let geo_point = GeoPoint::new(datum.p_lat * DEG, datum.p_lon * DEG, None)?;
+            let intercept_distance = geodesic_inverse(&geo_point, &intercept)?.geo_distance;
+
+            let p_geo = GeoPoint::new(datum.p_lat * DEG, datum.p_lon * DEG, None)?;
+            let p_xyz = geocentric_forward(&p_geo)?;
+            let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
+            let result = cartesian_intercept_distance(&seg, &p_xyz)?;
+
+            // For nearby points and geodesics, the linear estimate and the
+            // actual geodesic distance should be somewhat close.
+            assert_relative_eq!(
+                result.value_unsafe,
+                intercept_distance.value_unsafe,
+                max_relative = 0.001
+            );
+        }
+
+        Ok(())
     }
 }

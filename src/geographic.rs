@@ -6,7 +6,7 @@ use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
 use crate::measure::{DEG, Degree};
-use crate::types::{GeoPoint, GeoXYZ, TypeError, XYPoint};
+use crate::types::{GeoAndXyzPoint, GeoPoint, XyzPoint, TypeError, XyPoint};
 
 #[derive(Error, Debug)]
 pub enum GeographicError {
@@ -100,8 +100,8 @@ pub fn geodesic_direct(
 /// Given a projection centerpoint `point0` and a point `point`, finds the
 /// cartesian position of `point` in the gnomonic projection centered on
 /// `point0`.
-pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XYPoint> {
-    let mut result = XYPoint::default();
+pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> {
+    let mut result = XyPoint::default();
     crate::ffi::gnomonic_forward(
         point0.lat().value_unsafe,
         point0.lon().value_unsafe,
@@ -118,7 +118,7 @@ pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XYPoint> 
 /// Given a projection centerpoint `point0` and a projected (cartesian) point
 /// `xypoint`, finds the latitude and longitude corresponding to `xypoint` given
 /// the gnomonic projection centered on `point0`.
-pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint> {
+pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XyPoint) -> Result<GeoPoint> {
     let mut lat_deg = 0.0;
     let mut lon_deg = 0.0;
     crate::ffi::gnomonic_reverse(
@@ -132,7 +132,7 @@ pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XYPoint) -> Result<GeoPoint
     Ok(GeoPoint::new(lat_deg * DEG, lon_deg * DEG, None)?)
 }
 
-pub fn geocentric_forward(point: &GeoPoint) -> Result<GeoXYZ> {
+pub fn geocentric_forward(point: &GeoPoint) -> Result<XyzPoint> {
     let mut x = 0.0;
     let mut y = 0.0;
     let mut z = 0.0;
@@ -144,11 +144,23 @@ pub fn geocentric_forward(point: &GeoPoint) -> Result<GeoXYZ> {
         &mut y,
         &mut z
     )?;
-    Ok(GeoXYZ {
+    Ok(XyzPoint {
         x: x * M,
         y: y * M,
         z: z * M,
     })
+}
+
+impl TryFrom<GeoPoint> for GeoAndXyzPoint {
+    type Error = GeographicError;
+
+    fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
+        let xyz = geocentric_forward(&value)?;
+        Ok(GeoAndXyzPoint {
+            geo: value,
+            xyz,
+        })
+    }
 }
 
 #[cfg(test)]

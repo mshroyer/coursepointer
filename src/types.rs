@@ -1,7 +1,7 @@
 use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
-
+use crate::geographic::{geocentric_forward, GeographicError};
 use crate::measure::{DEG, Degree};
 
 #[derive(Error, Debug)]
@@ -120,30 +120,54 @@ impl RelativeEq for GeoPoint {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct GeoXYZ {
+pub struct XyzPoint {
     pub x: Meter<f64>,
     pub y: Meter<f64>,
     pub z: Meter<f64>,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct GeoSegment {
-    pub point1: GeoPoint,
-    pub point2: GeoPoint,
+pub struct GeoAndXyzPoint {
+    pub geo: GeoPoint,
+    pub xyz: XyzPoint,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct GeoSegment<P: GeoSegmentPoint> {
+    pub point1: P,
+    pub point2: P,
     pub geo_distance: Meter<f64>,
     pub azimuth1: Degree<f64>,
-    pub xyz1: GeoXYZ,
-    pub xyz2: GeoXYZ,
+}
+
+/// A point that can be used in a [`GeoSegment`].
+///
+/// At minimum, this must be able to produce a reference to a [`GeoPoint`]
+/// indicating the point's latitude and longitude.
+pub trait GeoSegmentPoint {
+    fn geo(&self) -> &GeoPoint;
+}
+
+impl GeoSegmentPoint for GeoPoint {
+    fn geo(&self) -> &GeoPoint {
+        &self
+    }
+}
+
+impl GeoSegmentPoint for GeoAndXyzPoint {
+    fn geo(&self) -> &GeoPoint {
+        &self.geo
+    }
 }
 
 /// A point on a 2D projection.
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct XYPoint {
+pub struct XyPoint {
     pub x: Meter<f64>,
     pub y: Meter<f64>,
 }
 
-impl Default for XYPoint {
+impl Default for XyPoint {
     fn default() -> Self {
         Self {
             x: 0.0 * M,
