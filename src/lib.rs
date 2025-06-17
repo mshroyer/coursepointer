@@ -39,7 +39,7 @@ pub use crate::course::{CourseOptions, InterceptStrategy};
 use crate::fit::CourseFile;
 use crate::gpx::{GpxItem, GpxReader};
 pub use crate::measure::{Kilometer, Mile};
-use crate::point_type::{get_course_point_type, get_gpx_creator, GpxCreator};
+use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};
 use crate::types::TypeError;
 
 #[derive(Error, Debug)]
@@ -132,10 +132,10 @@ pub fn convert_gpx<R: BufRead, W: Write>(
         );
     }
 
-    let mut course_set = builder.build()?;
-    if course_set.courses.len() != 1usize {
-        return Err(CoursePointerError::CourseCount(course_set.courses.len()));
+    if builder.num_courses() != 1usize {
+        return Err(CoursePointerError::CourseCount(builder.num_courses()));
     }
+    let mut course_set = builder.build()?;
     let course = course_set.courses.remove(0);
     if course.records.is_empty() {
         return Err(CoursePointerError::EmptyRecords);

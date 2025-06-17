@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use phf::phf_map;
 use tracing::warn;
+
 use crate::fit::CoursePointType;
 use crate::gpx::GpxWaypoint;
 

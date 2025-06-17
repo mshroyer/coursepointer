@@ -109,6 +109,10 @@ impl CourseSetBuilder {
         self
     }
 
+    pub fn num_courses(&self) -> usize {
+        self.courses.len()
+    }
+
     pub fn build(mut self) -> Result<CourseSet> {
         let mut courses = vec![];
         self.process_waypoints()?;
