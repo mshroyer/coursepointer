@@ -5,7 +5,7 @@ edition = "2024"
 default-run = "coursepointer"
 
 [package.metadata.winresource]
-FileDescription = "CoursePointer"
+FileDescription = "CoursePointer CLI"
 ProductName = "CoursePointer"
 LegalCopyright = "© 2025 Mark Shroyer - MIT license"
 
