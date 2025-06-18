@@ -154,7 +154,7 @@ where
 
 impl HasGeoPoint for GeoPoint {
     fn geo(&self) -> &GeoPoint {
-        &self
+        self
     }
 }
 
@@ -170,7 +170,7 @@ pub trait HasXyzPoint {
 
 impl HasXyzPoint for XyzPoint {
     fn xyz(&self) -> &XyzPoint {
-        &self
+        self
     }
 }
 

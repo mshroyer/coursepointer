@@ -155,7 +155,7 @@ impl TryFrom<GeoPoint> for XyzPoint {
     type Error = GeographicError;
 
     fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
-        Ok(geocentric_forward(&value)?)
+        geocentric_forward(&value)
     }
 }
 

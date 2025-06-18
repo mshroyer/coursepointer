@@ -149,11 +149,11 @@ where
         course_distance: Meter<f64>,
     ) -> Result<InterceptSolution> {
         let intercept = karney_interception(segment, &waypoint.point)?;
-        let distance = geodesic_inverse(&waypoint.point.geo(), &intercept)?.geo_distance;
+        let distance = geodesic_inverse(waypoint.point.geo(), &intercept)?.geo_distance;
         if distance.value_unsafe.is_nan() {
             return Err(CourseError::NaNDistance);
         }
-        let offset = geodesic_inverse(&segment.point1.geo(), &intercept)?.geo_distance;
+        let offset = geodesic_inverse(segment.point1.geo(), &intercept)?.geo_distance;
 
         Ok(InterceptSolution::Near(NearIntercept {
             intercept_point: intercept,
@@ -174,7 +174,7 @@ where
                     <Self as SolveIntercept<P>>::solve_intercept(
                         &mut slns,
                         segment,
-                        &waypoint,
+                        waypoint,
                         self.options.threshold,
                         course_distance,
                     )?;
@@ -337,7 +337,7 @@ impl PartialOrd for InterceptSolution {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self {
             InterceptSolution::Near(self_near) => match other {
-                InterceptSolution::Near(other_near) => self_near.partial_cmp(&other_near),
+                InterceptSolution::Near(other_near) => self_near.partial_cmp(other_near),
                 InterceptSolution::Far => Some(Ordering::Less),
             },
             InterceptSolution::Far => match other {

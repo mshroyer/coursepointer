@@ -67,15 +67,15 @@ where
 {
     // Start with an initial guess of an intercept at the geodesic's midpoint:
     let mut intercept = geodesic_direct(
-        &segment.point1.geo(),
+        segment.point1.geo(),
         segment.azimuth1,
         segment.geo_distance / 2.0,
     )?
     .point2;
 
     for _ in 0..10 {
-        let start = gnomonic_forward(&intercept, &segment.point1.geo())?;
-        let end = gnomonic_forward(&intercept, &segment.point2.geo())?;
+        let start = gnomonic_forward(&intercept, segment.point1.geo())?;
+        let end = gnomonic_forward(&intercept, segment.point2.geo())?;
         let p = gnomonic_forward(&intercept, point.geo())?;
         let b = subtract_xypoints(&end, &start);
         let a = subtract_xypoints(&p, &start);
