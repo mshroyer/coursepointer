@@ -92,6 +92,10 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
         let mut res = winresource::WindowsResource::new();
         res.set_icon("res/coursepointer.ico");
+        res.set_language(winapi::um::winnt::MAKELANGID(
+            winapi::um::winnt::LANG_ENGLISH,
+            winapi::um::winnt::SUBLANG_ENGLISH_US
+        ));
         res.compile().unwrap();
     }
 }

@@ -5,6 +5,8 @@ edition = "2024"
 default-run = "coursepointer"
 
 [package.metadata.winresource]
+FileDescription = "CoursePointer"
+ProductName = "CoursePointer"
 LegalCopyright = "© 2025 Mark Shroyer - MIT license"
 
 [lib]
@@ -50,6 +52,7 @@ full-geolib = []
 
 [build-dependencies]
 cxx-build = "1.0.158"
+winapi = { version = "0.3.9", features = ["winnt"] }
 winresource = "0.1.22"
 
 [workspace]

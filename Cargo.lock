@@ -235,6 +235,7 @@ dependencies = [
  "tracing",
  "tracing-span-tree",
  "tracing-subscriber",
+ "winapi",
  "winresource",
 ]
 
