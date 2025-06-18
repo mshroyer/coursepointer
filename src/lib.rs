@@ -26,6 +26,7 @@ mod measure;
 mod point_type;
 mod types;
 
+use std::convert::Infallible;
 use std::io::{BufRead, Write};
 
 use chrono::Utc;
@@ -61,6 +62,8 @@ pub enum CoursePointerError {
     Type(#[from] TypeError),
     #[error("Geographic calculation error")]
     Geographic(#[from] GeographicError),
+    #[error("Infallible")]
+    Infallible(#[from] Infallible),
 }
 
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
