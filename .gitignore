@@ -8,4 +8,4 @@
 target/
 __pycache__/
 
-flamegraph.svg
+flamegraph*.svg
