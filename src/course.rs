@@ -168,7 +168,7 @@ where
             let span = span!(Level::DEBUG, "waypoint", name = %waypoint.name);
             let _enter = span.enter();
             for course in &mut self.courses {
-                let mut slns = Vec::new();
+                let mut slns = Vec::with_capacity(self.waypoints.len());
                 let mut course_distance = 0.0 * M;
                 for segment in &course.segments {
                     <Self as SolveIntercept<P>>::solve_intercept(
