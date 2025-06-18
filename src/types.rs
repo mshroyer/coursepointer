@@ -2,6 +2,7 @@ use approx::{AbsDiffEq, RelativeEq, abs_diff_eq, relative_eq};
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
+use crate::course::CourseError;
 use crate::measure::{DEG, Degree};
 
 #[derive(Error, Debug)]
@@ -133,14 +134,21 @@ pub struct GeoAndXyzPoint {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct GeoSegment<P: HasGeoPoint> {
+pub struct GeoSegment<P>
+where
+    P: HasGeoPoint,
+    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
+{
     pub point1: P,
     pub point2: P,
     pub geo_distance: Meter<f64>,
     pub azimuth1: Degree<f64>,
 }
 
-pub trait HasGeoPoint {
+pub trait HasGeoPoint: PartialEq + TryFrom<GeoPoint> + Copy
+where
+    <Self as TryFrom<GeoPoint>>::Error: Into<CourseError>,
+{
     fn geo(&self) -> &GeoPoint;
 }
 

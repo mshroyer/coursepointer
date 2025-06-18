@@ -11,12 +11,11 @@ use dimensioned::si::{M, Meter};
 use thiserror::Error;
 use tracing::instrument;
 
+use crate::course::CourseError;
 use crate::geographic::{
     GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
 };
-use crate::types::{
-    GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint, HasXyzPoint, XyPoint, XyzPoint,
-};
+use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint, HasXyzPoint, XyPoint};
 
 #[derive(Error, Debug)]
 pub enum AlgorithmError {
@@ -64,6 +63,7 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 pub fn karney_interception<P>(segment: &GeoSegment<P>, point: &P) -> Result<GeoPoint>
 where
     P: HasGeoPoint,
+    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     // Start with an initial guess of an intercept at the geodesic's midpoint:
     let mut intercept = geodesic_direct(
@@ -235,6 +235,7 @@ pub trait FromGeoPoints<P>
 where
     Self: Sized,
     P: HasGeoPoint,
+    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError>;
 }
@@ -242,6 +243,7 @@ where
 impl<P> FromGeoPoints<P> for GeoSegment<P>
 where
     P: HasGeoPoint,
+    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError> {
         let inverse = geodesic_inverse(point1.geo(), point2.geo())?;
@@ -339,7 +341,6 @@ mod tests {
 
     use anyhow::Result;
     use approx::assert_relative_eq;
-    use dimensioned::si::M;
     use serde::Deserialize;
 
     use super::{
