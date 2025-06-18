@@ -88,4 +88,10 @@ fn main() {
     }
     println!("cargo:rerun-if-changed=src/shim.cpp");
     println!("cargo:rerun-if-changed=include/shim.hpp");
+
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
+        let mut res = winresource::WindowsResource::new();
+        res.set_icon("res/coursepointer.ico");
+        res.compile().unwrap();
+    }
 }
