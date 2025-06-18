@@ -266,7 +266,7 @@ where
             ""
         },
     )?;
-    let max_listing = 16usize;
+    let max_listing = 24usize;
     for i in 0..min(max_listing, info.course_points.len()) {
         let point = &info.course_points[i];
         writeln!(
