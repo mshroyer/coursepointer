@@ -1,9 +1,16 @@
 # CoursePointer
 
 A command-line tool that converts GPX routes/tracks and waypoints into Garmin
-FIT course files with "course points". This allows your waypoints to appear in
-[Up Ahead](https://support.garmin.com/en-US/?faq=lQMibRoY2I5Y4pP8EXgxv7) on
-recent Garmin watches and bicycle computers, displaying their 
+FIT course files with [course
+points](https://support.garmin.com/en-US/?faq=aisqGZTLwH5LvbExSdO6L6). This
+lets your waypoints appear in [Up
+Ahead](https://support.garmin.com/en-US/?faq=lQMibRoY2I5Y4pP8EXgxv7) on
+compatible Garmin watches and bicycle computers, showing the distance
+remaining (and on some devices, estimated time) to reach them.
+
+This provides a way to author courses in third-party applications that don't
+understand course points, while stil using Up Ahead functionality as though
+the course had been created in Garmin Connect.
 
 ## Usage example
 
@@ -13,7 +20,7 @@ entire folder as a GPX file:
 
 ![Example hike](docs/img/gaia-rancho-wildcat.png)
 
-Run coursepointer on the GPX file to produce a FIT file:
+Run coursepointer on the GPX download to produce a FIT file:
 
 ```
 % coursepointer convert-gpx rancho-wildcat.gpx rancho-wildcat.fit
@@ -35,6 +42,48 @@ from the Garmin mobile app.  Then, when navigating the course your course
 points will appear in Up Ahead on compatible devices:
 
 ![Garmin Fenix Up Ahead screenshot](docs/img/gaia-rancho-wildcat-screenshot.png)
+
+## Detailed description
+
+GPX waypoints specify a latitude, longitude, and possibly elevation in
+[WGS84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinates.
+Waypoints can be included in the same GPX file as a route or a track, but
+that doesn't mean they're necessarily located *on* the route.
+
+In contrast, the course points in a FIT course file are specifically points
+along the course.  In addition to their latitude and longitude, they also
+specify the distance at which they appear along the course, used by the Up
+Ahead feature to compute distance remaining.
+
+So given a GPX route and a set of waypoints, coursepointer:
+
+1. Identifies which waypoints intercept the route within a configurable
+   threshold distance
+2. Calculates that point of interception's distance along the total route
+3. Exports the route and these course points in FIT format
+
+See [docs/Course Point Distances.pdf](docs/Course%20Point%20Distances.pdf) for
+the calculations used.
+
+## Wait, can't I just import my GPX into Garmin Connect?
+
+Actually no, and this is a common source of confusion!
+
+Importing a GPX file with a route and waypoints into Garmin Connect's web
+application does convert any waypoints within about 35m of the course into
+course points.  However, at the time of writing it doesn't compute their
+distances, instead setting them to zero.
+
+This leads to surprising behavior when you navigate this course on your
+device: Your course points show up at the correct positions on the map, and
+may appear in Up Ahead before you begin.  But as soon as you start recording
+your course and pass distance zero, they'll all disappear!
+
+This has been discussed [on
+Reddit](https://www.reddit.com/r/Garmin/comments/1ds478x/how_does_up_ahead_actually_work/)
+and [in Garmin's
+forums](https://forums.garmin.com/outdoor-recreation/outdoor-recreation/f/fenix-7-series/369450/is-garmin-going-to-ever-fix-a-glaring-bug-with-garmin-connect-gpx-course-import-which-results-in-up-ahead-simply-not-working/1765480#1765480),
+for example.
 
 ## Development
 
