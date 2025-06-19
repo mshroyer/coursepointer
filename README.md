@@ -68,15 +68,14 @@ On your command line, run `coursepointer help` for usage information.
 
 ## Detailed description
 
-GPX waypoints specify a latitude, longitude, and optionally elevation in
-[WGS84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinates.
+GPX waypoints specify a latitude, longitude, and optionally elevation.
 Waypoints can be included in the same GPX file as a route or a track, but that
-doesn't mean they're necessarily located *on* the route.
+doesn't mean they're necessarily located *along* the route.
 
-In contrast, the course points in a FIT course file are specifically points
-along the course.  In addition to their latitude and longitude, they also
-specify the distance at which they appear along the course, used by the Up
-Ahead feature to compute distance remaining.
+In contrast, the course points in a FIT course file are specifically points on
+the course.  In addition to their latitude and longitude, they also specify
+the distance at which they appear along the course, used by the Up Ahead
+feature to compute distance remaining.
 
 So given a GPX route and a set of waypoints, coursepointer:
 
@@ -126,10 +125,14 @@ I made this originally with Ride with GPS in mind, but their new [Waypoints
 feature](https://support.ridewithgps.com/hc/en-us/articles/36795897776411-Waypoints)
 natively supports exporting POIs as FIT course points.
 
+## Troubleshooting
+
+TODO
+
 ## Development
 
 See [docs/development.md](docs/development.md).
 
 ## License
 
-TODO
+[MIT License](LICENSE.txt)
