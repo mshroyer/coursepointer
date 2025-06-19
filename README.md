@@ -11,7 +11,7 @@ When planning a hiking route on [Gaia GPS](https://gaiagps.com/), you can put
 a route and waypoints together in a Saved Items folder and then export the
 entire folder as a GPX file:
 
-<img alt="Example hike" src="docs/img/gaia-rancho-wildcat.png" width="75%" height="auto">
+![Example hike](docs/img/gaia-rancho-wildcat.png)
 
 Run coursepointer on the GPX file to produce a FIT file:
 
