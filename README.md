@@ -7,11 +7,34 @@ recent Garmin watches and bicycle computers, displaying their
 
 ## Usage example
 
-Suppose you're planning a hiking route on [Gaia GPS](https://gaiagps.com/). In
-addition to the route itself, you might have identified several points of
-interest that you've saved as "waypoints":
+When planning a hiking route on [Gaia GPS](https://gaiagps.com/), you can put
+a route and waypoints together in a Saved Items folder and then export the
+entire folder as a GPX file:
 
-![Example hike](docs/img/gaia-rancho-wildcat.png)
+<img alt="Example hike" src="docs/img/gaia-rancho-wildcat.png" width="75%" height="auto">
+
+Run coursepointer on the GPX file to produce a FIT file:
+
+```
+% coursepointer convert-gpx rancho-wildcat.gpx rancho-wildcat.fit
+Converted course "Rancho Wildcat" of length 3.03 mi
+
+Processed 5 waypoints, 5 of which were identified as course points:
+- Wildcat loop at 1.09 mi along the course
+- Vista point at 1.68 mi
+- Toilets at 2.70 mi
+- Drinking water at 2.74 mi
+- Deer Hollow Farm at 2.82 mi
+
+Output is in /Users/mshroyer/Desktop/rancho-wildcat.fit
+```
+
+Copy the FIT file to the device over USB, or import it into [Garmin
+Connect](https://connect.garmin.com/modern/) and then send it to your device
+from the Garmin mobile app.  Then, when navigating the course your course
+points will appear in Up Ahead on compatible devices:
+
+![Garmin Fenix Up Ahead screenshot](docs/img/gaia-rancho-wildcat-screenshot.png)
 
 ## Development
 
