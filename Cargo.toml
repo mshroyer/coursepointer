@@ -7,7 +7,7 @@ default-run = "coursepointer"
 [package.metadata.winresource]
 FileDescription = "CoursePointer CLI"
 ProductName = "CoursePointer"
-LegalCopyright = "© 2025 Mark Shroyer - MIT license"
+LegalCopyright = "© 2025 Mark Shroyer - MIT/Apache 2.0"
 
 [lib]
 name = "coursepointer"
