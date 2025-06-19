@@ -1,65 +1,21 @@
-<html>
+# Third-Party Licenses
 
-<head>
-    <style>
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: #333;
-                color: white;
-            }
-            a {
-                color: skyblue;
-            }
-        }
-        .container {
-            font-family: sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .intro {
-            text-align: center;
-        }
-        .licenses-list {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-        }
-        .license-used-by {
-            margin-top: -10px;
-        }
-        .license-text {
-            max-height: 200px;
-            overflow-y: scroll;
-            white-space: pre-wrap;
-        }
-    </style>
-</head>
+The software licenses of the third-party code included in the binary
+distribution of coursepointer include:
 
-<body>
-    <main class="container">
-        <div class="intro">
-            <h1>Third Party Licenses</h1>
-            <p>This page lists the licenses of the projects used in coursepointer.</p>
-        </div>
-    
-        <h2>Overview of licenses:</h2>
-        <ul class="licenses-overview">
-            {{#each overview}}
-            <li><a href="#{{id}}">{{name}}</a> ({{count}})</li>
-            {{/each}}
-        </ul>
+{{#each overview}}
+- {{name}}
+{{/each}}
 
-        <h2>All license text:</h2>
-        <ul class="licenses-list">
-            {{!-- Manually copy LICENSE.txt GeographicLib since cargo-about can't find it. --}}
-            <li class="license">
-                <h3 id="MIT-Karney">MIT License</h3>
-                <h4>Used by:</h4>
-                <ul class="license-used-by">
-                    <li><a href="https://github.com/geographiclib/geographiclib">GeographicLib 2.5</a></li>
-                </ul>
-                <pre class="license-text">The MIT License (MIT).
+## Full Third-Party License Text
 
+### MIT License
+
+Used by:
+
+- [GeographicLib 2.5](https://github.com/geographiclib/geographiclib)
+
+```
 Copyright (c) 2008-2023, Charles Karney
 
 Permission is hereby granted, free of charge, to any person
@@ -81,23 +37,19 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-</pre>
-            </li>
+```
 
-            {{#each licenses}}
-            <li class="license">
-                <h3 id="{{id}}">{{name}}</h3>
-                <h4>Used by:</h4>
-                <ul class="license-used-by">
-                    {{#each used_by}}
-                    <li><a href="{{#if crate.repository}} {{crate.repository}} {{else}} https://crates.io/crates/{{crate.name}} {{/if}}">{{crate.name}} {{crate.version}}</a></li>
-                    {{/each}}
-                </ul>
-                <pre class="license-text">{{text}}</pre>
-            </li>
-            {{/each}}
-        </ul>
-    </main>
-</body>
+{{#each licenses}}
+### {{name}}
 
-</html>
+Used by:
+
+{{#each used_by}}
+- [{{crate.name}} {{crate.version}}]({{#if crate.repository}} {{crate.repository}} {{else}} https://crates.io/crates/{{crate.name}} {{/if}})
+{{/each}}
+
+```
+{{text}}
+```
+
+{{/each}}
