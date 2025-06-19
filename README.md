@@ -1,7 +1,5 @@
 # CoursePointer
 
-![CoursePointer icon](docs/img/icon-64.png)
-
 A command-line tool that converts GPX routes/tracks and waypoints into Garmin
 FIT course files with [course
 points](https://support.garmin.com/en-US/?faq=aisqGZTLwH5LvbExSdO6L6). This
