@@ -13,6 +13,9 @@
 //! # Feature flags
 //!
 //! - `cli` enables the additional dependencies needed by the CLI
+//! - `floor` enables an "intercept distance floor" optimization when computing
+//!   waypoint-course intercepts, which provides a significant speedup (10s to
+//!   40ms on the cptr006.gpx stress test, for example).
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
 //!   of a hand-picked subset
 

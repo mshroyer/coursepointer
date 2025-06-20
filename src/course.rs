@@ -504,9 +504,9 @@ pub struct Record {
 
 /// A waypoint to be considered as a course point.
 ///
-/// In contrast with [`GpxWaypoint`], this type specifies a FIT
+/// In contrast with `GpxWaypoint`, this type specifies a FIT
 /// [`CoursePointType`] instead of a set of optional GPX attributes. And in
-/// contrast with a [`CoursePoint`], a Waypoint is not known to necessarily lie
+/// contrast with a `CoursePoint`, a Waypoint is not known to necessarily lie
 /// along the course and lacks a known course distance.
 pub struct Waypoint<P>
 where
