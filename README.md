@@ -114,11 +114,15 @@ This should work with GPX routes or tracks and waypoints authoried in
 arbitrary route-planning applications.
 
 However, for routes or tracks exported by [Gaia GPS](https://gaiagps.com/) or
-[Ride with GPS](https://ridewithgps.com/), coursepointer attempts to map the
-waypoint or POI type (respectively) to a relevant course point type instead of
-`generic`.  See [docs/point_types.md](docs/point_types.md) for more
+[Ride with GPS](https://ridewithgps.com/), coursepointer additionally attempts
+to map the waypoint or POI type (respectively) to a relevant course point type
+instead of `generic`, so you'll see a relevant course point icon instead of a
+generic pin.  See [docs/point_types.md](docs/point_types.md) for more
 information about how point types from these apps are interpreted as course
 point types.
+
+Currently, GPX input files must contain exactly one route or track, and zero
+or more waypoints.  Routes and tracks are treated identically.
 
 I made this originally with Ride with GPS in mind, but their new [Waypoints
 feature](https://support.ridewithgps.com/hc/en-us/articles/36795897776411-Waypoints)
