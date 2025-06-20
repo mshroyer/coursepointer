@@ -3,8 +3,6 @@
 # IDEs
 .idea/
 
-/.cargo/
-
 target/
 __pycache__/
 
