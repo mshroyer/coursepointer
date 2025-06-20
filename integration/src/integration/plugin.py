@@ -58,7 +58,7 @@ def caching_convert(coursepointer_cli):
         out_dir = Path(tempfile.mkdtemp(dir=session_dir))
         out_file = out_dir / "out.fit"
         try:
-            args = ["convert-gpx", input, out_file]
+            args = ["convert", input, out_file]
             args.extend(extra_args)
             coursepointer_cli(*args)
         except subprocess.CalledProcessError as e:

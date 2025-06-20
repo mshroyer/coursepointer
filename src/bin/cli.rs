@@ -94,7 +94,7 @@ impl DistUnit {
 }
 
 #[derive(Args, Debug)]
-struct ConvertGpxArgs {
+struct ConvertArgs {
     /// GPX input path
     input: PathBuf,
 
@@ -154,16 +154,15 @@ enum Commands {
     ///
     /// Given a GPX file containing a single track, converts the track to a
     /// Garmin FIT course file.
-    #[clap(alias = "gpx")]
-    ConvertGpx(ConvertGpxArgs),
+    Convert(ConvertArgs),
 
     /// Print software license info
     License,
 }
 
 #[instrument(level = "trace", skip_all)]
-fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertGpxArgs) -> Result<String> {
-    debug!("convert-gpx args: {:?}", sub_args);
+fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
+    debug!("convert args: {:?}", sub_args);
 
     if sub_args.threshold < 0.0 {
         bail!("Threshold cannot be negative");
@@ -340,7 +339,7 @@ fn main() -> Result<()> {
     }
 
     let report = match &args.cmd {
-        Commands::ConvertGpx(sub_args) => convert_gpx_cmd(&args, sub_args),
+        Commands::Convert(sub_args) => convert_gpx_cmd(&args, sub_args),
         Commands::License => license_cmd(),
     }?;
 

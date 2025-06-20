@@ -24,7 +24,7 @@ class TestUI:
     def test_missing_input(self, tmpdir, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
-                "convert-gpx", tmpdir / "nonexistent.gpx", tmpdir / "out.fit"
+                "convert", tmpdir / "nonexistent.gpx", tmpdir / "out.fit"
             )
 
         assert "Opening the GPX <INPUT> file" in einfo.value.stderr
@@ -34,7 +34,7 @@ class TestUI:
             print("Hello", file=f)
 
         with raises(subprocess.CalledProcessError) as einfo:
-            coursepointer_cli("convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit")
+            coursepointer_cli("convert", data / "cptr002.gpx", tmpdir / "out.fit")
 
         # Error message can vary slightly by platform
         assert "file exists" in einfo.value.stderr.lower()
@@ -44,7 +44,7 @@ class TestUI:
             print("Hello", file=f)
 
         coursepointer_cli(
-            "convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit", "--force"
+            "convert", data / "cptr002.gpx", tmpdir / "out.fit", "--force"
         )
 
     def test_speed_arg(self, tmpdir, data, ureg, caching_convert, caching_mesgs):
@@ -66,7 +66,7 @@ class TestUI:
     def test_no_courses(self, tmpdir, data, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
-                "convert-gpx", data / "invalid_empty.gpx", tmpdir / "out.fit"
+                "convert", data / "invalid_empty.gpx", tmpdir / "out.fit"
             )
 
         assert "No course was found" in einfo.value.stderr
@@ -74,7 +74,7 @@ class TestUI:
     def test_bad_xml(self, tmpdir, data, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
-                "convert-gpx", data / "invalid_bad_xml.gpx", tmpdir / "out.fit"
+                "convert", data / "invalid_bad_xml.gpx", tmpdir / "out.fit"
             )
 
         assert "<INPUT> is not a valid GPX file" in einfo.value.stderr
@@ -82,7 +82,7 @@ class TestUI:
     def test_negative_threshold(self, tmpdir, data, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
-                "convert-gpx",
+                "convert",
                 data / "cptr002.gpx",
                 tmpdir / "out.fit",
                 "--threshold=-30",
@@ -93,7 +93,7 @@ class TestUI:
     def test_low_speed(self, tmpdir, data, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
-                "convert-gpx", data / "cptr002.gpx", tmpdir / "out.fit", "--speed=0"
+                "convert", data / "cptr002.gpx", tmpdir / "out.fit", "--speed=0"
             )
 
         assert "too low" in einfo.value.stderr
