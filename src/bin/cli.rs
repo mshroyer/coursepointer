@@ -203,13 +203,13 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     }
     let fit_file = BufWriter::new(
         if sub_args.force {
-            File::create(&output)
+            File::create(output)
         } else {
-            File::create_new(&output)
+            File::create_new(output)
         }
         .context("Creating the <OUTPUT> file")?,
     );
-    info!("Created FIT output file: {:?}", absolute(&output)?);
+    info!("Created FIT output file: {:?}", absolute(output)?);
 
     let course_options = CourseOptions {
         threshold: sub_args.threshold * M,
@@ -237,9 +237,9 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     }?;
 
     match args.distance_unit.get() {
-        DistUnit::M => generate_conversion_report::<Meter<f64>>(info, &output),
-        DistUnit::Km => generate_conversion_report::<Kilometer<f64>>(info, &output),
-        DistUnit::Mi => generate_conversion_report::<Mile<f64>>(info, &output),
+        DistUnit::M => generate_conversion_report::<Meter<f64>>(info, output),
+        DistUnit::Km => generate_conversion_report::<Kilometer<f64>>(info, output),
+        DistUnit::Mi => generate_conversion_report::<Mile<f64>>(info, output),
         _ => {
             error!(
                 "Failed to detect distance unit for report: {}",
