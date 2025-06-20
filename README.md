@@ -46,24 +46,18 @@ points will appear in Up Ahead on compatible devices:
 ## Installation and running
 
 At the moment this is a source-only distribution, so you'll need a Rust
-toolchain to build and run the CLI.  Install a toolchain with
-[rustup](https://rustup.rs) and then clone this repository and its submodule:
+toolchain to build and run the CLI.  But it is at least published as a crate.
+Install a toolchain with [rustup](https://rustup.rs/) and then run:
 
 ```
-git clone https://github.com/mshroyer/coursepointer/
-cd coursepointer
-git submodule update --init
+cargo install --locked coursepointer
 ```
-
-Then build the optimized release profile with:
-
-```
-cargo build -r
-```
-
-This will put the CLI executable under the target/release subdirectory.
 
 On your command line, run `coursepointer help` for usage information.
+
+You can also clone and build this repository for the very most recent version,
+of course.  See [docs/development.md](docs/development.md) for more
+information.
 
 ## Detailed description
 
