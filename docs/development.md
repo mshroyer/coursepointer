@@ -5,8 +5,7 @@ If you've cloned CoursePointer as a git repo, you'll need to import
 sources as a git submodule before building.  Run:
 
 ```
-git submodule init
-git submodule update
+git submodule update --init
 ```
 
 ## Running and testing

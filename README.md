@@ -38,7 +38,7 @@ Output is in /Users/mshroyer/Desktop/rancho-wildcat.fit
 
 Copy the FIT file to the device over USB, or import it into [Garmin
 Connect](https://connect.garmin.com/modern/) and then send it to your device
-from the Garmin mobile app.  Then, when navigating the course your course
+from the Garmin mobile app.  Then, when navigating the course, your course
 points will appear in Up Ahead on compatible devices:
 
 ![Garmin Fenix Up Ahead screenshot](docs/img/gaia-rancho-wildcat-screenshot.png)
@@ -52,8 +52,7 @@ toolchain to build and run the CLI.  Install a toolchain with
 ```
 git clone https://github.com/mshroyer/coursepointer/
 cd coursepointer
-git submodule init
-git submodule update
+git submodule update --init
 ```
 
 Then build the optimized release profile with:
@@ -123,7 +122,11 @@ point types.
 
 I made this originally with Ride with GPS in mind, but their new [Waypoints
 feature](https://support.ridewithgps.com/hc/en-us/articles/36795897776411-Waypoints)
-natively supports exporting POIs as FIT course points.
+natively supports exporting POIs as FIT course points.  RWGPS Waypoints will
+probably be more convenient than using this tool for most users, though
+coursepointer does offer more control over things like virtual partner speed
+and behavior when passing by POIs multiple times, such as on out-and-back
+routes.
 
 ## Troubleshooting
 
