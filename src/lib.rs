@@ -24,6 +24,7 @@ mod course;
 mod fit;
 mod geographic;
 mod gpx;
+#[doc(hidden)]
 pub mod internal;
 mod measure;
 mod point_type;
@@ -43,7 +44,6 @@ pub use crate::course::{CourseOptions, InterceptStrategy};
 use crate::fit::CourseFile;
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
-pub use crate::measure::{Kilometer, Mile};
 use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};
 use crate::types::TypeError;
 

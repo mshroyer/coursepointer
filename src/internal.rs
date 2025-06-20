@@ -6,5 +6,5 @@
 
 pub use crate::course::{CourseOptions, CourseSetBuilder, Waypoint};
 pub use crate::fit::{CourseFile, CoursePointType, PROFILE_VERSION};
-pub use crate::measure::DEG;
+pub use crate::measure::{DEG, Kilometer, Mile};
 pub use crate::types::GeoPoint;

@@ -8,10 +8,9 @@ use anyhow::{Context, Result, bail};
 use clap::builder::styling::Styles;
 use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
-use coursepointer::internal::CoursePointType;
+use coursepointer::internal::{CoursePointType, Kilometer, Mile};
 use coursepointer::{
     ConversionInfo, CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy,
-    Kilometer, Mile,
 };
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};

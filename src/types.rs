@@ -204,6 +204,7 @@ impl Default for XyPoint {
 
 /// Instantiate a `GeoPoint` with a tuple-like syntax, optionally including an
 /// elevation in meters.
+#[doc(hidden)]
 #[macro_export]
 macro_rules! geo_point {
     ( $lat:expr, $lon:expr ) => {
@@ -224,6 +225,7 @@ macro_rules! geo_point {
 
 /// Instantiate a vec of `GeoPoint` with tuple-like syntax, optionally including
 /// an elevation in meters.
+#[doc(hidden)]
 #[macro_export]
 macro_rules! geo_points {
     ( $( ( $lat:expr, $lon:expr $(, $ele:expr )? $(,)? ) ),* $(,)? ) => {
