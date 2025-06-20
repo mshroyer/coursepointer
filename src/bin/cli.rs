@@ -5,20 +5,17 @@ use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf, absolute};
 
 use anyhow::{Context, Result, bail};
-use chrono::Utc;
 use clap::builder::styling::Styles;
 use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
-use coursepointer::internal::{
-    CourseFile, CoursePointType, CourseSetBuilder, DEG, GeoPoint, Waypoint,
-};
+use coursepointer::internal::CoursePointType;
 use coursepointer::{
     ConversionInfo, CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy,
     Kilometer, Mile,
 };
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
-use strum::{Display, IntoEnumIterator};
+use strum::Display;
 use sys_locale::get_locale;
 use tracing::level_filters::LevelFilter;
 use tracing::{Level, debug, enabled, error, info, instrument, warn};
@@ -62,7 +59,7 @@ struct Cli {
     log_level: Level,
 
     /// The unit of distance used in output on the command line.
-    /// 
+    ///
     /// If unspecified, this will default to either km or mi based on your
     /// system locale.
     #[clap(long, short = 'u', default_value_t = DistUnit::Autodetect)]
@@ -162,9 +159,6 @@ enum Commands {
 
     /// Print software license info
     License,
-
-    /// Writes a course with samples of each course point type
-    SampleCoursePoints(SampleCoursePointsArgs),
 }
 
 #[instrument(level = "trace", skip_all)]
@@ -310,54 +304,19 @@ where
     Ok(r)
 }
 
-fn sample_course_points_cmd(sub_args: &SampleCoursePointsArgs) -> Result<String> {
-    let mut output = sub_args.name.clone();
-    output += ".fit";
-    let fit_output = BufWriter::new(File::create(output).context("Creating the <OUTPUT> file")?);
-    let mut lon = sub_args.lon + sub_args.increment;
-    let mut builder = CourseSetBuilder::new(Default::default());
-    let mut n = 0usize;
-    for cptype in CoursePointType::iter() {
-        if (cptype as u8) < (sub_args.start_type as u8) {
-            continue;
-        }
-        if n >= sub_args.num_types {
-            break;
-        }
-        builder.add_waypoint(Waypoint {
-            name: cptype.to_string(),
-            point_type: cptype,
-            point: GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?.try_into()?,
-        });
-        debug!("Added course point type: {:?}", cptype);
-        lon += sub_args.increment;
-        n += 1;
-    }
-    builder
-        .add_course()
-        .with_name(sub_args.name.clone())
-        .with_route_point(GeoPoint::new(sub_args.lat * DEG, sub_args.lon * DEG, None)?)?
-        .with_route_point(GeoPoint::new(sub_args.lat * DEG, lon * DEG, None)?)?;
-    let course_set = builder.build()?;
-    let course_file = CourseFile::new(
-        course_set.courses.first().unwrap(),
-        Utc::now(),
-        10.0 * KILO * M / HR,
-    );
-    course_file.encode(fit_output)?;
-    Ok("".to_string())
-}
-
 fn license_cmd() -> Result<String> {
-    let mut r= include_str!("../../LICENSE.txt").to_string();
-    writeln!(&mut r, r#"
+    let mut r = include_str!("../../LICENSE.txt").to_string();
+    writeln!(
+        &mut r,
+        r#"
 ===
 
 This executable contains code from third-party open source projects, whose
 licenses are shown here:
 
 https://github.com/mshroyer/coursepointer/blob/main/docs/third_party_licenses.md
-"#)?;
+"#
+    )?;
     Ok(r)
 }
 
@@ -382,7 +341,6 @@ fn main() -> Result<()> {
 
     let report = match &args.cmd {
         Commands::ConvertGpx(sub_args) => convert_gpx_cmd(&args, sub_args),
-        Commands::SampleCoursePoints(sub_args) => sample_course_points_cmd(sub_args),
         Commands::License => license_cmd(),
     }?;
 
