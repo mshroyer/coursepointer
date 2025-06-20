@@ -559,9 +559,9 @@ impl RecordMessage {
     feature = "cli",
     derive(strum::Display, strum::EnumIter, clap::ValueEnum)
 )]
-#[cfg_attr(feature = "cli", strum(serialize_all = "snake_case"))]
-#[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
 #[derive(Clone, Copy, PartialEq, EnumString, Debug)]
+#[strum(serialize_all = "snake_case")]
+#[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
 pub enum CoursePointType {
     // 00
     Generic = 0u8,
