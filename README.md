@@ -46,8 +46,8 @@ points will appear in Up Ahead on compatible devices:
 ## Installation and running
 
 At the moment this is a source-only distribution, so you'll need a Rust
-toolchain to build and run the CLI.  But it is at least published as a crate.
-Install a toolchain with [rustup](https://rustup.rs/) and then run:
+toolchain to build and run the CLI.  Install a toolchain with
+[rustup](https://rustup.rs/) and then run:
 
 ```
 cargo install --locked coursepointer
@@ -110,8 +110,8 @@ route-planning applications.
 However, for routes or tracks exported by [Gaia GPS](https://gaiagps.com/) or
 [Ride with GPS](https://ridewithgps.com/), coursepointer additionally attempts
 to map the waypoint or POI type (respectively) to a relevant course point type
-instead of `generic`, so you'll see a relevant course point icon instead of a
-generic pin.  See [docs/point_types.md](docs/point_types.md) for more
+instead of `generic`, so that you'll see a relevant course point icon instead
+of a generic pin.  See [docs/point_types.md](docs/point_types.md) for more
 information about how point types from these apps are interpreted as course
 point types.
 
