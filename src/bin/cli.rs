@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf, absolute};
 use anyhow::{Context, Result, bail};
 use chrono::Utc;
 use clap::builder::styling::Styles;
-use clap::{ColorChoice, Parser, Subcommand, ValueEnum, command};
+use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::internal::{
     CourseFile, CoursePointType, CourseSetBuilder, DEG, GeoPoint, Waypoint,
@@ -35,9 +35,22 @@ pub const CLAP_STYLING: Styles = Styles::styled()
     .valid(VALID)
     .invalid(INVALID);
 
+/// Convert waypoints into Garmin FIT course points
+///
+/// Given a route and a set of waypoints, produces a Garmin FIT course file
+/// containing the route, with course points corresponding to any of the
+/// waypoints that are located approximately along the route.
+///
+/// https://github.com/mshroyer/coursepointer/
 #[derive(Parser)]
-#[command(name = "coursepointer", version, about, color = ColorChoice::Auto, styles = CLAP_STYLING)]
-struct Args {
+#[command(
+    name = "coursepointer",
+    version,
+    about,
+    color = ColorChoice::Auto,
+    styles = CLAP_STYLING,
+)]
+struct Cli {
     #[command(subcommand)]
     cmd: Commands,
 
@@ -45,10 +58,13 @@ struct Args {
     ///
     /// Set to DEBUG to see a performance summary following execution, but be
     /// aware this has a non-negligible performance impact on debug builds.
-    #[clap(long, default_value_t = Level::ERROR)]
-    log: Level,
+    #[clap(long, short = 'L', default_value_t = Level::ERROR)]
+    log_level: Level,
 
-    /// The unit of distance that coursepointer should use on the command line.
+    /// The unit of distance used in output on the command line.
+    /// 
+    /// If unspecified, this will default to either km or mi based on your
+    /// system locale.
     #[clap(long, short = 'u', default_value_t = DistUnit::Autodetect)]
     distance_unit: DistUnit,
 }
@@ -80,7 +96,7 @@ impl DistUnit {
     }
 }
 
-#[derive(Parser, Debug)]
+#[derive(Args, Debug)]
 struct ConvertGpxArgs {
     /// GPX input path
     input: PathBuf,
@@ -108,7 +124,7 @@ struct ConvertGpxArgs {
     strategy: InterceptStrategy,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Args, Debug)]
 struct SampleCoursePointsArgs {
     /// Course name. This will be used as both the filename prefix and the FIT
     /// course name.
@@ -141,14 +157,18 @@ enum Commands {
     ///
     /// Given a GPX file containing a single track, converts the track to a
     /// Garmin FIT course file.
+    #[clap(alias = "gpx")]
     ConvertGpx(ConvertGpxArgs),
+
+    /// Print software license info
+    License,
 
     /// Writes a course with samples of each course point type
     SampleCoursePoints(SampleCoursePointsArgs),
 }
 
 #[instrument(level = "trace", skip_all)]
-fn convert_gpx_cmd(args: &Args, sub_args: &ConvertGpxArgs) -> Result<String> {
+fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertGpxArgs) -> Result<String> {
     debug!("convert-gpx args: {:?}", sub_args);
 
     if sub_args.threshold < 0.0 {
@@ -328,17 +348,30 @@ fn sample_course_points_cmd(sub_args: &SampleCoursePointsArgs) -> Result<String>
     Ok("".to_string())
 }
 
+fn license_cmd() -> Result<String> {
+    let mut r= include_str!("../../LICENSE.txt").to_string();
+    writeln!(&mut r, r#"
+===
+
+This executable contains code from third-party open source projects, whose
+licenses are shown here:
+
+https://github.com/mshroyer/coursepointer/blob/main/docs/third_party_licenses.md
+"#)?;
+    Ok(r)
+}
+
 fn main() -> Result<()> {
     // Intentionally avoid wrapping argument parsing errors in anyhow::Result so
     // we preserve Clap's pretty formatting of usage info.
-    let args = Args::parse();
+    let args = Cli::parse();
 
     // Enable the TRACE-level span tree layer for fmt logging level DEBUG.
     let fmt_layer = fmt::Layer::new()
         .with_target(false)
         .with_span_events(FmtSpan::ENTER | FmtSpan::CLOSE)
-        .with_filter(LevelFilter::from_level(args.log));
-    if args.log >= Level::DEBUG {
+        .with_filter(LevelFilter::from_level(args.log_level));
+    if args.log_level >= Level::DEBUG {
         let span_tree_layer = tracing_span_tree::SpanTree::default().aggregate(true);
         tracing::subscriber::set_global_default(
             Registry::default().with(fmt_layer).with(span_tree_layer),
@@ -350,6 +383,7 @@ fn main() -> Result<()> {
     let report = match &args.cmd {
         Commands::ConvertGpx(sub_args) => convert_gpx_cmd(&args, sub_args),
         Commands::SampleCoursePoints(sub_args) => sample_course_points_cmd(sub_args),
+        Commands::License => license_cmd(),
     }?;
 
     print!("{}", report);

@@ -1,9 +1,12 @@
 [package]
 name = "coursepointer"
+description = "Converts waypoints into Garmin FIT course points"
 version = "0.1.0"
 edition = "2024"
 default-run = "coursepointer"
 license = "MIT"
+authors = ["Mark Shroyer <mark@shroyer.name>"]
+categories = ["command-line-utilities"]
 
 [package.metadata.winresource]
 FileDescription = "CoursePointer CLI"
@@ -27,7 +30,7 @@ num-traits = "0.2.19"
 quick-xml = "0.37.5"
 thiserror = "2.0.12"
 anyhow = { version = "1.0.98", optional = true }
-clap = { version = "4.5.39", optional = true, features = ["derive"] }
+clap = { version = "4.5.39", optional = true, features = ["derive", "wrap_help"] }
 cxx = "1.0.158"
 approx = "0.5.1"
 dimensioned = { version = "0.8.0", features = ["approx"] }
