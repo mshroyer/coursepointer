@@ -104,7 +104,7 @@ struct ConvertArgs {
     #[clap(long, short)]
     output: Option<PathBuf>,
 
-    /// Force overwrite the output file, if it already exists
+    /// Force overwriting the output file, if it already exists.
     #[clap(long, short, action)]
     force: bool,
 
