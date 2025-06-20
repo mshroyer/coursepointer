@@ -49,8 +49,8 @@ There are Windows and macOS (universal) binaries in the latest GitHub release,
 but you'll probably get Windows SmartScreen or macOS Gatekeeper messages
 you'll have to work around when running them, as they're currently unsigned.
 
-Alternately, to build from source, install a Rust toolchain with
-[rustup](https://rustup.rs/) and then run:
+Alternately, to build the latest release from source, install a Rust toolchain
+with [rustup](https://rustup.rs/) and then run:
 
 ```
 cargo install --locked coursepointer
