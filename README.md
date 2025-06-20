@@ -110,8 +110,8 @@ forums](https://forums.garmin.com/outdoor-recreation/outdoor-recreation/f/fenix-
 
 ## Supported route creators
 
-This should work with GPX routes or tracks and waypoints authoried in
-arbitrary route-planning applications.
+This should work with GPX routes or tracks and waypoints authored in arbitrary
+route-planning applications.
 
 However, for routes or tracks exported by [Gaia GPS](https://gaiagps.com/) or
 [Ride with GPS](https://ridewithgps.com/), coursepointer additionally attempts
