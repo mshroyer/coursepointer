@@ -23,7 +23,7 @@ entire folder as a GPX file:
 Run coursepointer on the GPX download to produce a FIT file:
 
 ```
-% coursepointer convert rancho-wildcat.gpx rancho-wildcat.fit
+% coursepointer convert rancho-wildcat.gpx
 Converted course "Rancho Wildcat" of length 3.03 mi
 
 Processed 5 waypoints, 5 of which were identified as course points:

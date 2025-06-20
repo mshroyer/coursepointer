@@ -99,7 +99,11 @@ struct ConvertArgs {
     input: PathBuf,
 
     /// FIT file output path
-    output: PathBuf,
+    ///
+    /// If unspecified, defaults to <INPUT>.fit in the same directory as the
+    /// input file.
+    #[clap(long, short)]
+    output: Option<PathBuf>,
 
     /// Force overwrite the output file, if it already exists
     #[clap(long, short, action)]
@@ -178,8 +182,13 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     );
     info!("Opened GPX input file: {:?}", absolute(&sub_args.input)?);
 
+    let output = match &sub_args.output {
+        Some(p) => p,
+        None => &sub_args.input.with_extension("fit"),
+    };
+
     if ((sub_args.force && enabled!(Level::WARN)) || (!sub_args.force && enabled!(Level::ERROR)))
-        && sub_args.output.exists()
+        && output.exists()
     {
         if sub_args.force {
             warn!(
@@ -195,13 +204,13 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     }
     let fit_file = BufWriter::new(
         if sub_args.force {
-            File::create(&sub_args.output)
+            File::create(&output)
         } else {
-            File::create_new(&sub_args.output)
+            File::create_new(&output)
         }
         .context("Creating the <OUTPUT> file")?,
     );
-    info!("Created FIT output file: {:?}", absolute(&sub_args.output)?);
+    info!("Created FIT output file: {:?}", absolute(&output)?);
 
     let course_options = CourseOptions {
         threshold: sub_args.threshold * M,
@@ -229,9 +238,9 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     }?;
 
     match args.distance_unit.get() {
-        DistUnit::M => generate_conversion_report::<Meter<f64>>(info, &sub_args.output),
-        DistUnit::Km => generate_conversion_report::<Kilometer<f64>>(info, &sub_args.output),
-        DistUnit::Mi => generate_conversion_report::<Mile<f64>>(info, &sub_args.output),
+        DistUnit::M => generate_conversion_report::<Meter<f64>>(info, &output),
+        DistUnit::Km => generate_conversion_report::<Kilometer<f64>>(info, &output),
+        DistUnit::Mi => generate_conversion_report::<Mile<f64>>(info, &output),
         _ => {
             error!(
                 "Failed to detect distance unit for report: {}",
