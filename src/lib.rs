@@ -7,8 +7,13 @@
 //! for navigation on a Garmin device such as an Edge bicycle computer or a
 //! Fenix watch.
 //!
-//! See the [`convert_gpx`] function, which is used by the CLI, for the main
-//! entry point into the library.
+//! This is mainly published to provide the `coursepointer` command-line tool,
+//! but it can also be used as a library via the [`convert_gpx`] function.  If
+//! used as a dependency I recommend disabling the `cli` default feature, which
+//! adds transient dependencies you probably don't need.
+//!
+//! See <https://github.com/mshroyer/coursepointer/blob/main/README.md> for
+//! details and command-line usage info.
 //!
 //! # Feature flags
 //!
@@ -84,6 +89,13 @@ pub struct ConversionInfo {
 /// this doesn't imply by contrast this function will construct its own
 /// `BufWrite` for the output. `fit_output` should probably also be given as a
 /// buffered `Write`.
+///
+/// The GPX input is required to contain exactly one route or track, and may
+/// contain zero or more waypoints.
+///
+/// The `fit_speed` parameter sets a speed for placing timestamps along the FIT
+/// course.  On compatible devices, this will determine the speed of the
+/// "virtual partner".
 pub fn convert_gpx<R: BufRead, W: Write>(
     gpx_input: R,
     fit_output: W,
