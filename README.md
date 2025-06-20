@@ -45,8 +45,11 @@ points will appear in Up Ahead on compatible devices:
 
 ## Installation and running
 
-At the moment this is a source-only distribution, so you'll need a Rust
-toolchain to build and run the CLI.  Install a toolchain with
+There are Windows and macOS (universal) binaries in the latest GitHub release,
+but you'll probably get Windows SmartScreen or macOS Gatekeeper messages
+you'll have to work around when running them, as they're currently unsigned.
+
+Alternately, to build from source, install a Rust toolchain with
 [rustup](https://rustup.rs/) and then run:
 
 ```
@@ -137,3 +140,10 @@ See [docs/development.md](docs/development.md).
 ## License
 
 [MIT License](LICENSE.txt)
+
+## Thanks
+
+This program relies on [a lot of](docs/third_party_licenses.md) other open
+source software, but particularly [Charles
+Karney](https://www.sri.com/people/charles-karney/)'s
+[GeographicLib](https://github.com/geographiclib/geographiclib).  Thanks!
