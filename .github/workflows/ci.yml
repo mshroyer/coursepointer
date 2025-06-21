@@ -8,8 +8,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test:
-    name: Rust project - latest
+  build_and_test_ubuntu:
+    name: Build and test on Ubuntu
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,6 +20,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - run: git submodule update --init
+      - run: cargo build --verbose
+      - run: cargo test --verbose
+
+  build_and_test_windows:
+    name: Build and test on Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
+      - run: git submodule update --init
+      - run: cargo build --verbose
+      - run: cargo test --verbose
+
+  build_and_test_macos:
+    name: Build and test on macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
       - run: git submodule update --init
       - run: cargo build --verbose
       - run: cargo test --verbose
