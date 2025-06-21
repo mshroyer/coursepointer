@@ -77,6 +77,7 @@ fn main() {
     // Thankfully GeographicLib has a pretty simple build, so we can just compile
     // all the source files here rather than go through CMake.
     cxx_build::bridge("src/lib.rs")
+        .flag_if_supported("-std=c++11")
         .file("src/shim.cpp")
         .files(sources::geographiclib_cpp().unwrap())
         .flag("-I./include")

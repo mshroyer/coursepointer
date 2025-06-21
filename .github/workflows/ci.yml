@@ -25,7 +25,7 @@ jobs:
       - run: cargo test --verbose
 
   build_and_test_windows:
-    name: Build and test on Windows
+    name: Build and test on Windows (stable)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
       - run: cargo test --verbose
 
   build_and_test_macos:
-    name: Build and test on macOS
+    name: Build and test on macOS (stable)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
