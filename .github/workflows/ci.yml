@@ -8,8 +8,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test_ubuntu:
-    name: Build and test on Ubuntu
+  build_and_test:
+    name: Build and test
     strategy:
       matrix:
         include:
@@ -40,3 +40,26 @@ jobs:
       - run: cargo build --verbose
       - run: cargo test --verbose
       - run: uv run --package integration pytest
+
+  build_and_test_features:
+    name: Build and test feature combinations
+    strategy:
+      matrix:
+        include:
+          - features: ""
+          - features: "full-geolib"
+          - features: "cli"
+          - features: "floor"
+          - features: "full-geolib,cli"
+          - features: "full-geolib,floor"
+          - features: "cli,floor"
+          - features: "full-geolib,cli,floor"
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup rust
+        run: rustup update stable && rustup default stable
+      - run: git submodule update --init
+      - run: cargo test --no-default-features -F "${{ matrix.features }}" --verbose
