@@ -3,6 +3,7 @@ name: Cargo Build and Test
 on:
   push:
   pull_request:
+  cron: "9 3 * * *"
 
 env:
   CARGO_TERM_COLOR: always
