@@ -9,8 +9,8 @@ compatible Garmin watches and bicycle computers, showing the distance
 remaining (and on some devices, estimated time) to reach them.
 
 This provides a way to author courses in third-party applications that don't
-export to course points, while stil using Up Ahead functionality as though the
-course had been created in Garmin Connect.
+export to course points, while still using Up Ahead functionality as though
+the course had been created in Garmin Connect.
 
 ## Usage example
 

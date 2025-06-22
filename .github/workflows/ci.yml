@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: "9 3 * * *"
+    - cron: "23 1 * * *"
 
 env:
   CARGO_TERM_COLOR: always
@@ -44,7 +44,7 @@ jobs:
       - run: uv run --package integration pytest
 
   build_and_test_features:
-    name: Build and test feature combinations
+    name: Build and test non-default feature sets
     strategy:
       matrix:
         include:
@@ -54,11 +54,13 @@ jobs:
           - features: "floor"
           - features: "full-geolib,cli"
           - features: "full-geolib,floor"
-          - features: "cli,floor"
           - features: "full-geolib,cli,floor"
 
     runs-on: ubuntu-latest
 
+    # Integration tests need the `cli` feature and some of their test cases may
+    # be painfully slow without the `floor` feature, so here we just make sure
+    # it builds and the Rust tests work.
     steps:
       - uses: actions/checkout@v4
       - name: Setup rust
