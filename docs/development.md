@@ -16,7 +16,7 @@ The CLI runs with `cargo run -- <CLI_ARGS>`, and Rust-based tests run with
 Many of the most important test cases are written as Python-based integration
 tests instead of Rust tests, in order to use the
 [garmin-fit-sdk](https://pypi.org/project/garmin-fit-sdk/) Python package as a
-reference implementation for FIT decoding.  Run these with
+reference implementation of FIT decoding.  Run these with
 [uv](https://docs.astral.sh/uv/):
 
 ```
@@ -44,3 +44,13 @@ the top-level project directory:
 ruff check
 ruff format
 ```
+
+## Profiling
+
+[cargo-flamegraph](https://github.com/flamegraph-rs/flamegraph) is very
+helpful for identifying hot spots.  Set the environment variable
+`CARGO_PROFILE_RELEASE_DEBUG=true` before running.
+
+Setting log level `-L debug` enables tracing summaries that can also be useful
+for understanding performance, but this seems to have a non-negligible
+measurement effect, especially on dev builds.

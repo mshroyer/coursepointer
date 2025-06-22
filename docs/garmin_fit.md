@@ -108,7 +108,3 @@ Also big endian.
 Setting the "notify before turn" option when exporting makes the cues being exported as course points appear earlier on the course: The distance field is reduced by the specified amount, and the course point's latitude and longitude are also adjusted.
 
 In contrast with Garmin Connect, doesn't set `message_index` on course point messages. Uses size 16 for the name string.
-
-## Device experiments
-
-TODO

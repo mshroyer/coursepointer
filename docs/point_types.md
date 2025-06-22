@@ -96,21 +96,21 @@ Connect.  Particularly, importing such FIT files containing more than four
 course points resulted in *no* course points appearing.  I haven't yet
 reproduced this behavior with conversions of "real" courses, however.
 
-## RideWithGPS POIs
+## Ride with GPS POIs
 
 Ride with GPS has various POI types.  When these are exported as GPX
-waypoints, they will correspond to certain `cmt` and `type` XML attributes.
+waypoints, they will correspond to certain `cmt` and `type` XML elements.
 Thanks to the new (if confusingly named) [Waypoints
 feature](https://ridewithgps.com/news/11178-introducing-waypoints), when
 exported in a FIT file, they also will correspond to certain FIT course point
 types.
 
 This table shows how the different POI types map to GPX and FIT types as of
-2025-06-14.  The `cmt` XML attribute used in GPX exports corresponds to the
-RWGPS POI type, while the `type` attribute always equals the FIT course point
+2025-06-14.  The `cmt` XML element used in GPX exports corresponds to the
+RWGPS POI type, while the `type` element always equals the FIT course point
 type.
 
-| Type              | Icon                                                  | GPX cmt attr        | GPX type attr | FIT type      |
+| Type              | Icon                                                  | GPX `cmt`           | GPX `type`    | FIT type      |
 |-------------------|-------------------------------------------------------|---------------------|---------------|---------------|
 | Information       | ![Information](img/rwgps-information.png)             | `generic`           | `generic`     | `generic`     |
 | Caution           | ![Caution](img/rwgps-caution.png)                     | `caution`           | `danger`      | `danger`      |
@@ -152,7 +152,7 @@ type.
 | Segment End       | ![Segment End](img/rwgps-segment-end.png)             | `segment_end`       | `generic`     | `generic`     |
 | Control           | ![Control](img/rwgps-control.png)                     | `control`           | `checkpoint`  | `checkpoint`  |
 
-All POI types set `Dot` as `sym` in the GPX export.
+All POI types set `sym` to `Dot` in the GPX export.
 
 The full set of course point types used by Ride with GPS in FIT exports of
 custom POIs and Waypoints (setting aside cues) is then:
@@ -191,19 +191,19 @@ In GPX exports, Gaia GPS indicates the point type by the text in the
 waypoint's `sym` sub-element.  These basically, but not precisely, match the
 waypoint's type; many have a `-24` suffix, which presumably corresponds to an
 icon size.  With others, such as `:gaia-body-of-water:`, the `sym` text is
-simplified to `water` for example.  The exact string used is shown in the Sym
-column below.
+simplified to `water` for example.  The exact string used is shown in the "GPX
+`sym`" column below.
 
 The Course Point column contains my interpretation of the course point type
 this Gaia GPS waypoint type best maps onto, with a blank defaulting to the
 `generic` type.  Of note, I abuse the `overlook` type to represent any sort of
-"oh cool look at that" waypoint, give its rendering as a camera icon on the
+"oh cool look at that" waypoint, given its rendering as a camera icon on the
 devices I've tested.  I also take liberties drawing meaning from waypoints'
 icons rather than their names, such as mapping numbers 1 through 4 to climb
 category course points, or "steps" to "steep climb", because they'll render
 similarly on devices as to on Gaia GPS.
 
-| Type                         | Icon                                    | Sym                      | Course Point      |
+| Type                         | Icon                                    | GPX `sym`                | Course Point      |
 |------------------------------|-----------------------------------------|--------------------------|-------------------|
 | `:gaia-pin:`                 | ![gaia-icon-0](img/gaia-icon-0.png)     | None                     |                   |
 | `:gaia-airport:`             | ![gaia-icon-1](img/gaia-icon-1.png)     | `airport-24`             | `transport`       |
