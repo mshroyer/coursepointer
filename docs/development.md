@@ -10,9 +10,11 @@ git submodule update --init
 
 ## Running and testing
 
-The CLI and Rust tests run with `cargo run` and `cargo test`.
+The CLI runs with `cargo run -- <CLI_ARGS>`, and Rust-based tests run with
+`cargo test`.
 
-Many test cases are written as Python integration tests, in order to use the
+Many of the most important test cases are written as Python-based integration
+tests instead of Rust tests, in order to use the
 [garmin-fit-sdk](https://pypi.org/project/garmin-fit-sdk/) Python package as a
 reference implementation for FIT decoding.  Run these with
 [uv](https://docs.astral.sh/uv/):
@@ -22,7 +24,8 @@ uv run --package integration pytest
 ```
 
 Some of the integration tests use the nested `integration-stub` binary crate
-by passing JSON specifications to it and then examining its output.
+by passing JSON specifications to it and then examining its output.  Most
+others build and test against the `coursepointer` command-line binary.
 
 ## Formatting
 
