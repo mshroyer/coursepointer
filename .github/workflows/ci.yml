@@ -30,6 +30,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - run: git submodule update --init
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
@@ -37,7 +38,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - run: git submodule update --init
       - run: cargo build --verbose
       - run: cargo test --verbose
       - run: uv run --package integration pytest
@@ -48,6 +48,7 @@ jobs:
     needs: build_and_test
     steps:
       - uses: actions/checkout@v4
+      - run: git submodule update --init
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal -c rustfmt,clippy nightly && rustup default nightly
@@ -78,7 +79,7 @@ jobs:
     # it builds and the Rust tests work.
     steps:
       - uses: actions/checkout@v4
+      - run: git submodule update --init
       - name: Setup rust
         run: rustup toolchain install --profile minimal stable && rustup default stable
-      - run: git submodule update --init
       - run: cargo test --no-default-features -F "${{ matrix.features }}" --verbose
