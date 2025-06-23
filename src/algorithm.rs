@@ -104,14 +104,14 @@ where
 }
 
 /// Returns a floor for geodesic interception distance
-/// 
+///
 /// Given a geodesic segment and a separate point, this computes a lower bound
 /// for the minimum distance between the two.  When processing a lot of
 /// waypoints and route segments but only interested in segments within a
 /// certain distance of points, this provides a very significant speedup
 /// compared to running [`karney_interception`] between every combination of
 /// segment and point.
-/// 
+///
 /// This takes into account edge cases in which a very long segment, combined
 /// with a very nearby waypoint, may result in the cartesian intercept distance
 /// actually being longer than the real geodesic intercept distance.
