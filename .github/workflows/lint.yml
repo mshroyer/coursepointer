@@ -1,0 +1,21 @@
+name: lint.yml
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init
+
+      - name: Setup rust
+        run: rustup toolchain install --profile minimal -c rustfmt,clippy nightly && rustup default nightly
+
+      - name: rustfmt
+        run: cargo fmt --check
+
+      - name: Cargo check
+        run: cargo check
