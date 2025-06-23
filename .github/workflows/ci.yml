@@ -91,3 +91,31 @@ jobs:
       - name: Setup rust
         run: rustup toolchain install --profile minimal stable && rustup default stable
       - run: cargo test --no-default-features -F "${{ matrix.features }}" --verbose
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv/
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .venv/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup rust
+        run: rustup toolchain install --profile minimal -c rustfmt,clippy nightly && rustup default nightly
+
+      - name: rustfmt
+        run: cargo fmt --check
+
+      - name: Cargo check
+        run: cargo check
