@@ -85,6 +85,7 @@ static GAIAGPS_SYMS: phf::Map<&'static str, CoursePointType> = phf_map! {
     "police" => CoursePointType::Service,
     "potable-water" => CoursePointType::Water,
     "rail-24" => CoursePointType::Transport,
+    "railroad" => CoursePointType::Crossing,
     "ranger-station" => CoursePointType::Shelter,
     "restaurant-24" => CoursePointType::Food,
     "resupply" => CoursePointType::Store,

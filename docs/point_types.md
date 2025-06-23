@@ -302,7 +302,7 @@ similarly on devices as to on Gaia GPS.
 | `:gaia-potable-water:`       | ![gaia-icon-94](img/gaia-icon-94.png)   | `potable-water`          | `water`           |
 | `:gaia-prison:`              | ![gaia-icon-95](img/gaia-icon-95.png)   | `prison-24`              |                   |
 | `:gaia-rail:`                | ![gaia-icon-96](img/gaia-icon-96.png)   | `rail-24`                | `transport`       |
-| `:gaia-railroad:`            | ![gaia-icon-97](img/gaia-icon-97.png)   | `railroad`               |                   |
+| `:gaia-railroad:`            | ![gaia-icon-97](img/gaia-icon-97.png)   | `railroad`               | `crossing`        |
 | `:gaia-ranger-station:`      | ![gaia-icon-98](img/gaia-icon-98.png)   | `ranger-station`         | `shelter`         |
 | `:gaia-reef:`                | ![gaia-icon-99](img/gaia-icon-99.png)   | `reef`                   |                   |
 | `:gaia-restaurant:`          | ![gaia-icon-100](img/gaia-icon-100.png) | `restaurant-24`          | `food`            |
