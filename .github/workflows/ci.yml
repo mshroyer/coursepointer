@@ -1,4 +1,4 @@
-name: Cargo Build and Test
+name: CI
 
 on:
   push:
@@ -31,17 +31,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt, clippy
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Setup python
-        run: uv python install
-      - name: Setup rust
-        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
 
       - run: git submodule update --init
       - run: cargo build --verbose
       - run: cargo test --verbose
-      - run: uv run --package integration pytest
+      - run: uv run --no-python-downloads --package integration pytest
 
   build_and_test_features:
     name: Build and test non-default feature sets
