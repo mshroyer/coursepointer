@@ -9,7 +9,6 @@ use std::ops::{Mul, Sub};
 
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
-use tracing::instrument;
 
 use crate::course::CourseError;
 use crate::geographic::{
@@ -59,7 +58,6 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 /// in his example code.)
 ///
 /// For a more detailed description, see: <http://arxiv.org/abs/1102.1215>
-#[instrument(level = "trace", skip_all)]
 pub fn karney_interception<P>(segment: &GeoSegment<P>, point: &P) -> Result<GeoPoint>
 where
     P: HasGeoPoint,

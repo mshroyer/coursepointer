@@ -11,6 +11,7 @@ use std::cmp::Ordering;
 use std::convert::Infallible;
 
 use dimensioned::si::{M, Meter};
+use rayon::prelude::*;
 use thiserror::Error;
 use tracing::{debug, error, info};
 
@@ -91,7 +92,8 @@ pub type CourseSetBuilder = CourseSetBuilderImpl<GeoPoint>;
 
 pub struct CourseSetBuilderImpl<P>
 where
-    P: HasGeoPoint,
+    P: HasGeoPoint + Send + Sync,
+    <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     options: CourseOptions,
@@ -102,7 +104,8 @@ where
 impl<P> CourseSetBuilderImpl<P>
 where
     Self: SolveIntercept<P>,
-    P: HasGeoPoint,
+    P: HasGeoPoint + Send + Sync,
+    <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     pub fn new(options: CourseOptions) -> Self {
@@ -203,22 +206,31 @@ where
 
     #[tracing::instrument(level = "debug", name = "process_waypoints", skip_all)]
     fn process_waypoints(&mut self) -> Result<()> {
-        for waypoint in &self.waypoints {
-            let course = &mut self.courses[0];
-            let mut near_intercepts =
-                Self::process_waypoint(waypoint, course, self.options.threshold)?;
+        let waypoints_and_intercepts = &self
+            .waypoints
+            .par_iter()
+            .map(|waypoint| {
+                let course = &self.courses[0];
+                let near_intercepts =
+                    Self::process_waypoint(waypoint, course, self.options.threshold)?;
+                Ok((waypoint, near_intercepts))
+            })
+            .collect::<Result<Vec<_>>>()?;
 
+        for (waypoint, near_intercepts) in waypoints_and_intercepts.into_iter() {
+            let course = &mut self.courses[0];
             if !near_intercepts.is_empty() {
                 match self.options.strategy {
                     InterceptStrategy::Nearest => {
-                        near_intercepts.sort_by(|a, b| {
+                        let mut near_sorted = near_intercepts.clone();
+                        near_sorted.sort_by(|a, b| {
                             a.intercept_distance
                                 .partial_cmp(&b.intercept_distance)
                                 .unwrap()
                         });
                         Self::add_course_point(
                             &mut course.course_points,
-                            &near_intercepts[0],
+                            &near_sorted[0],
                             waypoint,
                         );
                     }
@@ -258,7 +270,7 @@ where
 
 pub trait SolveIntercept<P>
 where
-    P: HasGeoPoint,
+    P: HasGeoPoint + Send + Sync,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn solve_intercept(
@@ -386,7 +398,8 @@ impl Course {
 
 pub struct CourseBuilderImpl<P>
 where
-    P: HasGeoPoint,
+    P: HasGeoPoint + Send + Sync,
+    <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     route_points: Vec<GeoPoint>,
@@ -399,7 +412,8 @@ where
 #[allow(clippy::new_without_default)]
 impl<P> CourseBuilderImpl<P>
 where
-    P: HasGeoPoint,
+    P: HasGeoPoint + Send + Sync,
+    <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn new() -> Self {
@@ -431,13 +445,16 @@ where
     fn calculate_segments(&mut self) -> Result<()> {
         let ps = self
             .route_points
-            .iter()
+            .par_iter()
             .map(|p| P::try_from(*p))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
-        let segments = ps
-            .windows(2)
-            .map(|pair| GeoSegment::from_geo_points(pair[0], pair[1]))
+        let index_pairs = (0..ps.len().saturating_sub(1))
+            .map(|i| (i, i + 1))
+            .collect::<Vec<_>>();
+        let segments = index_pairs
+            .par_iter()
+            .map(|(i, j)| GeoSegment::from_geo_points(ps[*i], ps[*j]))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
         let segments_and_distances: Vec<(GeoSegment<P>, Meter<f64>)> = segments
@@ -523,7 +540,7 @@ pub struct Record {
 /// along the course and lacks a known course distance.
 pub struct Waypoint<P>
 where
-    P: HasGeoPoint,
+    P: HasGeoPoint + Send + Sync,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     /// Position of the waypoint.
