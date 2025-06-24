@@ -63,9 +63,8 @@ jobs:
           - features: "full-geolib"
           - features: "cli"
           - features: "floor"
-          - features: "full-geolib,cli"
-          - features: "full-geolib,floor"
-          - features: "full-geolib,cli,floor"
+          - features: "cli,floor,rayon"
+          - features: "floor,rayon"
 
     runs-on: ubuntu-latest
 
