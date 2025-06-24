@@ -131,7 +131,16 @@ routes.
 
 ## Troubleshooting
 
-TODO
+### "Unexpected number of courses" in a Gaia GPS export, but I only have one route
+
+In Gaia GPS, archived items in a folder are still included in your folder's
+GPX export.  If you had an old route that you archived and replaced with a new
+one, the old route may still be getting exported.
+
+To fix this, [permanently
+delete](https://help.gaiagps.com/hc/en-us/articles/360004157214-Archiving-Unarchiving-and-Recovering-Lost-Data)
+it and then re-export.  To avoid it, move routes or waypoints out of your
+folder before archiving them.
 
 ## Development
 
