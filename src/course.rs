@@ -217,7 +217,7 @@ where
             })
             .collect::<Result<Vec<_>>>()?;
 
-        for (waypoint, near_intercepts) in waypoints_and_intercepts.into_iter() {
+        for (waypoint, near_intercepts) in waypoints_and_intercepts.iter() {
             let course = &mut self.courses[0];
             if !near_intercepts.is_empty() {
                 match self.options.strategy {
@@ -245,7 +245,7 @@ where
 
                     InterceptStrategy::All => {
                         for sln in near_intercepts {
-                            Self::add_course_point(&mut course.course_points, &sln, waypoint);
+                            Self::add_course_point(&mut course.course_points, sln, waypoint);
                         }
                     }
                 }
