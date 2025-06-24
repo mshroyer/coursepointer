@@ -63,7 +63,7 @@ jobs:
           - features: "full-geolib"
           - features: "cli"
           - features: "floor"
-          - features: "cli,floor,rayon"
+          - features: "cli,floor"
           - features: "floor,rayon"
 
     runs-on: ubuntu-latest
@@ -111,7 +111,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup rust
-        run: rustup toolchain install --profile minimal -c rustfmt,clippy nightly && rustup default nightly
+        run: rustup toolchain install --profile minimal -c rustfmt nightly && rustup default nightly
 
       - name: rustfmt
         run: cargo fmt --check
