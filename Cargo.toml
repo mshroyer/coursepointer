@@ -13,7 +13,7 @@ categories = ["command-line-utilities", "science::geo"]
 [package.metadata.winresource]
 FileDescription = "CoursePointer CLI"
 ProductName = "CoursePointer"
-LegalCopyright = "© 2025 Mark Shroyer - MIT/Apache 2.0"
+LegalCopyright = "© 2025 Mark Shroyer - MIT License"
 
 [lib]
 name = "coursepointer"
