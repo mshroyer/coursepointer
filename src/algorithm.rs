@@ -132,10 +132,7 @@ const WGS84_F: f64 = 1.0 / 298.257223563;
 const WGS84_B: f64 = WGS84_A * (1.0 - WGS84_F);
 
 fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Meter<f64> {
-    let chord_length = norm3(subtract_xyzpoints(
-        &segment.start.xyz(),
-        &segment.end.xyz(),
-    ));
+    let chord_length = norm3(subtract_xyzpoints(&segment.start.xyz(), &segment.end.xyz()));
     WGS84_A * (1.0 - (1.0 - chord_length * chord_length / (4.0 * WGS84_B * WGS84_B)).sqrt()) * M
 }
 

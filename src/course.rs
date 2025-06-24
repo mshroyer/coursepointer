@@ -12,7 +12,7 @@ use std::convert::Infallible;
 
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
-use tracing::{Level, debug, error, info, span};
+use tracing::{debug, error, info};
 
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
@@ -136,6 +136,9 @@ where
 
     pub fn build(mut self) -> Result<CourseSet> {
         let mut courses = vec![];
+        for course_builder in &mut self.courses {
+            course_builder.calculate_segments()?;
+        }
         self.process_waypoints()?;
         for course_builder in self.courses {
             courses.push(course_builder.build()?);
@@ -162,72 +165,75 @@ where
         }))
     }
 
-    #[tracing::instrument(level = "debug", name = "process", skip_all)]
+    fn process_waypoint(
+        waypoint: &Waypoint<P>,
+        course: &CourseBuilderImpl<P>,
+        threshold: Meter<f64>,
+    ) -> Result<Vec<NearIntercept>> {
+        let mut slns = Vec::new();
+        for (segment, start_distance) in course.segments.as_ref().unwrap() {
+            slns.push(<Self as SolveIntercept<P>>::solve_intercept(
+                segment,
+                waypoint,
+                threshold,
+                *start_distance,
+            )?);
+        }
+
+        let near_intercepts = find_nearby_segments(&slns, threshold)
+            .iter()
+            .filter_map(|sln| match sln {
+                InterceptSolution::Near(near) => Some(*near),
+                InterceptSolution::Far => None,
+            })
+            .collect::<Vec<_>>();
+        info!(
+            intercepts = near_intercepts.len(),
+            "Processed {:?}", waypoint.name,
+        );
+        for seg in &near_intercepts {
+            info!(
+                intercept_dist = ?seg.intercept_distance,
+                course_dist = %seg.course_distance,
+                "Intercept",
+            );
+        }
+        Ok(near_intercepts)
+    }
+
+    #[tracing::instrument(level = "debug", name = "process_waypoints", skip_all)]
     fn process_waypoints(&mut self) -> Result<()> {
         for waypoint in &self.waypoints {
-            let span = span!(Level::DEBUG, "waypoint", name = %waypoint.name);
-            let _enter = span.enter();
-            for course in &mut self.courses {
-                let mut slns = Vec::with_capacity(self.waypoints.len());
-                if course.segments.is_none() {
-                    course.calculate_segments()?;
-                }
-                for (segment, start_distance) in course.segments.as_ref().unwrap() {
-                    <Self as SolveIntercept<P>>::solve_intercept(
-                        &mut slns,
-                        segment,
-                        waypoint,
-                        self.options.threshold,
-                        *start_distance,
-                    )?;
-                }
+            let course = &mut self.courses[0];
+            let mut near_intercepts =
+                Self::process_waypoint(waypoint, course, self.options.threshold)?;
 
-                let mut near_intercepts = find_nearby_segments(&slns, self.options.threshold)
-                    .iter()
-                    .filter_map(|sln| match sln {
-                        InterceptSolution::Near(near) => Some(near),
-                        InterceptSolution::Far => None,
-                    })
-                    .collect::<Vec<_>>();
-                info!(
-                    intercepts = near_intercepts.len(),
-                    "Processed {:?}", waypoint.name,
-                );
-                for seg in &near_intercepts {
-                    info!(
-                        intercept_dist = ?seg.intercept_distance,
-                        course_dist = %seg.course_distance,
-                        "Intercept",
-                    );
-                }
+            if !near_intercepts.is_empty() {
+                match self.options.strategy {
+                    InterceptStrategy::Nearest => {
+                        near_intercepts.sort_by(|a, b| {
+                            a.intercept_distance
+                                .partial_cmp(&b.intercept_distance)
+                                .unwrap()
+                        });
+                        Self::add_course_point(
+                            &mut course.course_points,
+                            &near_intercepts[0],
+                            waypoint,
+                        );
+                    }
 
-                if !near_intercepts.is_empty() {
-                    match self.options.strategy {
-                        InterceptStrategy::Nearest => {
-                            near_intercepts.sort_by(|a, b| {
-                                a.intercept_distance
-                                    .partial_cmp(&b.intercept_distance)
-                                    .unwrap()
-                            });
-                            Self::add_course_point(
-                                &mut course.course_points,
-                                near_intercepts[0],
-                                waypoint,
-                            );
-                        }
+                    InterceptStrategy::First => {
+                        Self::add_course_point(
+                            &mut course.course_points,
+                            &near_intercepts[0],
+                            waypoint,
+                        );
+                    }
 
-                        InterceptStrategy::First => {
-                            Self::add_course_point(
-                                &mut course.course_points,
-                                near_intercepts[0],
-                                waypoint,
-                            );
-                        }
-
-                        InterceptStrategy::All => {
-                            for sln in near_intercepts {
-                                Self::add_course_point(&mut course.course_points, sln, waypoint);
-                            }
+                    InterceptStrategy::All => {
+                        for sln in near_intercepts {
+                            Self::add_course_point(&mut course.course_points, &sln, waypoint);
                         }
                     }
                 }
@@ -256,49 +262,36 @@ where
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn solve_intercept(
-        slns: &mut Vec<InterceptSolution>,
         segment: &GeoSegment<P>,
         waypoint: &Waypoint<P>,
         _threshold: Meter<f64>,
         course_distance: Meter<f64>,
-    ) -> Result<()>;
+    ) -> Result<InterceptSolution>;
 }
 
 impl SolveIntercept<GeoPoint> for CourseSetBuilderImpl<GeoPoint> {
     fn solve_intercept(
-        slns: &mut Vec<InterceptSolution>,
         segment: &GeoSegment<GeoPoint>,
         waypoint: &Waypoint<GeoPoint>,
         _threshold: Meter<f64>,
         course_distance: Meter<f64>,
-    ) -> Result<()> {
-        slns.push(Self::solve_near_intercept(
-            segment,
-            waypoint,
-            course_distance,
-        )?);
-        Ok(())
+    ) -> Result<InterceptSolution> {
+        Self::solve_near_intercept(segment, waypoint, course_distance)
     }
 }
 
 impl SolveIntercept<GeoAndXyzPoint> for CourseSetBuilderImpl<GeoAndXyzPoint> {
     fn solve_intercept(
-        slns: &mut Vec<InterceptSolution>,
         segment: &GeoSegment<GeoAndXyzPoint>,
         waypoint: &Waypoint<GeoAndXyzPoint>,
         threshold: Meter<f64>,
         course_distance: Meter<f64>,
-    ) -> Result<()> {
+    ) -> Result<InterceptSolution> {
         if intercept_distance_floor(segment, &waypoint.point)? > threshold {
-            slns.push(InterceptSolution::Far);
+            Ok(InterceptSolution::Far)
         } else {
-            slns.push(Self::solve_near_intercept(
-                segment,
-                waypoint,
-                course_distance,
-            )?);
+            Self::solve_near_intercept(segment, waypoint, course_distance)
         }
-        Ok(())
     }
 }
 
