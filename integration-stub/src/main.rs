@@ -74,7 +74,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
             point.lat * DEG,
             point.lon * DEG,
             None,
-        )?)?;
+        )?);
     }
     let course_set = builder.build()?;
     let course = course_set.courses.first().unwrap();

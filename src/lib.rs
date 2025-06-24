@@ -129,7 +129,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                 }
 
                 GpxItem::TrackOrRoutePoint(p) => {
-                    builder.last_course_mut()?.with_route_point(p)?;
+                    builder.last_course_mut()?.with_route_point(p);
                 }
 
                 GpxItem::Waypoint(wpt) => {
