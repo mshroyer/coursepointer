@@ -61,7 +61,6 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 pub fn karney_interception<P>(segment: &GeoSegment<P>, point: &P) -> Result<GeoPoint>
 where
     P: HasGeoPoint,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     // Start with an initial guess of an intercept at the geodesic's midpoint:
     let mut intercept = geodesic_direct(
@@ -237,7 +236,7 @@ where
 pub trait FromGeoPoints<P>
 where
     Self: Sized,
-    P: HasGeoPoint,
+    P: HasGeoPoint + TryFrom<GeoPoint>,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn from_geo_points(start: P, end: P) -> std::result::Result<Self, GeographicError>;
@@ -245,7 +244,7 @@ where
 
 impl<P> FromGeoPoints<P> for GeoSegment<P>
 where
-    P: HasGeoPoint,
+    P: HasGeoPoint + TryFrom<GeoPoint>,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError> {

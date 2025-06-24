@@ -107,7 +107,7 @@ pub type CourseSetBuilder = CourseSetBuilderImpl<GeoPoint>;
 
 pub struct CourseSetBuilderImpl<P>
 where
-    P: HasGeoPoint + Send + Sync,
+    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
     <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
@@ -120,7 +120,7 @@ where
 impl<P> CourseSetBuilderImpl<P>
 where
     Self: SolveIntercept<P>,
-    P: HasGeoPoint + Send + Sync,
+    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
     <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
@@ -296,7 +296,7 @@ where
 
 pub trait SolveIntercept<P>
 where
-    P: HasGeoPoint + Send + Sync,
+    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn solve_intercept(
@@ -471,7 +471,8 @@ impl CourseBuilder {
     /// parameter `P` (such as [`XyzPoint`]).
     fn segment<P>(self) -> Result<SegmentedCourseBuilder<P>>
     where
-        P: HasGeoPoint + Send + Sync,
+        P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
+        GeoSegment<P>: FromGeoPoints<P>,
         <P as TryFrom<GeoPoint>>::Error: Send,
         CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
     {
@@ -496,7 +497,7 @@ impl CourseBuilder {
             .collect::<Vec<_>>();
 
         Ok(SegmentedCourseBuilder {
-            route_points: self.route_points,
+            route_points: ps,
             segments_and_distances,
             name: self.name,
             course_points: Vec::new(),
@@ -515,11 +516,12 @@ impl CourseBuilder {
 /// course points.
 struct SegmentedCourseBuilder<P>
 where
-    P: HasGeoPoint + Send + Sync,
+    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
+    GeoSegment<P>: FromGeoPoints<P>,
     <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
-    route_points: Vec<GeoPoint>,
+    route_points: Vec<P>,
     segments_and_distances: Vec<(GeoSegment<P>, Meter<f64>)>,
     name: Option<String>,
     course_points: Vec<CoursePoint>,
@@ -528,7 +530,8 @@ where
 
 impl<P> SegmentedCourseBuilder<P>
 where
-    P: HasGeoPoint + Send + Sync,
+    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
+    GeoSegment<P>: FromGeoPoints<P>,
     <P as TryFrom<GeoPoint>>::Error: Send,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
@@ -551,7 +554,7 @@ where
         }
         if let Some(rp) = self.route_points.last() {
             records.push(Record {
-                point: *rp,
+                point: *rp.geo(),
                 cumulative_distance: total_distance,
             })
         }
@@ -598,7 +601,7 @@ pub struct Record {
 /// along the course and lacks a known course distance.
 pub struct Waypoint<P>
 where
-    P: HasGeoPoint + Send + Sync,
+    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     /// Position of the waypoint.
