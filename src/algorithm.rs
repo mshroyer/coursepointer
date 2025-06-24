@@ -67,15 +67,15 @@ where
 {
     // Start with an initial guess of an intercept at the geodesic's midpoint:
     let mut intercept = geodesic_direct(
-        segment.point1.geo(),
-        segment.azimuth1,
-        segment.geo_distance / 2.0,
+        segment.start.geo(),
+        segment.start_azimuth,
+        segment.geo_length / 2.0,
     )?
     .point2;
 
     for _ in 0..10 {
-        let start = gnomonic_forward(&intercept, segment.point1.geo())?;
-        let end = gnomonic_forward(&intercept, segment.point2.geo())?;
+        let start = gnomonic_forward(&intercept, segment.start.geo())?;
+        let end = gnomonic_forward(&intercept, segment.end.geo())?;
         let p = gnomonic_forward(&intercept, point.geo())?;
         let b = subtract_xypoints(&end, &start);
         let a = subtract_xypoints(&p, &start);
@@ -133,8 +133,8 @@ const WGS84_B: f64 = WGS84_A * (1.0 - WGS84_F);
 
 fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Meter<f64> {
     let chord_length = norm3(subtract_xyzpoints(
-        &segment.point1.xyz(),
-        &segment.point2.xyz(),
+        &segment.start.xyz(),
+        &segment.end.xyz(),
     ));
     WGS84_A * (1.0 - (1.0 - chord_length * chord_length / (4.0 * WGS84_B * WGS84_B)).sqrt()) * M
 }
@@ -146,8 +146,8 @@ fn cartesian_intercept_distance<P>(
 where
     P: HasXyzPoint,
 {
-    let b = subtract_xyzpoints(&segment.point2.xyz(), &segment.point1.xyz());
-    let a = subtract_xyzpoints(point, segment.point1.xyz());
+    let b = subtract_xyzpoints(&segment.end.xyz(), &segment.start.xyz());
+    let a = subtract_xyzpoints(point, segment.start.xyz());
     let intercept = if dot3(a, b) <= 0.0 {
         Vec3 {
             x: 0.0,
@@ -245,7 +245,7 @@ where
     P: HasGeoPoint,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
-    fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError>;
+    fn from_geo_points(start: P, end: P) -> std::result::Result<Self, GeographicError>;
 }
 
 impl<P> FromGeoPoints<P> for GeoSegment<P>
@@ -256,10 +256,10 @@ where
     fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError> {
         let inverse = geodesic_inverse(point1.geo(), point2.geo())?;
         Ok(GeoSegment {
-            point1,
-            point2,
-            geo_distance: inverse.geo_distance,
-            azimuth1: inverse.azimuth1,
+            start: point1,
+            end: point2,
+            geo_length: inverse.geo_distance,
+            start_azimuth: inverse.azimuth1,
         })
     }
 }

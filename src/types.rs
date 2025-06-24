@@ -133,16 +133,24 @@ pub struct GeoAndXyzPoint {
     pub xyz: XyzPoint,
 }
 
+/// A geodesic segment of a course.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GeoSegment<P>
 where
     P: HasGeoPoint,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
-    pub point1: P,
-    pub point2: P,
-    pub geo_distance: Meter<f64>,
-    pub azimuth1: Degree<f64>,
+    /// The segment's start point.
+    pub start: P,
+
+    /// The segment's end point.
+    pub end: P,
+
+    /// The geodesic length of the segment.
+    pub geo_length: Meter<f64>,
+
+    /// The azimuth of the segment as measured at its start point.
+    pub start_azimuth: Degree<f64>,
 }
 
 pub trait HasGeoPoint: PartialEq + TryFrom<GeoPoint> + Copy

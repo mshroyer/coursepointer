@@ -12,7 +12,7 @@ use std::convert::Infallible;
 
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
-use tracing::{Level, debug, info, span};
+use tracing::{Level, debug, error, info, span};
 
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
@@ -138,7 +138,7 @@ where
         let mut courses = vec![];
         self.process_waypoints()?;
         for course_builder in self.courses {
-            courses.push(course_builder.build());
+            courses.push(course_builder.build()?);
         }
         Ok(CourseSet { courses })
     }
@@ -153,7 +153,7 @@ where
         if distance.value_unsafe.is_nan() {
             return Err(CourseError::NaNDistance);
         }
-        let offset = geodesic_inverse(segment.point1.geo(), &intercept)?.geo_distance;
+        let offset = geodesic_inverse(segment.start.geo(), &intercept)?.geo_distance;
 
         Ok(InterceptSolution::Near(NearIntercept {
             intercept_point: intercept,
@@ -169,16 +169,17 @@ where
             let _enter = span.enter();
             for course in &mut self.courses {
                 let mut slns = Vec::with_capacity(self.waypoints.len());
-                let mut course_distance = 0.0 * M;
-                for segment in &course.segments {
+                if course.segments.is_none() {
+                    course.calculate_segments()?;
+                }
+                for (segment, start_distance) in course.segments.as_ref().unwrap() {
                     <Self as SolveIntercept<P>>::solve_intercept(
                         &mut slns,
                         segment,
                         waypoint,
                         self.options.threshold,
-                        course_distance,
+                        *start_distance,
                     )?;
-                    course_distance += segment.geo_distance;
                 }
 
                 let mut near_intercepts = find_nearby_segments(&slns, self.options.threshold)
@@ -395,11 +396,11 @@ where
     P: HasGeoPoint,
     CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
-    segments: Vec<GeoSegment<P>>,
-    prev_point: Option<P>,
+    route_points: Vec<GeoPoint>,
+    segments: Option<Vec<(GeoSegment<P>, Meter<f64>)>>,
     name: Option<String>,
     course_points: Vec<CoursePoint>,
-    num_releated_points_skipped: usize,
+    num_repeated_points_skipped: usize,
 }
 
 #[allow(clippy::new_without_default)]
@@ -410,11 +411,11 @@ where
 {
     fn new() -> Self {
         Self {
-            segments: Vec::new(),
-            prev_point: None,
+            route_points: Vec::new(),
+            segments: None,
             name: None,
             course_points: Vec::new(),
-            num_releated_points_skipped: 0,
+            num_repeated_points_skipped: 0,
         }
     }
 
@@ -424,59 +425,78 @@ where
     }
 
     pub fn with_route_point(&mut self, point: GeoPoint) -> Result<&mut Self> {
-        let with_xyz = P::try_from(point)?;
-        match &self.prev_point {
-            Some(prev) => {
-                if *prev == with_xyz {
-                    self.num_releated_points_skipped += 1
-                } else {
-                    // TODO: Investigate using elevation-corrected distances
-                    self.segments
-                        .push(GeoSegment::from_geo_points(*prev, with_xyz)?);
-                    self.prev_point = Some(with_xyz);
-                }
+        if let Some(prev) = self.route_points.last() {
+            if *prev == point {
+                self.num_repeated_points_skipped += 1;
+                return Ok(self);
             }
-
-            None => self.prev_point = Some(with_xyz),
         }
+        self.route_points.push(point);
         Ok(self)
     }
 
-    fn build(mut self) -> Course {
+    fn calculate_segments(&mut self) -> Result<()> {
+        let ps = self
+            .route_points
+            .iter()
+            .map(|p| P::try_from(*p))
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+
+        let segments = ps
+            .windows(2)
+            .map(|pair| GeoSegment::from_geo_points(pair[0], pair[1]))
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+
+        let segments_and_distances: Vec<(GeoSegment<P>, Meter<f64>)> = segments
+            .into_iter()
+            .scan(0.0 * M, |dist, s| {
+                let start_dist = *dist;
+                *dist += s.geo_length;
+                Some((s, start_dist))
+            })
+            .collect::<Vec<_>>();
+
+        self.segments = Some(segments_and_distances);
+        Ok(())
+    }
+
+    fn build(mut self) -> Result<Course> {
+        if self.segments.is_none() {
+            self.calculate_segments()?;
+        }
         match &self.name {
             Some(name) => info!("Building course {}", name),
             None => info!("Building untitled course"),
         }
         let mut records = Vec::new();
-        let mut cumulative_distance = 0.0 * M;
-        match (self.segments.first(), self.prev_point) {
-            (Some(first), _) => records.push(Record {
-                point: *first.point1.geo(),
-                cumulative_distance,
-            }),
-            (None, Some(point)) => records.push(Record {
-                point: *point.geo(),
-                cumulative_distance,
-            }),
-            (None, None) => (),
-        }
-        let num_segments = self.segments.len();
-        for segment in self.segments {
-            cumulative_distance += segment.geo_distance;
+        let segments = self.segments.as_ref().unwrap();
+        let num_segments = segments.len();
+        let total_distance = match segments.last() {
+            Some((s, start_distance)) => *start_distance + s.geo_length,
+            None => 0.0 * M,
+        };
+        for (segment, start_distance) in segments {
             records.push(Record {
-                point: *segment.point2.geo(),
-                cumulative_distance,
-            });
+                point: *segment.start.geo(),
+                cumulative_distance: *start_distance,
+            })
         }
+        if let Some(rp) = self.route_points.last() {
+            records.push(Record {
+                point: *rp,
+                cumulative_distance: total_distance,
+            })
+        }
+
         info!(
             "Processed {} course records ({} segments) with a total distance of {:.2}",
             records.len(),
             num_segments,
-            cumulative_distance
+            total_distance,
         );
         debug!(
             "{} repeated records (zero-length segments) were excluded from the conversion",
-            self.num_releated_points_skipped
+            self.num_repeated_points_skipped
         );
 
         // Unwrap is safe here because we check for NaN distances when adding
@@ -484,11 +504,11 @@ where
         self.course_points
             .sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
 
-        Course {
+        Ok(Course {
             records,
             course_points: self.course_points,
             name: self.name,
-        }
+        })
     }
 }
 
@@ -560,7 +580,7 @@ mod tests {
 
     #[test]
     fn test_course_builder_empty() -> Result<()> {
-        let course = CourseBuilder::new().build();
+        let course = CourseBuilder::new().build()?;
         assert_eq!(course.records, vec![]);
         Ok(())
     }
@@ -570,7 +590,7 @@ mod tests {
         let mut builder = CourseBuilder::new();
         builder.with_route_point(geo_point!(1.0, 2.0))?;
         let record_points = builder
-            .build()
+            .build()?
             .records
             .iter()
             .map(|r| r.point)
@@ -589,7 +609,7 @@ mod tests {
             .with_route_point(geo_point!(1.0, 2.0))?
             .with_route_point(geo_point!(1.1, 2.2))?;
         let record_points = builder
-            .build()
+            .build()?
             .records
             .iter()
             .map(|r| r.point)
@@ -613,7 +633,7 @@ mod tests {
             .with_route_point(geo_point!(1.1, 2.2))?
             .with_route_point(geo_point!(1.1, 2.2))?;
 
-        let course = builder.build();
+        let course = builder.build()?;
         let record_points = course.records.iter().map(|r| r.point).collect::<Vec<_>>();
 
         let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2), (1.2, 2.1), (1.1, 2.2)];
