@@ -78,6 +78,14 @@ class TestUI:
 
         assert "No course was found" in einfo.value.stderr
 
+    def test_multiple_routes(self, tmpdir, data, coursepointer_cli):
+        with raises(subprocess.CalledProcessError) as einfo:
+            coursepointer_cli(
+                "convert", data / "cptr007.gpx", "-o", tmpdir / "out.fit"
+            )
+
+        assert "Unexpected number of courses" in einfo.value.stderr
+
     def test_bad_xml(self, tmpdir, data, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
