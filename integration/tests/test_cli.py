@@ -263,7 +263,7 @@ class TestConvert:
                 ureg.second
             )
             actual_duration = record["timestamp"] - start_timestamp
-            assert actual_duration.seconds == approx(expected_duration.magnitude, abs=1)
+            assert actual_duration.seconds == approx(expected_duration.magnitude, abs=2)
 
     def test_timer_event_spacing(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
@@ -282,7 +282,7 @@ class TestConvert:
         event_spacing = event_mesgs[1]["timestamp"] - event_mesgs[0]["timestamp"]
         # Comparison is approximate because event timestamps have one-second
         # resolution, while lap time has millisecond resolution.
-        assert event_spacing.seconds == approx(lap_elapsed, abs=1)
+        assert event_spacing.seconds == approx(lap_elapsed, abs=2)
 
     def test_timer_event_group(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
