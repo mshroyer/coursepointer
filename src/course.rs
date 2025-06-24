@@ -221,44 +221,44 @@ where
 
     #[tracing::instrument(level = "debug", name = "process_waypoints", skip_all)]
     fn process_waypoints(&mut self) -> Result<()> {
-        let waypoints_and_intercepts = iter_work!(&self.waypoints)
-            .map(|waypoint| {
-                let course = &self.courses[0];
-                let near_intercepts =
-                    Self::process_waypoint(waypoint, course, self.options.threshold)?;
-                Ok((waypoint, near_intercepts))
-            })
-            .collect::<Result<Vec<_>>>()?;
+        for course in &mut self.courses {
+            let waypoints_and_intercepts = iter_work!(&self.waypoints)
+                .map(|waypoint| {
+                    let near_intercepts =
+                        Self::process_waypoint(waypoint, course, self.options.threshold)?;
+                    Ok((waypoint, near_intercepts))
+                })
+                .collect::<Result<Vec<_>>>()?;
 
-        for (waypoint, near_intercepts) in waypoints_and_intercepts.iter() {
-            let course = &mut self.courses[0];
-            if !near_intercepts.is_empty() {
-                match self.options.strategy {
-                    InterceptStrategy::Nearest => {
-                        let mut near_sorted = near_intercepts.clone();
-                        near_sorted.sort_by(|a, b| {
-                            a.intercept_distance
-                                .partial_cmp(&b.intercept_distance)
-                                .unwrap()
-                        });
-                        Self::add_course_point(
-                            &mut course.course_points,
-                            &near_sorted[0],
-                            waypoint,
-                        );
-                    }
+            for (waypoint, near_intercepts) in waypoints_and_intercepts.iter() {
+                if !near_intercepts.is_empty() {
+                    match self.options.strategy {
+                        InterceptStrategy::Nearest => {
+                            let mut near_sorted = near_intercepts.clone();
+                            near_sorted.sort_by(|a, b| {
+                                a.intercept_distance
+                                    .partial_cmp(&b.intercept_distance)
+                                    .unwrap()
+                            });
+                            Self::add_course_point(
+                                &mut course.course_points,
+                                &near_sorted[0],
+                                waypoint,
+                            );
+                        }
 
-                    InterceptStrategy::First => {
-                        Self::add_course_point(
-                            &mut course.course_points,
-                            &near_intercepts[0],
-                            waypoint,
-                        );
-                    }
+                        InterceptStrategy::First => {
+                            Self::add_course_point(
+                                &mut course.course_points,
+                                &near_intercepts[0],
+                                waypoint,
+                            );
+                        }
 
-                    InterceptStrategy::All => {
-                        for sln in near_intercepts {
-                            Self::add_course_point(&mut course.course_points, sln, waypoint);
+                        InterceptStrategy::All => {
+                            for sln in near_intercepts {
+                                Self::add_course_point(&mut course.course_points, sln, waypoint);
+                            }
                         }
                     }
                 }
