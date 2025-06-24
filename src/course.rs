@@ -11,6 +11,7 @@ use std::cmp::Ordering;
 use std::convert::Infallible;
 
 use dimensioned::si::{M, Meter};
+#[cfg(feature = "rayon")]
 use rayon::prelude::*;
 use thiserror::Error;
 use tracing::{debug, error, info};
@@ -38,6 +39,20 @@ pub enum CourseError {
 }
 
 type Result<T> = std::result::Result<T, CourseError>;
+
+#[cfg(not(feature = "rayon"))]
+macro_rules! iter_work {
+    ($i:expr) => {
+        $i.iter()
+    };
+}
+
+#[cfg(feature = "rayon")]
+macro_rules! iter_work {
+    ($i:expr) => {
+        $i.par_iter()
+    };
+}
 
 /// Strategy for handling duplicate intercepts from a waypoint.
 ///
@@ -206,9 +221,7 @@ where
 
     #[tracing::instrument(level = "debug", name = "process_waypoints", skip_all)]
     fn process_waypoints(&mut self) -> Result<()> {
-        let waypoints_and_intercepts = &self
-            .waypoints
-            .par_iter()
+        let waypoints_and_intercepts = iter_work!(&self.waypoints)
             .map(|waypoint| {
                 let course = &self.courses[0];
                 let near_intercepts =
@@ -443,17 +456,14 @@ where
     }
 
     fn calculate_segments(&mut self) -> Result<()> {
-        let ps = self
-            .route_points
-            .par_iter()
+        let ps = iter_work!(self.route_points)
             .map(|p| P::try_from(*p))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
         let index_pairs = (0..ps.len().saturating_sub(1))
             .map(|i| (i, i + 1))
             .collect::<Vec<_>>();
-        let segments = index_pairs
-            .par_iter()
+        let segments = iter_work!(index_pairs)
             .map(|(i, j)| GeoSegment::from_geo_points(ps[*i], ps[*j]))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
