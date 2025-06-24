@@ -596,7 +596,7 @@ mod tests {
     type CourseBuilder = CourseBuilderImpl<GeoAndXyzPoint>;
 
     #[cfg(not(feature = "floor"))]
-    type CourseBuilder = CourseBuilderImpl<GeoAndXyzPoint>;
+    type CourseBuilder = CourseBuilderImpl<GeoPoint>;
 
     #[test]
     fn test_course_builder_empty() -> Result<()> {
