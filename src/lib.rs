@@ -1,4 +1,5 @@
-//! A CLI tool and library for computing FIT course points from GPX.
+//! A CLI tool and library for computing FIT course
+//! points from GPX.
 //!
 //! Builds on
 //! [GeographicLib](https://geographiclib.sourceforge.io/C++/doc/index.html) to
@@ -18,9 +19,7 @@
 //! # Feature flags
 //!
 //! - `cli` enables the additional dependencies needed by the CLI
-//! - `floor` enables an "intercept distance floor" optimization when computing
-//!   waypoint-course intercepts, which provides a significant speedup (10s to
-//!   40ms on the cptr006.gpx stress test, for example).
+//! - `rayon` enables computing course points in parallel using [rayon](https://docs.rs/rayon/latest/rayon/)
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
 //!   of a hand-picked subset
 

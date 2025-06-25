@@ -60,11 +60,9 @@ jobs:
       matrix:
         include:
           - features: ""
+          - features: "rayon"
           - features: "full-geolib"
           - features: "cli"
-          - features: "floor"
-          - features: "cli,floor"
-          - features: "floor,rayon"
 
     runs-on: ubuntu-latest
 

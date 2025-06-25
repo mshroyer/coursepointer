@@ -2,10 +2,10 @@
 //!
 //! Provides [`Course`], an abstract representation of a course with its records
 //! and course points (if any). Courses are created by obtaining a
-//! [`CourseSetBuilderImpl`] and adding data to it.
+//! [`CourseSetBuilder`] and adding data to it.
 //!
 //! Once all the data has been added (for example, by parsing it from a GPX
-//! file), [`CourseSetBuilderImpl::build`] returns a [`CourseSet`].
+//! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
 
 use std::cmp::Ordering;
 use std::convert::Infallible;
@@ -99,30 +99,13 @@ pub struct CourseSet {
     pub courses: Vec<Course>,
 }
 
-#[cfg(feature = "floor")]
-pub type CourseSetBuilder = CourseSetBuilderImpl<GeoAndXyzPoint>;
-
-#[cfg(not(feature = "floor"))]
-pub type CourseSetBuilder = CourseSetBuilderImpl<GeoPoint>;
-
-pub struct CourseSetBuilderImpl<P>
-where
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    <P as TryFrom<GeoPoint>>::Error: Send,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
+pub struct CourseSetBuilder {
     options: CourseOptions,
-    course_builders: Vec<CourseBuilder<P>>,
-    waypoints: Vec<Waypoint<P>>,
+    course_builders: Vec<CourseBuilder>,
+    waypoints: Vec<Waypoint>,
 }
 
-impl<P> CourseSetBuilderImpl<P>
-where
-    Self: SolveIntercept<P>,
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    <P as TryFrom<GeoPoint>>::Error: Send,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
+impl CourseSetBuilder {
     pub fn new(options: CourseOptions) -> Self {
         Self {
             options,
@@ -131,19 +114,19 @@ where
         }
     }
 
-    pub fn add_course(&mut self) -> &mut CourseBuilder<P> {
+    pub fn add_course(&mut self) -> &mut CourseBuilder {
         self.course_builders.push(CourseBuilder::new());
         self.last_course_mut().unwrap()
     }
 
-    pub fn last_course_mut(&mut self) -> Result<&mut CourseBuilder<P>> {
+    pub fn last_course_mut(&mut self) -> Result<&mut CourseBuilder> {
         match self.course_builders.last_mut() {
             Some(course) => Ok(course),
             None => Err(CourseError::MissingCourse),
         }
     }
 
-    pub fn add_waypoint(&mut self, waypoint: Waypoint<P>) -> &mut Self {
+    pub fn add_waypoint(&mut self, waypoint: Waypoint) -> &mut Self {
         self.waypoints.push(waypoint);
         self
     }
@@ -170,8 +153,8 @@ where
     }
 
     fn solve_near_intercept(
-        segment: &GeoSegment<P>,
-        waypoint: &Waypoint<P>,
+        segment: &GeoSegment<GeoAndXyzPoint>,
+        waypoint: &Waypoint,
         course_distance: Meter<f64>,
     ) -> Result<InterceptSolution> {
         let intercept = karney_interception(segment, &waypoint.point)?;
@@ -189,18 +172,19 @@ where
     }
 
     fn process_single_waypoint(
-        waypoint: &Waypoint<P>,
-        course: &SegmentedCourseBuilder<P>,
+        waypoint: &Waypoint,
+        course: &SegmentedCourseBuilder,
         threshold: Meter<f64>,
     ) -> Result<Vec<NearIntercept>> {
         let mut slns = Vec::new();
         for (segment, start_distance) in &course.segments_and_distances {
-            slns.push(<Self as SolveIntercept<P>>::solve_intercept(
-                segment,
-                waypoint,
-                threshold,
-                *start_distance,
-            )?);
+            slns.push(
+                if intercept_distance_floor(segment, &waypoint.point)? > threshold {
+                    InterceptSolution::Far
+                } else {
+                    Self::solve_near_intercept(segment, waypoint, *start_distance)?
+                },
+            );
         }
 
         let near_intercepts = find_nearby_segments(&slns, threshold)
@@ -225,10 +209,7 @@ where
     }
 
     #[tracing::instrument(level = "debug", name = "process_waypoints", skip_all)]
-    fn process_waypoints(
-        &self,
-        segmented_courses: &mut Vec<SegmentedCourseBuilder<P>>,
-    ) -> Result<()> {
+    fn process_waypoints(&self, segmented_courses: &mut Vec<SegmentedCourseBuilder>) -> Result<()> {
         for segmented_course in segmented_courses {
             let waypoints_and_intercepts = iter_work!(&self.waypoints)
                 .map(|waypoint| {
@@ -285,7 +266,7 @@ where
     fn add_course_point(
         course_points: &mut Vec<CoursePoint>,
         sln: &NearIntercept,
-        waypoint: &Waypoint<P>,
+        waypoint: &Waypoint,
     ) {
         course_points.push(CoursePoint {
             point: sln.intercept_point,
@@ -293,45 +274,6 @@ where
             point_type: waypoint.point_type,
             name: waypoint.name.clone(),
         });
-    }
-}
-
-pub trait SolveIntercept<P>
-where
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
-    fn solve_intercept(
-        segment: &GeoSegment<P>,
-        waypoint: &Waypoint<P>,
-        _threshold: Meter<f64>,
-        course_distance: Meter<f64>,
-    ) -> Result<InterceptSolution>;
-}
-
-impl SolveIntercept<GeoPoint> for CourseSetBuilderImpl<GeoPoint> {
-    fn solve_intercept(
-        segment: &GeoSegment<GeoPoint>,
-        waypoint: &Waypoint<GeoPoint>,
-        _threshold: Meter<f64>,
-        course_distance: Meter<f64>,
-    ) -> Result<InterceptSolution> {
-        Self::solve_near_intercept(segment, waypoint, course_distance)
-    }
-}
-
-impl SolveIntercept<GeoAndXyzPoint> for CourseSetBuilderImpl<GeoAndXyzPoint> {
-    fn solve_intercept(
-        segment: &GeoSegment<GeoAndXyzPoint>,
-        waypoint: &Waypoint<GeoAndXyzPoint>,
-        threshold: Meter<f64>,
-        course_distance: Meter<f64>,
-    ) -> Result<InterceptSolution> {
-        if intercept_distance_floor(segment, &waypoint.point)? > threshold {
-            Ok(InterceptSolution::Far)
-        } else {
-            Self::solve_near_intercept(segment, waypoint, course_distance)
-        }
     }
 }
 
@@ -401,7 +343,7 @@ pub struct Course {
     pub records: Vec<Record>,
 
     /// The course points and their cumulative distances. These are derived from
-    /// the subset of waypoints provided to [`CourseSetBuilderImpl`] that are
+    /// the subset of waypoints provided to [`CourseSetBuilder`] that are
     /// located near the course.
     pub course_points: Vec<CoursePoint>,
 
@@ -426,34 +368,22 @@ impl Course {
 
 /// Builder for [`Course`].
 ///
-/// Used as part of [`CourseSetBuilderImpl`] to allow composing a course.
+/// Used as part of [`CourseSetBuilder`] to allow composing a course.
 /// Within that context, obtain a new instance with
-/// [`CourseSetBuilderImpl::add_course`].
-pub struct CourseBuilder<P>
-where
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    for<'a> GeoSegment<'a, P>: FromGeoPoints<'a, P>,
-    <P as TryFrom<GeoPoint>>::Error: Send,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
+/// [`CourseSetBuilder::add_course`].
+pub struct CourseBuilder {
     route_points: Vec<GeoPoint>,
-    ps: Vec<P>,
+    xyz_points: Vec<GeoAndXyzPoint>,
     name: Option<String>,
     num_repeated_points_skipped: usize,
 }
 
 #[allow(clippy::new_without_default)]
-impl<P> CourseBuilder<P>
-where
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    for<'a> GeoSegment<'a, P>: FromGeoPoints<'a, P>,
-    <P as TryFrom<GeoPoint>>::Error: Send,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
+impl CourseBuilder {
     fn new() -> Self {
         Self {
             route_points: Vec::new(),
-            ps: Vec::new(),
+            xyz_points: Vec::new(),
             name: None,
             num_repeated_points_skipped: 0,
         }
@@ -485,19 +415,19 @@ where
     /// Does the initial geodesic calculations of solving the indirect problem
     /// between adjacent points, and lifting points into instances the type
     /// parameter `P` (such as [`XyzPoint`]).
-    fn segment(&mut self) -> Result<SegmentedCourseBuilder<P>> {
-        self.ps = iter_work!(self.route_points)
-            .map(|p| P::try_from(*p))
+    fn segment(&mut self) -> Result<SegmentedCourseBuilder> {
+        self.xyz_points = iter_work!(self.route_points)
+            .map(|p| GeoAndXyzPoint::try_from(*p))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
-        let index_pairs = (0..self.ps.len().saturating_sub(1))
+        let index_pairs = (0..self.xyz_points.len().saturating_sub(1))
             .map(|i| (i, i + 1))
             .collect::<Vec<_>>();
         let segments = iter_work!(index_pairs)
-            .map(|(i, j)| GeoSegment::from_geo_points(&self.ps[*i], &self.ps[*j]))
+            .map(|(i, j)| GeoSegment::from_geo_points(&self.xyz_points[*i], &self.xyz_points[*j]))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
-        let segments_and_distances: Vec<(GeoSegment<P>, Meter<f64>)> = segments
+        let segments_and_distances: Vec<(GeoSegment<GeoAndXyzPoint>, Meter<f64>)> = segments
             .into_iter()
             .scan(0.0 * M, |dist, s| {
                 let start_dist = *dist;
@@ -507,7 +437,7 @@ where
             .collect::<Vec<_>>();
 
         Ok(SegmentedCourseBuilder {
-            route_points: &self.ps,
+            xyz_points: &self.xyz_points,
             segments_and_distances,
             name: self.name.clone(),
             course_points: Vec::new(),
@@ -522,29 +452,17 @@ where
 /// initial work of processing route points into geodesic segments along with
 /// distance information, as well as possibly [`XyPoint`] values, has been done.
 ///
-/// This builder is used internally within [`CourseSetBuilderImpl`] to gather
+/// This builder is used internally within [`CourseSetBuilder`] to gather
 /// course points.
-struct SegmentedCourseBuilder<'a, P>
-where
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    GeoSegment<'a, P>: FromGeoPoints<'a, P>,
-    <P as TryFrom<GeoPoint>>::Error: Send,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
-    route_points: &'a Vec<P>,
-    segments_and_distances: Vec<(GeoSegment<'a, P>, Meter<f64>)>,
+struct SegmentedCourseBuilder<'a> {
+    xyz_points: &'a Vec<GeoAndXyzPoint>,
+    segments_and_distances: Vec<(GeoSegment<'a, GeoAndXyzPoint>, Meter<f64>)>,
     name: Option<String>,
     course_points: Vec<CoursePoint>,
     num_repeated_points_skipped: usize,
 }
 
-impl<'a, P> SegmentedCourseBuilder<'a, P>
-where
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    GeoSegment<'a, P>: FromGeoPoints<'a, P>,
-    <P as TryFrom<GeoPoint>>::Error: Send,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
+impl<'a> SegmentedCourseBuilder<'a> {
     fn build(mut self) -> Result<Course> {
         match &self.name {
             Some(name) => info!("Building course {}", name),
@@ -562,7 +480,7 @@ where
                 cumulative_distance: start_distance,
             })
         }
-        if let Some(rp) = self.route_points.last() {
+        if let Some(rp) = self.xyz_points.last() {
             records.push(Record {
                 point: *rp.geo(),
                 cumulative_distance: total_distance,
@@ -609,13 +527,9 @@ pub struct Record {
 /// [`CoursePointType`] instead of a set of optional GPX attributes. And in
 /// contrast with a `CoursePoint`, a Waypoint is not known to necessarily lie
 /// along the course and lacks a known course distance.
-pub struct Waypoint<P>
-where
-    P: HasGeoPoint + TryFrom<GeoPoint> + Send + Sync,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
-{
+pub struct Waypoint {
     /// Position of the waypoint.
-    pub point: P,
+    pub point: GeoAndXyzPoint,
 
     /// The type of course point this should be considered, if it does turn out
     /// to be one.
@@ -650,19 +564,19 @@ mod tests {
         CourseBuilder, CourseSetBuilder, InterceptSolution, NearIntercept, Waypoint,
     };
     use crate::fit::CoursePointType;
-    use crate::types::{GeoAndXyzPoint, GeoPoint};
+    use crate::types::GeoPoint;
     use crate::{CourseOptions, geo_point, geo_points};
 
     #[test]
     fn test_course_builder_empty() -> Result<()> {
-        let course = CourseBuilder::<GeoAndXyzPoint>::new().segment()?.build()?;
+        let course = CourseBuilder::new().segment()?.build()?;
         assert_eq!(course.records, vec![]);
         Ok(())
     }
 
     #[test]
     fn test_course_builder_single_point() -> Result<()> {
-        let mut builder = CourseBuilder::<GeoAndXyzPoint>::new();
+        let mut builder = CourseBuilder::new();
         builder.with_route_point(geo_point!(1.0, 2.0));
         let record_points = builder
             .segment()?
@@ -680,7 +594,7 @@ mod tests {
 
     #[test]
     fn test_course_builder_two_points() -> Result<()> {
-        let mut builder = CourseBuilder::<GeoAndXyzPoint>::new();
+        let mut builder = CourseBuilder::new();
         builder
             .with_route_point(geo_point!(1.0, 2.0))
             .with_route_point(geo_point!(1.1, 2.2));
@@ -700,7 +614,7 @@ mod tests {
 
     #[test]
     fn test_repeated_points() -> Result<()> {
-        let mut builder = CourseBuilder::<GeoAndXyzPoint>::new();
+        let mut builder = CourseBuilder::new();
         builder
             .with_route_point(geo_point!(1.0, 2.0))
             .with_route_point(geo_point!(1.0, 2.0))
