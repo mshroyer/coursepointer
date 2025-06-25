@@ -95,6 +95,22 @@ impl Default for CourseOptions {
     }
 }
 
+impl CourseOptions {
+    pub fn with_threshold(self, threshold: Meter<f64>) -> Self {
+        Self {
+            threshold,
+            strategy: self.strategy,
+        }
+    }
+
+    pub fn with_strategy(self, strategy: InterceptStrategy) -> Self {
+        Self {
+            threshold: self.threshold,
+            strategy,
+        }
+    }
+}
+
 pub struct CourseSet {
     pub courses: Vec<Course>,
 }

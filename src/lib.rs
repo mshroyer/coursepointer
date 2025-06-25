@@ -45,7 +45,7 @@ use tracing::{Level, debug, span};
 
 use crate::course::{CourseError, CoursePoint, CourseSetBuilder, Waypoint};
 pub use crate::course::{CourseOptions, InterceptStrategy};
-use crate::fit::CourseFile;
+pub use crate::fit::CourseFile;
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
 use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};

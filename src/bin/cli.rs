@@ -211,10 +211,9 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     );
     info!("Created FIT output file: {:?}", absolute(output)?);
 
-    let course_options = CourseOptions {
-        threshold: sub_args.threshold * M,
-        strategy: sub_args.strategy,
-    };
+    let course_options = CourseOptions::default()
+        .with_threshold(sub_args.threshold * M)
+        .with_strategy(sub_args.strategy);
     let fit_speed = sub_args.speed * KILO * M / HR;
 
     let res = coursepointer::convert_gpx(gpx_file, fit_file, course_options, fit_speed);
