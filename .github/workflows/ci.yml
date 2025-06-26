@@ -47,11 +47,13 @@ jobs:
       - name: Setup rust
         run: rustup toolchain install --profile minimal ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-
-      - name: Set up Python
-        run: uv python install
 
       - run: cargo build --verbose
       - run: cargo test --verbose
@@ -119,9 +121,9 @@ jobs:
 
       - name: Cargo check
         run: cargo check
-        
+
       - uses: astral-sh/ruff-action@v3
-        
+
       - uses: astral-sh/ruff-action@v3
         with:
           args: "format --check --diff"
