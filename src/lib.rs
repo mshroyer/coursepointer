@@ -62,7 +62,9 @@ pub use fit::FitEncodeError;
 use thiserror::Error;
 use tracing::{Level, debug, span};
 
-use crate::course::{CourseError, CoursePoint, CourseSetBuilder, CourseSetOptions, Waypoint};
+use crate::course::{
+    Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions, Waypoint,
+};
 pub use crate::fit::CourseFile;
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
@@ -119,9 +121,22 @@ pub fn convert_gpx<R: BufRead, W: Write>(
     course_options: CourseSetOptions,
     fit_speed: MeterPerSecond<f64>,
 ) -> Result<ConversionInfo> {
-    let mut builder = CourseSetBuilder::new(course_options);
+    let mut course_set = read_gpx(course_options, gpx_input)?;
+    let course = course_set.courses.remove(0);
+    write_fit_course(&course, fit_speed, fit_output)?;
 
-    let mut num_waypoints = 0usize;
+    Ok(ConversionInfo {
+        course_name: course.name.clone(),
+        total_distance: course.records.last().unwrap().cumulative_distance,
+        num_waypoints: course_set.num_waypoints,
+        course_points: course.course_points,
+    })
+}
+
+/// Read a GPX file into a [`CourseSet`].
+pub fn read_gpx<R: BufRead>(options: CourseSetOptions, gpx_input: R) -> Result<CourseSet> {
+    let mut builder = CourseSetBuilder::new(options);
+
     {
         let span = span!(Level::DEBUG, "read_input");
         let _guard = span.enter();
@@ -150,7 +165,6 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                 }
 
                 GpxItem::Waypoint(wpt) => {
-                    num_waypoints += 1;
                     builder.add_waypoint(Waypoint {
                         point: wpt.point.try_into()?,
                         point_type: get_course_point_type(creator, &wpt),
@@ -173,20 +187,18 @@ pub fn convert_gpx<R: BufRead, W: Write>(
     if builder.num_routes() != 1usize {
         return Err(CoursePointerError::CourseCount(builder.num_routes()));
     }
-    let mut course_set = builder.build()?;
-    let course = course_set.courses.remove(0);
-    if course.records.is_empty() {
-        return Err(CoursePointerError::EmptyRecords);
-    }
+    Ok(builder.build()?)
+}
+
+/// Write a single [`Course`] into a GPX course file.
+pub fn write_fit_course<W: Write>(
+    course: &Course,
+    fit_speed: MeterPerSecond<f64>,
+    fit_output: W,
+) -> Result<()> {
     let course_file = CourseFile::new(&course, Utc::now(), fit_speed);
     course_file.encode(fit_output)?;
-
-    Ok(ConversionInfo {
-        course_name: course.name.clone(),
-        total_distance: course.records.last().unwrap().cumulative_distance,
-        num_waypoints,
-        course_points: course.course_points,
-    })
+    Ok(())
 }
 
 /// CXX Generated FFI for GeographicLib

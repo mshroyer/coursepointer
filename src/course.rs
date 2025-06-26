@@ -155,6 +155,7 @@ impl CourseSetOptions {
 
 pub struct CourseSet {
     pub courses: Vec<Course>,
+    pub num_waypoints: usize,
 }
 
 /// Builds routes and waypoints into courses with associated course points
@@ -210,7 +211,10 @@ impl CourseSetBuilder {
         for segmented_course in segmented_courses {
             courses.push(segmented_course.build()?);
         }
-        Ok(CourseSet { courses })
+        Ok(CourseSet {
+            courses,
+            num_waypoints: self.waypoints.len(),
+        })
     }
 
     fn solve_near_intercept(
