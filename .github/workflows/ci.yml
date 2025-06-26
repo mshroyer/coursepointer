@@ -41,6 +41,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            ~/.rustup/toolchains/
+            ~/.rustup/update-hashes/
             .venv/
             target/
           key: build_and_test-${{ matrix.toolchain }}-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
@@ -88,6 +90,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            ~/.rustup/toolchains/
+            ~/.rustup/update-hashes/
             .venv/
             target/
           key: features-${{ matrix.features }}-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
@@ -112,6 +116,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            ~/.rustup/toolchains/
+            ~/.rustup/update-hashes/
             .venv/
             target/
           key: lint-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
