@@ -36,13 +36,9 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/uv/
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ~/.rustup/toolchains/
-            ~/.rustup/update-hashes/
+            ~/.cache/
+            ~/.cargo/
+            ~/.rustup/
             .venv/
             target/
           key: build_and_test-${{ matrix.toolchain }}-${{ runner.os }}
@@ -85,11 +81,8 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/uv/
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
+            ~/.cache/
+            ~/.cargo/
             .venv/
             target/
           key: features-${{ matrix.features }}-${{ runner.os }}
@@ -107,13 +100,9 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/uv/
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ~/.rustup/toolchains/
-            ~/.rustup/update-hashes/
+            ~/.cache/
+            ~/.cargo/
+            ~/.rustup/
             .venv/
             target/
           key: lint-${{ runner.os }}
