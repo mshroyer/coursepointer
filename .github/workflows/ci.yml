@@ -90,14 +90,10 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ~/.rustup/toolchains/
-            ~/.rustup/update-hashes/
             .venv/
             target/
           key: features-${{ matrix.features }}-${{ runner.os }}
 
-      - name: Setup rust
-        run: rustup toolchain install --profile minimal stable && rustup default stable
       - run: cargo test --no-default-features -F "${{ matrix.features }}" --verbose
 
   lint:
