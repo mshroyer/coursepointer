@@ -21,7 +21,7 @@ jobs:
             toolchain: beta
           - os: ubuntu-latest
             toolchain: nightly
-          - os: windows-2022
+          - os: windows-2025
             toolchain: stable
           - os: macos-latest
             toolchain: stable
