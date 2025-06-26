@@ -10,7 +10,6 @@ use std::ops::{Mul, Sub};
 use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
-use crate::course::CourseError;
 use crate::geographic::{
     GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
 };
@@ -237,7 +236,6 @@ pub trait FromGeoPoints<'a, P>
 where
     Self: Sized,
     P: HasGeoPoint + TryFrom<GeoPoint>,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn from_geo_points(start: &'a P, end: &'a P) -> std::result::Result<Self, GeographicError>;
 }
@@ -245,7 +243,6 @@ where
 impl<'a, P> FromGeoPoints<'a, P> for GeoSegment<'a, P>
 where
     P: HasGeoPoint + TryFrom<GeoPoint>,
-    CourseError: From<<P as TryFrom<GeoPoint>>::Error>,
 {
     fn from_geo_points(point1: &'a P, point2: &'a P) -> std::result::Result<Self, GeographicError> {
         let inverse = geodesic_inverse(point1.geo(), point2.geo())?;

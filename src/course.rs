@@ -53,7 +53,6 @@
 //! calculations.
 
 use std::cmp::Ordering;
-use std::convert::Infallible;
 
 use dimensioned::si::{M, Meter};
 #[cfg(feature = "rayon")]
@@ -79,8 +78,6 @@ pub enum CourseError {
     Algorithm(#[from] AlgorithmError),
     #[error("Distance is NaN")]
     NaNDistance,
-    #[error("Infallible")]
-    Infallible(#[from] Infallible),
 }
 
 type Result<T> = std::result::Result<T, CourseError>;
@@ -163,7 +160,7 @@ pub struct CourseSet {
 /// Builds routes and waypoints into courses with associated course points
 pub struct CourseSetBuilder {
     options: CourseSetOptions,
-    course_builders: Vec<RouteBuilder>,
+    route_builders: Vec<RouteBuilder>,
     waypoints: Vec<Waypoint>,
 }
 
@@ -172,19 +169,19 @@ impl CourseSetBuilder {
     pub fn new(options: CourseSetOptions) -> Self {
         Self {
             options,
-            course_builders: Vec::new(),
+            route_builders: Vec::new(),
             waypoints: Vec::new(),
         }
     }
 
     /// Adds a new [`RouteBuilder`] to this set builder.
     pub fn add_route(&mut self) -> &mut RouteBuilder {
-        self.course_builders.push(RouteBuilder::new());
-        self.last_course_mut().unwrap()
+        self.route_builders.push(RouteBuilder::new());
+        self.last_route_mut().unwrap()
     }
 
-    pub fn last_course_mut(&mut self) -> Result<&mut RouteBuilder> {
-        match self.course_builders.last_mut() {
+    pub fn last_route_mut(&mut self) -> Result<&mut RouteBuilder> {
+        match self.route_builders.last_mut() {
             Some(course) => Ok(course),
             None => Err(CourseError::MissingCourse),
         }
@@ -195,8 +192,8 @@ impl CourseSetBuilder {
         self
     }
 
-    pub fn num_courses(&self) -> usize {
-        self.course_builders.len()
+    pub fn num_routes(&self) -> usize {
+        self.route_builders.len()
     }
 
     /// Build the courses.
@@ -204,7 +201,7 @@ impl CourseSetBuilder {
     /// The geodesic calculations happen in here.
     pub fn build(mut self) -> Result<CourseSet> {
         let mut courses = Vec::new();
-        let mut course_builders = std::mem::take(&mut self.course_builders);
+        let mut course_builders = std::mem::take(&mut self.route_builders);
         let mut segmented_courses = course_builders
             .iter_mut()
             .map(|c| c.segment())

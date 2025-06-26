@@ -142,11 +142,11 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                 }
 
                 GpxItem::TrackOrRouteName(name) => {
-                    builder.last_course_mut()?.with_name(name);
+                    builder.last_route_mut()?.with_name(name);
                 }
 
                 GpxItem::TrackOrRoutePoint(p) => {
-                    builder.last_course_mut()?.with_route_point(p);
+                    builder.last_route_mut()?.with_route_point(p);
                 }
 
                 GpxItem::Waypoint(wpt) => {
@@ -170,8 +170,8 @@ pub fn convert_gpx<R: BufRead, W: Write>(
         );
     }
 
-    if builder.num_courses() != 1usize {
-        return Err(CoursePointerError::CourseCount(builder.num_courses()));
+    if builder.num_routes() != 1usize {
+        return Err(CoursePointerError::CourseCount(builder.num_routes()));
     }
     let mut course_set = builder.build()?;
     let course = course_set.courses.remove(0);
