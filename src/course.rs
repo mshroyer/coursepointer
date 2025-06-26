@@ -55,18 +55,18 @@
 use std::cmp::Ordering;
 use std::convert::Infallible;
 
-use dimensioned::si::{Meter, M};
+use dimensioned::si::{M, Meter};
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 use thiserror::Error;
 use tracing::{debug, error, info};
 
 use crate::algorithm::{
-    find_nearby_segments, intercept_distance_floor, karney_interception, AlgorithmError,
-    FromGeoPoints, NearbySegment,
+    AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
+    karney_interception,
 };
 use crate::fit::CoursePointType;
-use crate::geographic::{geodesic_inverse, GeographicError};
+use crate::geographic::{GeographicError, geodesic_inverse};
 use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint};
 
 #[derive(Error, Debug)]
@@ -622,14 +622,14 @@ pub struct CoursePoint {
 mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
-    use dimensioned::si::{Meter, M};
+    use dimensioned::si::{M, Meter};
 
     use crate::course::{
         CourseSetBuilder, InterceptSolution, NearIntercept, RouteBuilder, Waypoint,
     };
     use crate::fit::CoursePointType;
     use crate::types::GeoPoint;
-    use crate::{geo_point, geo_points, CourseSetOptions};
+    use crate::{CourseSetOptions, geo_point, geo_points};
 
     #[test]
     fn test_route_builder_empty() -> Result<()> {

@@ -27,7 +27,8 @@
 //! to compute the interception points and course distances of waypoints near
 //! routes or tracks, then encodes this all as a FIT course.
 //!
-//! The [`course`] module has types for building up a set of courses and waypoints
+//! The [`course`] module has types for building up a set of courses and
+//! waypoints
 //!
 //! # Feature flags
 //!
@@ -35,8 +36,8 @@
 //!   enabled by default, but may be disabled to prevent unnecessary transient
 //!   dependencies if used as a library.
 //! - `rayon` enables computing course points in parallel using [rayon](https://docs.rs/rayon/latest/rayon/).
-//!   This improves the binary's runtime significantly in stress tests, and
-//!   at least doesn't hurt in more typical cases, on my machine.
+//!   This improves the binary's runtime significantly in stress tests, and at
+//!   least doesn't hurt in more typical cases, on my machine.
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
 //!   of a hand-picked subset.  This is mainly useful when experimenting with
 //!   new FFI additions, otherwise it simply slows the build down.
@@ -61,7 +62,7 @@ pub use fit::FitEncodeError;
 use thiserror::Error;
 use tracing::{Level, debug, span};
 
-use crate::course::{CourseError, CourseSetOptions, CoursePoint, CourseSetBuilder, Waypoint};
+use crate::course::{CourseError, CoursePoint, CourseSetBuilder, CourseSetOptions, Waypoint};
 pub use crate::fit::CourseFile;
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
