@@ -116,3 +116,9 @@ jobs:
 
       - name: Cargo check
         run: cargo check
+        
+      - uses: astral-sh/ruff-action@v3
+        
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
