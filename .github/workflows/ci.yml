@@ -42,7 +42,7 @@ jobs:
             ~/.cargo/git/db/
             .venv/
             target/
-          key: build_and_test-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          key: build_and_test-${{ matrix.toolchain }}-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
