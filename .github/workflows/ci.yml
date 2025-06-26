@@ -45,7 +45,7 @@ jobs:
             ~/.rustup/update-hashes/
             .venv/
             target/
-          key: build_and_test-${{ matrix.toolchain }}-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          key: build_and_test-${{ matrix.toolchain }}-${{ runner.os }}
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
@@ -94,7 +94,7 @@ jobs:
             ~/.rustup/update-hashes/
             .venv/
             target/
-          key: features-${{ matrix.features }}-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          key: features-${{ matrix.features }}-${{ runner.os }}
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal stable && rustup default stable
@@ -120,7 +120,7 @@ jobs:
             ~/.rustup/update-hashes/
             .venv/
             target/
-          key: lint-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          key: lint-${{ runner.os }}
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal -c rustfmt nightly && rustup default nightly
