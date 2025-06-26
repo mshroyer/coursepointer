@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
-use coursepointer::CourseOptions;
+use coursepointer::CourseSetOptions;
 use coursepointer::internal::{CourseFile, CourseSetBuilder, DEG, GeoPoint};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::M;
@@ -66,7 +66,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let spec: CourseSpec = serde_json::from_reader(spec_file)?;
 
     let mut fit_file = BufWriter::new(File::create(&out)?);
-    let mut builder = CourseSetBuilder::new(CourseOptions::default());
+    let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
     builder.add_course();
     builder.last_course_mut()?.with_name(spec.name);
     for point in &spec.records {

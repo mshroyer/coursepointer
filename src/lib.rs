@@ -1,30 +1,48 @@
-//! A CLI tool and library for computing FIT course
-//! points from GPX.
+//! CoursePointer is a CLI tool and library for computing Garmin FIT courses and
+//! [course
+//! points](https://support.garmin.com/en-US/?faq=aisqGZTLwH5LvbExSdO6L6) from
+//! routes and waypoints.
 //!
-//! Builds on
-//! [GeographicLib](https://geographiclib.sourceforge.io/C++/doc/index.html) to
-//! compute the interception points and course distances of waypoints near
-//! routes or tracks imported from a GPX file, then encodes this as a FIT course
-//! for navigation on a Garmin device such as an Edge bicycle computer or a
-//! Fenix watch.
+//! This crate helps waypoints (such as from a GPX file) appear in [Up
+//! Ahead](https://support.garmin.com/en-US/?faq=lQMibRoY2I5Y4pP8EXgxv7) on
+//! compatible devices, like Fenix watches and Edge bicycle computers.
 //!
-//! This is mainly published to provide the `coursepointer` command-line tool,
-//! but it can also be used as a library via the [`convert_gpx`] function.  If
-//! used as a dependency I recommend disabling the `cli` default feature, which
-//! adds transient dependencies you probably don't need.
+//! See the repo's
+//! [README](https://github.com/mshroyer/coursepointer/blob/main/README.md)
+//! for details about how this works and the problem it solves.
 //!
-//! See <https://github.com/mshroyer/coursepointer/blob/main/README.md> for
-//! details and command-line usage info.
+//! # Binary
+//!
+//! The `coursepointer` binary takes as input a GPX file containing a single
+//! route or track, and outputs a Garmin FIT course file in which those of the
+//! GPX's waypoints that are within a threshold distance of the route/track have
+//! been converted to FIT course points.  Also see
+//! [README](https://github.com/mshroyer/coursepointer/blob/main/README.md)
+//! for more information about using the binary.
+//!
+//! # Library
+//!
+//! The library crate contains the bulk of the binary's logic.  It builds on top
+//! of [GeographicLib](https://geographiclib.sourceforge.io/C++/doc/index.html)
+//! to compute the interception points and course distances of waypoints near
+//! routes or tracks, then encodes this all as a FIT course.
+//!
+//! The [`course`] module has types for building up a set of courses and waypoints
 //!
 //! # Feature flags
 //!
-//! - `cli` enables the additional dependencies needed by the CLI
-//! - `rayon` enables computing course points in parallel using [rayon](https://docs.rs/rayon/latest/rayon/)
+//! - `cli` enables the additional dependencies needed by the CLI.  This is
+//!   enabled by default, but may be disabled to prevent unnecessary transient
+//!   dependencies if used as a library.
+//! - `rayon` enables computing course points in parallel using [rayon](https://docs.rs/rayon/latest/rayon/).
+//!   This improves the binary's runtime significantly in stress tests, and
+//!   at least doesn't hurt in more typical cases, on my machine.
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
-//!   of a hand-picked subset
+//!   of a hand-picked subset.  This is mainly useful when experimenting with
+//!   new FFI additions, otherwise it simply slows the build down.
 
 mod algorithm;
-mod course;
+pub mod course;
 mod fit;
 mod geographic;
 mod gpx;
@@ -43,8 +61,7 @@ pub use fit::FitEncodeError;
 use thiserror::Error;
 use tracing::{Level, debug, span};
 
-use crate::course::{CourseError, CoursePoint, CourseSetBuilder, Waypoint};
-pub use crate::course::{CourseOptions, InterceptStrategy};
+use crate::course::{CourseError, CourseSetOptions, CoursePoint, CourseSetBuilder, Waypoint};
 pub use crate::fit::CourseFile;
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
@@ -98,7 +115,7 @@ pub struct ConversionInfo {
 pub fn convert_gpx<R: BufRead, W: Write>(
     gpx_input: R,
     fit_output: W,
-    course_options: CourseOptions,
+    course_options: CourseSetOptions,
     fit_speed: MeterPerSecond<f64>,
 ) -> Result<ConversionInfo> {
     let mut builder = CourseSetBuilder::new(course_options);
@@ -120,7 +137,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
                 }
 
                 GpxItem::TrackOrRoute => {
-                    builder.add_course();
+                    builder.add_route();
                 }
 
                 GpxItem::TrackOrRouteName(name) => {
@@ -173,9 +190,8 @@ pub fn convert_gpx<R: BufRead, W: Write>(
 
 /// CXX Generated FFI for GeographicLib
 ///
-/// This currently has to be inline in lib.rs because non-inline mods are
-/// unstable in proc macro input:
-/// <https://github.com/rust-lang/rust/issues/54727>
+/// This currently has to be inline in lib.rs because non-inline mods in proc
+/// macro input are unstable: <https://github.com/rust-lang/rust/issues/54727>
 #[allow(clippy::too_many_arguments)]
 #[cxx::bridge(namespace = "CoursePointer")]
 mod ffi {

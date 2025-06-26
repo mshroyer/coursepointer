@@ -1,27 +1,72 @@
-//! Abstract representation of courses and waypoints
+//! Types for composing courses that contain course points
 //!
-//! Provides [`Course`], an abstract representation of a course with its records
-//! and course points (if any). Courses are created by obtaining a
-//! [`CourseSetBuilder`] and adding data to it.
+//! # Course points and courses, waypoints and routes
 //!
-//! Once all the data has been added (for example, by parsing it from a GPX
-//! file), [`CourseSetBuilder::build`] returns a [`CourseSet`].
+//! This module borrows terminology from GPX and Garmin FIT.  Here a route, like
+//! a GPX route, consists of a sequence of route points with latitude,
+//! longitude, and optionally elevation.  And a waypoint is just a named
+//! location, which may or may not be associated with any given route.
+//!
+//! (GPX also has a notion of tracks and track points, but here they are
+//! represented as routes and route points.  This module has no concept
+//! corresponding to a GPX track segment.)
+//!
+//! These GPX-based concepts have FIT analogues, which contain additional
+//! distance information:
+//!
+//! | GPX term    | FIT term     | FIT additional data                        |
+//! | ----------- | ------------ | ------------------------------------------ |
+//! | route       | course       | Total distance                             |
+//! | route point | record       | Distance along the course                  |
+//! | waypoint    | course point | Association with and distance along course |
+//!
+//! The role of this module is to calculate this additional information needed
+//! to turn a set of routes and waypoints into courses and associated course
+//! points.
+//!
+//! Unlike in a Garmin FIT course file, here course records do not contain
+//! timestamps, but those can be trivially computed from records' distances
+//! based on a given start time and speed.
+//!
+//! # Module overview
+//!
+//! This module provides [`CourseSetBuilder`], which is used to build a set of
+//! routes and waypoints into a set of courses and their now-associated course
+//! points.
+//!
+//! Individual routes are added with [`CourseSetBuilder::add_route`], and their
+//! [`RouteBuilder::with_name`] and [`RouteBuilder::with_route_point`] methods
+//! are used to add names and route points to them.
+//!
+//! Waypoints are added to the set (not to a particular route) with
+//! [`CourseSetBuilder::add_waypoint`].
+//!
+//! Once your routes and waypoints have been assembled, running
+//! [`CourseSetBuilder::build`] does the work needed to determine which
+//! waypoints qualify as course points along any of the given routes.  It
+//! returns a [`CourseSet`] containing [`Course`] instances, which in turn will
+//! contain any identified [`CoursePoint`] instances.
+//!
+//! If route points are given optional elevation data, this will simply be
+//! passed through to the corresponding course points.  No additional geoid data
+//! is applied by this module, and elevations are not used in distance
+//! calculations.
 
 use std::cmp::Ordering;
 use std::convert::Infallible;
 
-use dimensioned::si::{M, Meter};
+use dimensioned::si::{Meter, M};
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 use thiserror::Error;
 use tracing::{debug, error, info};
 
 use crate::algorithm::{
-    AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
-    karney_interception,
+    find_nearby_segments, intercept_distance_floor, karney_interception, AlgorithmError,
+    FromGeoPoints, NearbySegment,
 };
 use crate::fit::CoursePointType;
-use crate::geographic::{GeographicError, geodesic_inverse};
+use crate::geographic::{geodesic_inverse, GeographicError};
 use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint};
 
 #[derive(Error, Debug)]
@@ -54,7 +99,7 @@ macro_rules! iter_work {
     };
 }
 
-/// Strategy for handling duplicate intercepts from a waypoint.
+/// A strategy for handling duplicate intercepts from a waypoint.
 ///
 /// Duplicate interception can happen in an out-and-back course, for example.
 /// This strategy determines what to do in the case that duplicate intercepts
@@ -74,19 +119,19 @@ pub enum InterceptStrategy {
     All,
 }
 
-/// Options for building a course.
-pub struct CourseOptions {
-    /// The threshold distance of a waypoint from the segments of a course,
-    /// below which the course will be considered "intercepted" by the waypoint,
-    /// turning it into a course point.
+/// Options for building a course set
+pub struct CourseSetOptions {
+    /// The maximum distance between a waypoint and a route, within which the
+    /// waypoint will be considered to be a course point along the corresponding
+    /// course.
     pub threshold: Meter<f64>,
 
-    /// What strategy should be applied in the case of duplicate course
-    /// intercepts from a waypoint.
+    /// What strategy to apply when a waypoint intercepts a single route
+    /// multiple times.
     pub strategy: InterceptStrategy,
 }
 
-impl Default for CourseOptions {
+impl Default for CourseSetOptions {
     fn default() -> Self {
         Self {
             threshold: 35.0 * M,
@@ -95,7 +140,7 @@ impl Default for CourseOptions {
     }
 }
 
-impl CourseOptions {
+impl CourseSetOptions {
     pub fn with_threshold(self, threshold: Meter<f64>) -> Self {
         Self {
             threshold,
@@ -115,14 +160,16 @@ pub struct CourseSet {
     pub courses: Vec<Course>,
 }
 
+/// Builds routes and waypoints into courses with associated course points
 pub struct CourseSetBuilder {
-    options: CourseOptions,
-    course_builders: Vec<CourseBuilder>,
+    options: CourseSetOptions,
+    course_builders: Vec<RouteBuilder>,
     waypoints: Vec<Waypoint>,
 }
 
 impl CourseSetBuilder {
-    pub fn new(options: CourseOptions) -> Self {
+    /// Returns a new builder using the given [`CourseSetOptions`].
+    pub fn new(options: CourseSetOptions) -> Self {
         Self {
             options,
             course_builders: Vec::new(),
@@ -130,12 +177,13 @@ impl CourseSetBuilder {
         }
     }
 
-    pub fn add_course(&mut self) -> &mut CourseBuilder {
-        self.course_builders.push(CourseBuilder::new());
+    /// Adds a new [`RouteBuilder`] to this set builder.
+    pub fn add_route(&mut self) -> &mut RouteBuilder {
+        self.course_builders.push(RouteBuilder::new());
         self.last_course_mut().unwrap()
     }
 
-    pub fn last_course_mut(&mut self) -> Result<&mut CourseBuilder> {
+    pub fn last_course_mut(&mut self) -> Result<&mut RouteBuilder> {
         match self.course_builders.last_mut() {
             Some(course) => Ok(course),
             None => Err(CourseError::MissingCourse),
@@ -294,7 +342,7 @@ impl CourseSetBuilder {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct NearIntercept {
+struct NearIntercept {
     /// The point of interception.
     intercept_point: GeoPoint,
 
@@ -320,7 +368,7 @@ impl PartialOrd for NearIntercept {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub enum InterceptSolution {
+enum InterceptSolution {
     Near(NearIntercept),
     Far,
 }
@@ -349,7 +397,7 @@ impl NearbySegment<Meter<f64>> for &InterceptSolution {
     }
 }
 
-/// A course for navigation.
+/// A navigation course
 ///
 /// This contains the distance data needed as input for a FIT course file, but
 /// it does not represent speeds or timestamps.
@@ -358,9 +406,9 @@ pub struct Course {
     /// course, in order of physical traversal.
     pub records: Vec<Record>,
 
-    /// The course points and their cumulative distances. These are derived from
-    /// the subset of waypoints provided to [`CourseSetBuilder`] that are
-    /// located near the course.
+    /// The course points and their course distances. These are derived from the
+    /// subset of waypoints provided to [`CourseSetBuilder`] that are located
+    /// near the course.
     pub course_points: Vec<CoursePoint>,
 
     /// The name of the course, if given.
@@ -386,8 +434,8 @@ impl Course {
 ///
 /// Used as part of [`CourseSetBuilder`] to allow composing a course.
 /// Within that context, obtain a new instance with
-/// [`CourseSetBuilder::add_course`].
-pub struct CourseBuilder {
+/// [`CourseSetBuilder::add_route`].
+pub struct RouteBuilder {
     route_points: Vec<GeoPoint>,
     xyz_points: Vec<GeoAndXyzPoint>,
     name: Option<String>,
@@ -395,7 +443,7 @@ pub struct CourseBuilder {
 }
 
 #[allow(clippy::new_without_default)]
-impl CourseBuilder {
+impl RouteBuilder {
     fn new() -> Self {
         Self {
             route_points: Vec::new(),
@@ -464,7 +512,7 @@ impl CourseBuilder {
 
 /// A segmented [`Course`] builder.
 ///
-/// This represents an intermediate stage of building a [`CourseBuilder`]: The
+/// This represents an intermediate stage of building a [`RouteBuilder`]: The
 /// initial work of processing route points into geodesic segments along with
 /// distance information, as well as possibly [`XyPoint`] values, has been done.
 ///
@@ -574,25 +622,25 @@ pub struct CoursePoint {
 mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
-    use dimensioned::si::{M, Meter};
+    use dimensioned::si::{Meter, M};
 
     use crate::course::{
-        CourseBuilder, CourseSetBuilder, InterceptSolution, NearIntercept, Waypoint,
+        CourseSetBuilder, InterceptSolution, NearIntercept, RouteBuilder, Waypoint,
     };
     use crate::fit::CoursePointType;
     use crate::types::GeoPoint;
-    use crate::{CourseOptions, geo_point, geo_points};
+    use crate::{geo_point, geo_points, CourseSetOptions};
 
     #[test]
-    fn test_course_builder_empty() -> Result<()> {
-        let course = CourseBuilder::new().segment()?.build()?;
+    fn test_route_builder_empty() -> Result<()> {
+        let course = RouteBuilder::new().segment()?.build()?;
         assert_eq!(course.records, vec![]);
         Ok(())
     }
 
     #[test]
-    fn test_course_builder_single_point() -> Result<()> {
-        let mut builder = CourseBuilder::new();
+    fn test_route_builder_single_point() -> Result<()> {
+        let mut builder = RouteBuilder::new();
         builder.with_route_point(geo_point!(1.0, 2.0));
         let record_points = builder
             .segment()?
@@ -609,8 +657,8 @@ mod tests {
     }
 
     #[test]
-    fn test_course_builder_two_points() -> Result<()> {
-        let mut builder = CourseBuilder::new();
+    fn test_route_builder_two_points() -> Result<()> {
+        let mut builder = RouteBuilder::new();
         builder
             .with_route_point(geo_point!(1.0, 2.0))
             .with_route_point(geo_point!(1.1, 2.2));
@@ -630,7 +678,7 @@ mod tests {
 
     #[test]
     fn test_repeated_points() -> Result<()> {
-        let mut builder = CourseBuilder::new();
+        let mut builder = RouteBuilder::new();
         builder
             .with_route_point(geo_point!(1.0, 2.0))
             .with_route_point(geo_point!(1.0, 2.0))
@@ -651,9 +699,9 @@ mod tests {
 
     #[test]
     fn test_intercept_long_segments() -> Result<()> {
-        let mut builder = CourseSetBuilder::new(CourseOptions::default());
+        let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
         builder
-            .add_course()
+            .add_route()
             .with_route_point(geo_point!(35.5252717091331, -101.2856451853322))
             .with_route_point(geo_point!(36.05200980326534, -90.02610043506964))
             .with_route_point(geo_point!(38.13369722302025, -78.51238236506529));

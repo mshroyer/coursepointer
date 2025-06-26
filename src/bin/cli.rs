@@ -8,10 +8,9 @@ use anyhow::{Context, Result, bail};
 use clap::builder::styling::Styles;
 use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
+use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{CoursePointType, Kilometer, Mile};
-use coursepointer::{
-    ConversionInfo, CourseOptions, CoursePointerError, FitEncodeError, InterceptStrategy,
-};
+use coursepointer::{ConversionInfo, CoursePointerError, FitEncodeError};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
 use strum::Display;
@@ -211,7 +210,7 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     );
     info!("Created FIT output file: {:?}", absolute(output)?);
 
-    let course_options = CourseOptions::default()
+    let course_options = CourseSetOptions::default()
         .with_threshold(sub_args.threshold * M)
         .with_strategy(sub_args.strategy);
     let fit_speed = sub_args.speed * KILO * M / HR;

@@ -24,16 +24,18 @@ uv run --package integration pytest
 ```
 
 Some of the integration tests use the nested `integration-stub` binary crate
-by passing JSON specifications to it and then examining its output.  Most
-others build and test against the `coursepointer` command-line binary.
+by passing JSON specifications to it and then examining its output.  (This was
+how I bootstrapped my early FIT encoding implementation, which is the first
+part I wrote.)  Most other integration tests build and test against the main
+`coursepointer` command-line binary.
 
 ## Formatting
 
-Though the project builds with the stable Rust toolchain, it uses nightly for
-`cargo fmt` for access to unstable features:
+Though the project targets the stable Rust toolchain, it uses nightly for
+`cargo fmt` to access unstable features:
 
 ```
-rustup toolchain install nightly
+rustup toolchain install --profile minimal -c rustfmt nightly
 cargo +nightly fmt
 ```
 

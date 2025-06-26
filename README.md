@@ -70,8 +70,8 @@ doesn't mean they're necessarily located *along* the route.
 
 In contrast, the course points in a FIT course file are specifically points on
 the course.  In addition to their latitude and longitude, they also specify
-the distance at which they appear along the course, used by the Up Ahead
-feature to compute distance remaining.
+the distance at which they appear along the course, which is used by the Up
+Ahead feature to compute distance remaining.
 
 So given a GPX route and a set of waypoints, coursepointer:
 
@@ -113,10 +113,10 @@ route-planning applications.
 However, for routes or tracks exported by [Gaia GPS](https://gaiagps.com/) or
 [Ride with GPS](https://ridewithgps.com/), coursepointer additionally attempts
 to map the waypoint or POI type (respectively) to a relevant course point type
-instead of `generic`, so that you'll see a relevant course point icon instead
-of a generic pin.  See [docs/point_types.md](docs/point_types.md) for more
-information about how point types from these apps are interpreted as course
-point types.
+instead of `generic`, so that you'll see a meaningful course point icon
+instead of a generic pin.  See [docs/point_types.md](docs/point_types.md) for
+more information about how point types from these apps are interpreted as
+course point types.
 
 Currently, GPX input files must contain exactly one route or track, and zero
 or more waypoints.  Routes and tracks are treated identically.
@@ -142,7 +142,7 @@ delete](https://help.gaiagps.com/hc/en-us/articles/360004157214-Archiving-Unarch
 it and then re-export.  To avoid it, move routes or waypoints out of your
 folder before archiving them.
 
-## Development
+## Development and contributing
 
 See [docs/development.md](docs/development.md).
 
