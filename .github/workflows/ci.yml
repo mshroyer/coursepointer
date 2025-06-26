@@ -77,7 +77,8 @@ jobs:
     # it builds and the Rust tests work.
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init
+        with:
+          submodules: true
 
       - uses: actions/cache@v4
         with:
@@ -100,7 +101,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init
+        with:
+          submodules: true
 
       - uses: actions/cache@v4
         with:
