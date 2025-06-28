@@ -11,10 +11,19 @@ env:
 
 jobs:
   build_and_test_new:
+    name: New build and test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            toolchain: nightly
+          - os: ubuntu-latest
+            toolchain: stable
+
     uses: ./.github/workflows/build-test.yml
     with:
-      os: ubuntu-latest
-      toolchain: nightly
+      os: ${{ matrix.os }}
+      toolchain: ${{ matrix.toolchain }}
 
   build_and_test:
     name: Build and test
