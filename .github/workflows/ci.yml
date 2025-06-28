@@ -10,6 +10,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  build_and_test_new:
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ubuntu-latest
+      toolchain: nightly
+
   build_and_test:
     name: Build and test
     strategy:
@@ -33,15 +39,15 @@ jobs:
         with:
           submodules: true
 
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/
-            ~/.cargo/
-            ~/.rustup/
-            .venv/
-            target/
-          key: build_and_test-${{ matrix.toolchain }}-${{ runner.os }}
+#      - uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.cache/
+#            ~/.cargo/
+#            ~/.rustup/
+#            .venv/
+#            target/
+#          key: build_and_test_old-${{ matrix.toolchain }}-${{ runner.os }}
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
@@ -98,15 +104,15 @@ jobs:
         with:
           submodules: true
 
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/
-            ~/.cargo/
-            ~/.rustup/
-            .venv/
-            target/
-          key: build_and_test-nightly-${{ runner.os }}
+#      - uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.cache/
+#            ~/.cargo/
+#            ~/.rustup/
+#            .venv/
+#            target/
+#          key: build_and_test_old-nightly-${{ runner.os }}
 
       - name: Setup rust
         run: rustup toolchain install --profile minimal -c rustfmt nightly && rustup default nightly
