@@ -41,7 +41,7 @@ jobs:
             ~/.rustup/
             .venv/
             target/
-          key: build_test-${{ inputs.toolchain }}-${{ runner.os }}
+          key: build_test-${{ inputs.toolchain }}-${{ runner.os }}-${{ inputs.default_features }}-${{ inputs.extra_features }}
 
       - name: Setup rust
         if: inputs.toolchain != 'stable'  # Runner already comes with the stable toolchain
@@ -60,4 +60,7 @@ jobs:
 
       - run: cargo build --verbose
       - run: cargo test --verbose
+
+        # Integration tests need the cli feature.
       - run: uv run --package integration pytest
+        if: ${{ inputs.default_features || contains(inputs.extra_features, 'cli') }}
