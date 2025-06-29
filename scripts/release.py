@@ -1,15 +1,6 @@
 #!/usr/bin/env python3
 
-"""Runs lints on a new release to make sure aren't forgetting anything.
-
-Before running this:
-
-1. The repo should be tagged with the new release version and in a clean state.
-2. The crate's version number should be set correctly.
-3. The CHANGELOG should have been updated.
-4. The output of
-
-"""
+"""Lints and automation for creating releases"""
 
 import argparse
 import json

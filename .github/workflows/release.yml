@@ -21,6 +21,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/release.py check-ci ${{ github.sha }}
 
+      - name: Install cargo-about
+        run: cargo install --locked cargo-about
+
       - name: Lint release
         run: python3 scripts/release.py lint
 
