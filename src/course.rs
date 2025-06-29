@@ -162,7 +162,7 @@ pub struct CourseSet {
 pub struct CourseSetBuilder {
     options: CourseSetOptions,
     route_builders: Vec<RouteBuilder>,
-    waypoints: Vec<Waypoint>,
+    waypoints: Vec<Waypoint<GeoPoint>>,
 }
 
 impl CourseSetBuilder {
@@ -188,8 +188,18 @@ impl CourseSetBuilder {
         }
     }
 
-    pub fn add_waypoint(&mut self, waypoint: Waypoint) -> &mut Self {
-        self.waypoints.push(waypoint);
+    /// Adds a waypoint to the set of routes.
+    pub fn add_waypoint(
+        &mut self,
+        point: GeoPoint,
+        point_type: CoursePointType,
+        name: String,
+    ) -> &mut Self {
+        self.waypoints.push(Waypoint::<GeoPoint> {
+            point,
+            point_type,
+            name,
+        });
         self
     }
 
@@ -219,7 +229,7 @@ impl CourseSetBuilder {
 
     fn solve_near_intercept(
         segment: &GeoSegment<GeoAndXyzPoint>,
-        waypoint: &Waypoint,
+        waypoint: &Waypoint<GeoAndXyzPoint>,
         course_distance: Meter<f64>,
     ) -> Result<InterceptSolution> {
         let intercept = karney_interception(segment, &waypoint.point)?;
@@ -237,7 +247,7 @@ impl CourseSetBuilder {
     }
 
     fn process_single_waypoint(
-        waypoint: &Waypoint,
+        waypoint: &Waypoint<GeoAndXyzPoint>,
         course: &SegmentedCourseBuilder,
         threshold: Meter<f64>,
     ) -> Result<Vec<NearIntercept>> {
@@ -278,12 +288,13 @@ impl CourseSetBuilder {
         for segmented_course in segmented_courses {
             let waypoints_and_intercepts = iter_work!(&self.waypoints)
                 .map(|waypoint| {
+                    let xyz_waypoint: Waypoint<GeoAndXyzPoint> = waypoint.clone().try_into()?;
                     let near_intercepts = Self::process_single_waypoint(
-                        waypoint,
+                        &xyz_waypoint,
                         segmented_course,
                         self.options.threshold,
                     )?;
-                    Ok((waypoint, near_intercepts))
+                    Ok((xyz_waypoint, near_intercepts))
                 })
                 .collect::<Result<Vec<_>>>()?;
 
@@ -331,7 +342,7 @@ impl CourseSetBuilder {
     fn add_course_point(
         course_points: &mut Vec<CoursePoint>,
         sln: &NearIntercept,
-        waypoint: &Waypoint,
+        waypoint: &Waypoint<GeoAndXyzPoint>,
     ) {
         course_points.push(CoursePoint {
             point: sln.intercept_point,
@@ -592,16 +603,29 @@ pub struct Record {
 /// [`CoursePointType`] instead of a set of optional GPX attributes. And in
 /// contrast with a `CoursePoint`, a Waypoint is not known to necessarily lie
 /// along the course and lacks a known course distance.
-pub struct Waypoint {
+#[derive(Clone)]
+struct Waypoint<P: HasGeoPoint> {
     /// Position of the waypoint.
-    pub point: GeoAndXyzPoint,
+    point: P,
 
     /// The type of course point this should be considered, if it does turn out
     /// to be one.
-    pub point_type: CoursePointType,
+    point_type: CoursePointType,
 
     /// Name.
-    pub name: String,
+    name: String,
+}
+
+impl TryFrom<Waypoint<GeoPoint>> for Waypoint<GeoAndXyzPoint> {
+    type Error = GeographicError;
+
+    fn try_from(value: Waypoint<GeoPoint>) -> std::result::Result<Self, Self::Error> {
+        Ok(Waypoint::<GeoAndXyzPoint> {
+            point: value.point.try_into()?,
+            point_type: value.point_type,
+            name: value.name,
+        })
+    }
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -625,9 +649,7 @@ mod tests {
     use approx::assert_relative_eq;
     use dimensioned::si::{M, Meter};
 
-    use crate::course::{
-        CourseSetBuilder, InterceptSolution, NearIntercept, RouteBuilder, Waypoint,
-    };
+    use crate::course::{CourseSetBuilder, InterceptSolution, NearIntercept, RouteBuilder};
     use crate::fit::CoursePointType;
     use crate::types::GeoPoint;
     use crate::{CourseSetOptions, geo_point, geo_points};
@@ -707,11 +729,11 @@ mod tests {
             .with_route_point(geo_point!(36.05200980326534, -90.02610043506964))
             .with_route_point(geo_point!(38.13369722302025, -78.51238236506529));
 
-        builder.add_waypoint(Waypoint {
-            name: "MyWaypoint".to_owned(),
-            point_type: CoursePointType::Generic,
-            point: geo_point!(35.951314, -94.973085).try_into()?,
-        });
+        builder.add_waypoint(
+            geo_point!(35.951314, -94.973085),
+            CoursePointType::Generic,
+            "MyWaypoint".to_owned(),
+        );
 
         let course_set = builder.build()?;
         assert_eq!(course_set.courses.len(), 1);
@@ -742,16 +764,16 @@ mod tests {
             .with_route_point(geo_point!(37.26924, -122.18951))
             .with_route_point(geo_point!(37.25803, -122.19300))
             .with_route_point(geo_point!(37.26310, -122.17977));
-        builder.add_waypoint(Waypoint {
-            name: "SingleRoute".to_owned(),
-            point_type: CoursePointType::Generic,
-            point: geo_point!(37.26376, -122.19067).try_into()?,
-        });
-        builder.add_waypoint(Waypoint {
-            name: "DoubleRoute".to_owned(),
-            point_type: CoursePointType::Generic,
-            point: geo_point!(37.26104, -122.18569).try_into()?,
-        });
+        builder.add_waypoint(
+            geo_point!(37.26376, -122.19067),
+            CoursePointType::Generic,
+            "SingleRoute".to_owned(),
+        );
+        builder.add_waypoint(
+            geo_point!(37.26104, -122.18569),
+            CoursePointType::Generic,
+            "DoubleRoute".to_owned(),
+        );
 
         let course_set = builder.build()?;
         assert_eq!(course_set.courses.len(), 2);

@@ -63,7 +63,7 @@ use thiserror::Error;
 use tracing::{Level, debug, span};
 
 use crate::course::{
-    Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions, Waypoint,
+    Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions,
 };
 pub use crate::fit::CourseFile;
 use crate::geographic::GeographicError;
@@ -165,11 +165,7 @@ pub fn read_gpx<R: BufRead>(options: CourseSetOptions, gpx_input: R) -> Result<C
                 }
 
                 GpxItem::Waypoint(wpt) => {
-                    builder.add_waypoint(Waypoint {
-                        point: wpt.point.try_into()?,
-                        point_type: get_course_point_type(creator, &wpt),
-                        name: wpt.name,
-                    });
+                    builder.add_waypoint(wpt.point, get_course_point_type(creator, &wpt), wpt.name);
                 }
 
                 _ => {
@@ -196,7 +192,7 @@ pub fn write_fit_course<W: Write>(
     fit_speed: MeterPerSecond<f64>,
     fit_output: W,
 ) -> Result<()> {
-    let course_file = CourseFile::new(&course, Utc::now(), fit_speed);
+    let course_file = CourseFile::new(course, Utc::now(), fit_speed);
     course_file.encode(fit_output)?;
     Ok(())
 }
