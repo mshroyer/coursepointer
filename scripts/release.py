@@ -157,7 +157,7 @@ def create(args: argparse.Namespace):
             for line in r:
                 if current_version:
                     if line.startswith("## "):
-                        return
+                        break
 
                     if line.strip() != "":
                         past_padding = True
@@ -167,7 +167,7 @@ def create(args: argparse.Namespace):
                     current_version = True
 
     subprocess.run(
-        ["gh", "release", "create", f"v{version}", "-F", "release_notes.md", "--draft"],
+        ["gh", "release", "create", f"v{version}", "-F", "release_notes.md", "--draft", "--verify-tag"],
         check=True,
     )
 
