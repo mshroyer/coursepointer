@@ -65,6 +65,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
       - name: Build and upload artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
