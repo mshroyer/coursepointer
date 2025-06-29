@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 import tomllib
 from typing import List, Optional
 
@@ -108,6 +109,17 @@ def successful_run_id(workflow_runs: dict) -> Optional[int]:
     return None
 
 
+def pending_run_id(workflow_runs: dict) -> Optional[int]:
+    for run in workflow_runs:
+        if (
+            run["status"]
+            in ("expected", "in_progress", "pending", "queued", "requested", "waiting")
+            and run["event"] == "push"
+        ):
+            return run["id"]
+        return None
+
+
 def lint(args: argparse.Namespace):
     if not is_checkout_unmodified():
         print("Git checkout is modified!", file=sys.stderr)
@@ -142,6 +154,38 @@ def check_ci(args: argparse.Namespace):
     print(
         f"Found successful CI run https://github.com/mshroyer/coursepointer/actions/runs/{id} for commit {args.hash}"
     )
+
+
+def wait_ci(args: argparse.Namespace):
+    max_minutes = 10
+    while True:
+        runs = query_ci_runs(args.hash)
+        success_id = successful_run_id(runs)
+        if success_id is not None:
+            print(
+                f"Found successful CI run https://github.com/mshroyer/coursepointer/actions/runs/{success_id} for commit {args.hash}"
+            )
+            return
+
+        pending_id = pending_run_id(runs)
+        if pending_id is None:
+            print(
+                f"No successful or pending CI run for commit {args.hash} found",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        if max_minutes == 0:
+            print(
+                f"Timed out waiting for CI run https://github.com/mshroyer/coursepointer/actions/runs/{pending_id} for commit {args.hash}"
+            )
+            sys.exit(1)
+
+        print(
+            f"Waiting on CI run https://github.com/mshroyer/coursepointer/actions/runs/{pending_id} for commit {args.hash}"
+        )
+        max_minutes -= 1
+        time.sleep(60)
 
 
 def create(args: argparse.Namespace):
@@ -202,6 +246,12 @@ def main():
     )
     parser_ci.set_defaults(func=check_ci)
     parser_ci.add_argument("hash", type=str, help="Commit hash")
+
+    parser_wait = subparsers.add_parser(
+        "wait-ci", help="Wait for CI to complete for a commit"
+    )
+    parser_wait.set_defaults(func=check_ci)
+    parser_wait.add_argument("hash", type=str, help="Commit hash")
 
     parser_notes = subparsers.add_parser("create", help="Create a release")
     parser_notes.set_defaults(func=create)

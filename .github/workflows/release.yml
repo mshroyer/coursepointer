@@ -63,4 +63,5 @@ jobs:
       - name: Build and upload artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: scripts/upload_windows.cmd
+        run: scripts/upload_windows.sh
+        shell: bash
