@@ -17,7 +17,7 @@ import re
 import subprocess
 import sys
 import tomllib
-from typing import Optional
+from typing import List, Optional
 
 
 def workspace_dir() -> Optional[Path]:
@@ -81,6 +81,24 @@ def read_tag(tag: str) -> str:
     return rev_parse(f"tags/{tag}")
 
 
+def get_tags_at(rev: str) -> List[str]:
+    output = subprocess.check_output(
+        ["git", "tag", "--points-at", rev],
+        cwd=workspace_dir(),
+        universal_newlines=True,
+    ).strip()
+    return output.splitlines()
+
+
+def get_tagged_version(rev: str) -> Optional[str]:
+    pattern = re.compile(r"^v(\d+\.\d+\.\d+)$")
+    for tag in get_tags_at(rev):
+        m = pattern.match(tag)
+        if m is not None:
+            return m.group(1)
+    return None
+
+
 def read_head() -> str:
     return rev_parse("HEAD")
 
@@ -89,22 +107,22 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("version", type=str, help="New release version")
-    args = parser.parse_args()
+    parser.parse_args()
 
     if not is_checkout_unmodified():
         print("Git checkout is modified!", file=sys.stderr)
         sys.exit(1)
 
-    if read_tag(f"v{args.version}") != read_head():
-        print(f"HEAD is not tagged at v{args.version}!", file=sys.stderr)
+    version = get_tagged_version("HEAD")
+    if version is None:
+        print("HEAD has no tagged version", file=sys.stderr)
         sys.exit(1)
 
-    if crate_version() != args.version:
+    if crate_version() != version:
         print("Crate version mismatch!", file=sys.stderr)
         sys.exit(1)
 
-    if last_changelog_version() != args.version:
+    if last_changelog_version() != version:
         print("CHANGELOG is not up-to-date!", file=sys.stderr)
         sys.exit(1)
 
