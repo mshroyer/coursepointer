@@ -193,6 +193,7 @@ dependencies = [
     { name = "fitdecode" },
     { name = "garmin-fit-sdk" },
     { name = "geographiclib" },
+    { name = "integration" },
 ]
 
 [package.metadata]
@@ -201,6 +202,7 @@ requires-dist = [
     { name = "fitdecode", specifier = ">=0.10.0" },
     { name = "garmin-fit-sdk", specifier = ">=21.158.0" },
     { name = "geographiclib", specifier = ">=2.0" },
+    { name = "integration", editable = "integration" },
 ]
 
 [[package]]

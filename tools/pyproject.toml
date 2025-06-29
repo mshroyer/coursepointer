@@ -7,7 +7,11 @@ dependencies = [
     "fitdecode>=0.10.0",
     "garmin-fit-sdk>=21.158.0",
     "geographiclib>=2.0",
+    "integration",
 ]
+
+[tool.uv.sources]
+integration = { workspace = true }
 
 [project.scripts]
 readfit = "readfit:main"
