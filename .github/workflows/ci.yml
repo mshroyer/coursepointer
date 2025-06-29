@@ -55,7 +55,7 @@ jobs:
 
     uses: ./.github/workflows/build-test.yml
     with:
-      os: ubuntu-latest
+      os: ${{ matrix.os }}
       toolchain: stable
       default_features: false
       extra_features: ${{ matrix.features }}
@@ -71,7 +71,6 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          os: ubuntu-latest
           toolchain: nightly
 
       - name: Add rust components
@@ -102,7 +101,6 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          os: ubuntu-latest
           toolchain: nightly
 
       - name: Build docs

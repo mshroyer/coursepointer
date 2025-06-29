@@ -2,10 +2,6 @@ name: setup-and-cache
 author: mshroyer
 description: setup-and-cache
 inputs:
-  os:
-    description: "Operating system to run on"
-    required: true
-    type: string
   toolchain:
     description: "Rust toolchain version"
     required: true
@@ -35,11 +31,11 @@ runs:
     - name: Setup rust
       if: inputs.toolchain != 'stable'  # Runner already comes with the stable toolchain
       run: rustup toolchain install --profile minimal ${{ inputs.toolchain }} && rustup default ${{ inputs.toolchain }}
-      shell: ${{ startsWith(inputs.os, 'Windows-') && 'pwsh' || 'bash' }}
+      shell: bash
 
     - name: Print rust version
       run: rustc --version
-      shell: ${{ startsWith(inputs.os, 'Windows-') && 'pwsh' || 'bash' }}
+      shell: bash
 
     - name: Setup python
       uses: actions/setup-python@v5

@@ -35,8 +35,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          os: ubuntu-latest
-          toolchain: nightly
+          toolchain: ${{ inputs.toolchain }}
 
       - name: Setup python
         uses: actions/setup-python@v5
