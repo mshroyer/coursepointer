@@ -168,12 +168,11 @@ def wait_ci(args: argparse.Namespace):
             return
 
         pending_id = pending_run_id(runs)
-        if pending_id is None:
+        if pending_id is not None:
             print(
-                f"No successful or pending CI run for commit {args.hash} found",
-                file=sys.stderr,
+                f"Found successful CI run https://github.com/mshroyer/coursepointer/actions/runs/{success_id} for commit {args.hash}"
             )
-            sys.exit(1)
+            return
 
         if max_minutes == 0:
             print(
