@@ -4,8 +4,11 @@
 
 set -e
 
+VERSION=$1
+
 cargo build -r
 cargo build -r --target x86_64-apple-darwin
 lipo -create -output coursepointer target/release/coursepointer target/x86_64-apple-darwin/release/coursepointer
-zip -j coursepointer-macos.zip coursepointer docs/third_party_licenses.md
-python3 scripts/release.py upload coursepointer-macos.zip
+cp docs/bdist_readme.txt README.txt
+zip -j coursepointer-macos-v${VERSION}.zip coursepointer README.txt LICENSE.txt docs/third_party_licenses.md
+python3 scripts/release.py upload coursepointer-macos-v${VERSION}.zip

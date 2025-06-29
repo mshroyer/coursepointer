@@ -1,3 +1,6 @@
+param([string]$version)
+
 cargo build -r
-Compress-Archive -Path target/release/coursepointer.exe,docs/third_party_licenses.md -Destination coursepointer-windows.zip
-python3 scripts/release.py upload coursepointer-macos.zip
+cp docs/bdist_readme.txt README.txt
+Compress-Archive -Path target/release/coursepointer.exe,README.txt,LICENSE.txt,docs/third_party_licenses.md -Destination coursepointer-windows-v$version.zip
+python3 scripts/release.py upload coursepointer-windows-v$version.zip
