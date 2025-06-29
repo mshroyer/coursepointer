@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION=$1
+VERSION=$(python3 scripts/release.py head)
 
 cargo build -r
 cargo build -r --target x86_64-apple-darwin

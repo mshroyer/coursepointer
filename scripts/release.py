@@ -240,6 +240,7 @@ def head(args: argparse.Namespace):
     if version is None:
         print("No currently tagged version number at HEAD", file=sys.stderr)
         sys.exit(1)
+    print(version)
 
 
 def main():
