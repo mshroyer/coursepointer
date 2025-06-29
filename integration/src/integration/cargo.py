@@ -1,5 +1,4 @@
 from enum import Enum, auto
-import os
 from pathlib import Path
 import platform
 import subprocess
