@@ -167,7 +167,16 @@ def create(args: argparse.Namespace):
                     current_version = True
 
     subprocess.run(
-        ["gh", "release", "create", f"v{version}", "-F", "release_notes.md", "--draft", "--verify-tag"],
+        [
+            "gh",
+            "release",
+            "create",
+            f"v{version}",
+            "-F",
+            "release_notes.md",
+            "--draft",
+            "--verify-tag",
+        ],
         check=True,
     )
 
