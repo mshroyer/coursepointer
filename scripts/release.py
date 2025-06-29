@@ -168,11 +168,12 @@ def wait_ci(args: argparse.Namespace):
             return
 
         pending_id = pending_run_id(runs)
-        if pending_id is not None:
+        if pending_id is None:
             print(
-                f"Found successful CI run https://github.com/mshroyer/coursepointer/actions/runs/{success_id} for commit {args.hash}"
+                f"No successful or pending CI run for commit {args.hash}",
+                file=sys.stderr,
             )
-            return
+            sys.exit(1)
 
         if max_minutes == 0:
             print(
@@ -249,7 +250,7 @@ def main():
     parser_wait = subparsers.add_parser(
         "wait-ci", help="Wait for CI to complete for a commit"
     )
-    parser_wait.set_defaults(func=check_ci)
+    parser_wait.set_defaults(func=wait_ci)
     parser_wait.add_argument("hash", type=str, help="Commit hash")
 
     parser_notes = subparsers.add_parser("create", help="Create a release")
