@@ -45,4 +45,7 @@ jobs:
       - name: Install x86_64 target
         run: rustup target add x86_64-apple-darwin
 
-      - run: scripts/upload_macos.sh
+      - name: Build and upload artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/upload_macos.sh
