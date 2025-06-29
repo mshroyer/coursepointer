@@ -47,6 +47,21 @@ ruff check
 ruff format
 ```
 
+## GitHub Actions and releasing
+
+Using GitHub Actions for CI and the release process.
+
+When creating a release, remember to:
+- Update the crate version
+- Add an entry to [CHANGELOG.md](../CHANGELOG.md)
+- Run `scripts/update_third_party_licenses.sh`
+
+The [release
+workflow](https://github.com/mshroyer/coursepointer/actions/workflows/release.yml)
+will check that these things are correct (and also for regular CI to finish)
+before proceeding, but you can verify them locally before pushing by running
+`scripts/release.py lint`.
+
 ## Profiling
 
 [cargo-flamegraph](https://github.com/flamegraph-rs/flamegraph) is very
