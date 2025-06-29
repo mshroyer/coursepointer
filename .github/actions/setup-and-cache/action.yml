@@ -35,10 +35,11 @@ runs:
     - name: Setup rust
       if: inputs.toolchain != 'stable'  # Runner already comes with the stable toolchain
       run: rustup toolchain install --profile minimal ${{ inputs.toolchain }} && rustup default ${{ inputs.toolchain }}
+      shell: ${{ startsWith(inputs.os, 'Windows-') && 'pwsh' || 'bash' }}
 
     - name: Print rust version
       run: rustc --version
-      shell: pwsh
+      shell: ${{ startsWith(inputs.os, 'Windows-') && 'pwsh' || 'bash' }}
 
     - name: Setup python
       uses: actions/setup-python@v5
