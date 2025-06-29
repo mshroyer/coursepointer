@@ -44,7 +44,13 @@ def is_checkout_unmodified() -> bool:
 
 def is_cargo_about_up_to_date() -> bool:
     with open(workspace_dir() / "docs" / "third_party_licenses.md", "w") as f:
-        subprocess.run(["cargo", "about", "generate", "about.hbs"], cwd=workspace_dir(), universal_newlines=True, check=True, stdout=f)
+        subprocess.run(
+            ["cargo", "about", "generate", "about.hbs"],
+            cwd=workspace_dir(),
+            universal_newlines=True,
+            check=True,
+            stdout=f,
+        )
 
     return is_checkout_unmodified()
 
