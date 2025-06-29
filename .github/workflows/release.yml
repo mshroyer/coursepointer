@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   create_release:
-    name: Check whether ready for release
+    name: Create release
     runs-on: ubuntu-latest
 
     steps:
@@ -45,4 +45,4 @@ jobs:
       - name: Install x86_64 target
         run: rustup target add x86_64-apple-darwin
 
-      - run: python3 scripts/upload_macos.sh
+      - run: scripts/upload_macos.sh
