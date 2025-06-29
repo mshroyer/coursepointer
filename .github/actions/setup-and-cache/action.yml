@@ -22,10 +22,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-
     - uses: actions/cache@v4
       with:
         path: |
