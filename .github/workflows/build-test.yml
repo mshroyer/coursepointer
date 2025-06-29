@@ -33,22 +33,10 @@ jobs:
         with:
           submodules: true
 
-      - uses: actions/cache@v4
+      - uses: ./.github/actions/setup-and-cache
         with:
-          path: |
-            ~/.cache/
-            ~/.cargo/
-            ~/.rustup/
-            .venv/
-            target/
-          key: build_test-${{ inputs.toolchain }}-${{ runner.os }}-${{ inputs.default_features }}-${{ inputs.extra_features }}
-
-      - name: Setup rust
-        if: inputs.toolchain != 'stable'  # Runner already comes with the stable toolchain
-        run: rustup toolchain install --profile minimal ${{ inputs.toolchain }} && rustup default ${{ inputs.toolchain }}
-
-      - name: Print rust version
-        run: rustc --version
+          os: ubuntu-latest
+          toolchain: nightly
 
       - name: Setup python
         uses: actions/setup-python@v5
