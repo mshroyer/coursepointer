@@ -235,6 +235,13 @@ def upload(args: argparse.Namespace):
     )
 
 
+def head(args: argparse.Namespace):
+    version = get_tagged_version("HEAD")
+    if version is None:
+        print("No currently tagged version number at HEAD", file=sys.stderr)
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -262,6 +269,9 @@ def main():
     parser_upload = subparsers.add_parser("upload", help="Upload a release asset")
     parser_upload.set_defaults(func=upload)
     parser_upload.add_argument("file", type=Path, help="File to upload")
+
+    parser_head = subparsers.add_parser("head", help="Show version for release at HEAD")
+    parser_head.set_defaults(func=head)
 
     args = parser.parse_args()
     if "func" not in args:
