@@ -1,0 +1,21 @@
+name: delete-caches
+on:
+  schedule:
+    - cron: "23 2 * * 1"
+
+jobs:
+  delete_caches:
+    name: Delete caches
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up GitHub CLI
+        uses: cli/cli@v3
+
+      - name: Authenticate GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GITHUB_TOKEN" | gh auth login --with-token
+
+      - name: Delete caches
+        run: gh cache delete --all
