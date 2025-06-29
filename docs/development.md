@@ -62,6 +62,10 @@ will check that these things are correct (and also for regular CI to finish)
 before proceeding, but you can verify them locally before pushing by running
 `scripts/release.py lint`.
 
+Upon success, the new GitHub release will be left in draft state for review
+before publishing.  Publishing the crate to crates.io is also a separate,
+manual step.
+
 ## Profiling
 
 [cargo-flamegraph](https://github.com/flamegraph-rs/flamegraph) is very
