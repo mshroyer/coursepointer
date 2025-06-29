@@ -96,6 +96,18 @@ macro_rules! iter_work {
     };
 }
 
+/// Options for building a course set
+pub struct CourseSetOptions {
+    /// The maximum distance between a waypoint and a route, within which the
+    /// waypoint will be considered to be a course point along the corresponding
+    /// course.
+    pub threshold: Meter<f64>,
+
+    /// What strategy to apply when a waypoint intercepts a single route
+    /// multiple times.
+    pub strategy: InterceptStrategy,
+}
+
 /// A strategy for handling duplicate intercepts from a waypoint.
 ///
 /// Duplicate interception can happen in an out-and-back course, for example.
@@ -114,18 +126,6 @@ pub enum InterceptStrategy {
 
     /// All available intercepts should be chosen as duplicate course points.
     All,
-}
-
-/// Options for building a course set
-pub struct CourseSetOptions {
-    /// The maximum distance between a waypoint and a route, within which the
-    /// waypoint will be considered to be a course point along the corresponding
-    /// course.
-    pub threshold: Meter<f64>,
-
-    /// What strategy to apply when a waypoint intercepts a single route
-    /// multiple times.
-    pub strategy: InterceptStrategy,
 }
 
 impl Default for CourseSetOptions {
@@ -153,9 +153,48 @@ impl CourseSetOptions {
     }
 }
 
+/// A set of [`Course`]s and their associated course points.
 pub struct CourseSet {
+    /// Courses with any associated course points.
     pub courses: Vec<Course>,
+
+    /// The total number of waypoints that were specified to the builder.  This
+    /// may be greater than the number of course points that were actually
+    /// resolved for the course(s).
     pub num_waypoints: usize,
+}
+
+/// A navigation course
+///
+/// This contains the distance data needed as input for a FIT course file, but
+/// it does not represent speeds or timestamps.
+pub struct Course {
+    /// The records (coordinates and cumulative distances) that define the
+    /// course, in order of physical traversal.
+    pub records: Vec<Record>,
+
+    /// The course points and their course distances. These are derived from the
+    /// subset of waypoints provided to [`CourseSetBuilder`] that are located
+    /// near the course.
+    pub course_points: Vec<CoursePoint>,
+
+    /// The name of the course, if given.
+    pub name: Option<String>,
+}
+
+impl Course {
+    /// The total distance of the course.
+    pub fn total_distance(&self) -> Meter<f64> {
+        self.records
+            .last()
+            .map(|x| x.cumulative_distance)
+            .unwrap_or(0.0 * M)
+    }
+
+    /// Checks whether elevation data is available in this course.
+    pub fn has_elevation(&self) -> bool {
+        self.records.iter().all(|r| r.point.ele().is_some())
+    }
 }
 
 /// Builds routes and waypoints into courses with associated course points
@@ -406,39 +445,6 @@ impl NearbySegment<Meter<f64>> for &InterceptSolution {
             InterceptSolution::Near(near) => near.intercept_distance,
             InterceptSolution::Far => f64::INFINITY * M,
         }
-    }
-}
-
-/// A navigation course
-///
-/// This contains the distance data needed as input for a FIT course file, but
-/// it does not represent speeds or timestamps.
-pub struct Course {
-    /// The records (coordinates and cumulative distances) that define the
-    /// course, in order of physical traversal.
-    pub records: Vec<Record>,
-
-    /// The course points and their course distances. These are derived from the
-    /// subset of waypoints provided to [`CourseSetBuilder`] that are located
-    /// near the course.
-    pub course_points: Vec<CoursePoint>,
-
-    /// The name of the course, if given.
-    pub name: Option<String>,
-}
-
-impl Course {
-    /// The total distance of the course.
-    pub fn total_distance(&self) -> Meter<f64> {
-        self.records
-            .last()
-            .map(|x| x.cumulative_distance)
-            .unwrap_or(0.0 * M)
-    }
-
-    /// Checks whether elevation data is available in this course.
-    pub fn has_elevation(&self) -> bool {
-        self.records.iter().all(|r| r.point.ele().is_some())
     }
 }
 
