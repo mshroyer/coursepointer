@@ -183,7 +183,9 @@ def create(args: argparse.Namespace):
 
 def upload(args: argparse.Namespace):
     version = get_tagged_version("HEAD")
-    subprocess.run(["gh", "release", "upload", f"v{version}", args.file], check=True)
+    subprocess.run(
+        ["gh", "release", "upload", "--clobber", f"v{version}", args.file], check=True
+    )
 
 
 def main():

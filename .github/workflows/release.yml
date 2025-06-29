@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 jobs:
-  check_release:
+  create_release:
     name: Check whether ready for release
     runs-on: ubuntu-latest
 
@@ -31,3 +31,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/release.py create
+
+  macos_binary:
+    name: Build and upload macOS binary
+    runs-on: macos-latest
+    needs: create_release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install x86_64 target
+        run: rustup target add x86_64-apple-darwin
+
+      - run: python3 scripts/upload_macos.sh
