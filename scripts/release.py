@@ -12,6 +12,7 @@ Before running this:
 """
 
 import argparse
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -103,12 +104,35 @@ def read_head() -> str:
     return rev_parse("HEAD")
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+def query_ci_runs(sha: str) -> dict:
+    output = subprocess.check_output(
+        [
+            "gh",
+            "api",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "-H",
+            "X-GitHub-Api-Version: 2022-11-28",
+            f"/repos/mshroyer/coursepointer/actions/workflows/ci.yml/runs?head_sha={sha}",
+        ]
     )
-    parser.parse_args()
 
+    runs = json.loads(output)
+    return runs["workflow_runs"]
+
+
+def successful_run_id(workflow_runs: dict) -> Optional[int]:
+    for run in workflow_runs:
+        if (
+            run["status"] == "completed"
+            and run["conclusion"] == "success"
+            and run["event"] == "push"
+        ):
+            return run["id"]
+    return None
+
+
+def lint(args: argparse.Namespace):
     if not is_checkout_unmodified():
         print("Git checkout is modified!", file=sys.stderr)
         sys.exit(1)
@@ -130,7 +154,68 @@ def main():
         print("docs/third_party_licenses.md needs to be updated!", file=sys.stderr)
         sys.exit(1)
 
-    print("Release verified.")
+    print("Release lint check successful.")
+
+
+def check_ci(args: argparse.Namespace):
+    id = successful_run_id(query_ci_runs(args.hash))
+    if id is None:
+        print(f"No successful CI run for commit {args.hash} found", file=sys.stderr)
+        sys.exit(1)
+
+    print(
+        f"Found successful CI run https://github.com/mshroyer/coursepointer/actions/runs/{id} for commit {args.hash}"
+    )
+
+
+def create(args: argparse.Namespace):
+    version = get_tagged_version("HEAD")
+    if version is None:
+        print("No release version is tagged", file=sys.stderr)
+        sys.exit(1)
+
+    with open("CHANGELOG.md") as r:
+        with open("release_notes.md", "w") as w:
+            current_version = False
+            past_padding = False
+            for line in r:
+                if current_version:
+                    if line.startswith("## "):
+                        return
+
+                    if line.strip() != "":
+                        past_padding = True
+                    if past_padding:
+                        print(line.strip(), file=w)
+                elif line.strip() == f"## v{version}":
+                    current_version = True
+
+    subprocess.run(
+        ["gh", "release", "create", f"v{version}", "-F", "release_notes.md", "--draft"],
+        check=True,
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    subparsers = parser.add_subparsers(help="Subcommand")
+
+    parser_lint = subparsers.add_parser("lint", help="Lint the release")
+    parser_lint.set_defaults(func=lint)
+
+    parser_ci = subparsers.add_parser(
+        "check-ci", help="Check whether CI has run for a commit"
+    )
+    parser_ci.set_defaults(func=check_ci)
+    parser_ci.add_argument("hash", type=str, help="Commit hash")
+
+    parser_notes = subparsers.add_parser("create", help="Create a release")
+    parser_notes.set_defaults(func=create)
+
+    args = parser.parse_args()
+    args.func(args)
 
 
 if __name__ == "__main__":

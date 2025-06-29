@@ -4,6 +4,7 @@ on:
 
 permissions:
   actions: read
+  contents: write
 
 jobs:
   check_release:
@@ -18,10 +19,12 @@ jobs:
       - name: Check for successful CI run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 scripts/check_ci_run.py ${{ github.sha }}
+        run: python3 scripts/release.py check-ci ${{ github.sha }}
 
-      - name: Check release
-        run: python3 scripts/check_release.py
+      - name: Lint release
+        run: python3 scripts/release.py lint
 
-      - name: Generate release notes
-        run: python3 scripts/gen_release_notes.py
+      - name: Create draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/release.py create
