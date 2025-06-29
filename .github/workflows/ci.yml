@@ -68,6 +68,9 @@ jobs:
           os: ubuntu-latest
           toolchain: nightly
 
+      - name: Add rust components
+        run: rustup component add rustfmt
+
       - name: rustfmt
         run: cargo fmt --check
 
