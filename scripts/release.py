@@ -21,20 +21,8 @@ import tomllib
 from typing import List, Optional
 
 
-def workspace_dir() -> Optional[Path]:
-    exe_parents = Path(sys.executable).parents
-    if len(exe_parents) < 3:
-        return None
-
-    workspace = exe_parents[2]
-    if not (workspace / ".git").is_dir():
-        return None
-
-    return workspace
-
-
 def crate_version() -> str:
-    with open(workspace_dir() / "Cargo.toml", "rb") as f:
+    with open("Cargo.toml", "rb") as f:
         cargo = tomllib.load(f)
 
     return cargo["package"]["version"]
@@ -42,7 +30,7 @@ def crate_version() -> str:
 
 def last_changelog_version() -> str:
     pattern = re.compile(r"^## v(\d+\.\d+\.\d+)")
-    with open(workspace_dir() / "CHANGELOG.md") as f:
+    with open("CHANGELOG.md") as f:
         for line in f:
             m = pattern.match(line)
             if m:
@@ -52,16 +40,15 @@ def last_changelog_version() -> str:
 
 def is_checkout_unmodified() -> bool:
     output = subprocess.check_output(
-        ["git", "status", "--porcelain"], cwd=workspace_dir(), universal_newlines=True
+        ["git", "status", "--porcelain"], universal_newlines=True
     ).strip()
     return len(output) == 0
 
 
 def is_cargo_about_up_to_date() -> bool:
-    with open(workspace_dir() / "docs" / "third_party_licenses.md", "w") as f:
+    with open(Path("docs") / "third_party_licenses.md", "w") as f:
         subprocess.run(
             ["cargo", "about", "generate", "about.hbs"],
-            cwd=workspace_dir(),
             universal_newlines=True,
             check=True,
             stdout=f,
@@ -73,7 +60,6 @@ def is_cargo_about_up_to_date() -> bool:
 def rev_parse(rev: str) -> str:
     return subprocess.check_output(
         ["git", "rev-parse", rev],
-        cwd=workspace_dir(),
         universal_newlines=True,
     ).strip()
 
@@ -85,7 +71,6 @@ def read_tag(tag: str) -> str:
 def get_tags_at(rev: str) -> List[str]:
     output = subprocess.check_output(
         ["git", "tag", "--points-at", rev],
-        cwd=workspace_dir(),
         universal_newlines=True,
     ).strip()
     return output.splitlines()
