@@ -1,4 +1,5 @@
 from collections import namedtuple
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -29,7 +30,11 @@ def cargo() -> Cargo:
 
 @pytest.fixture(scope="session")
 def coursepointer_cli(cargo) -> RustBinFunc:
-    return cargo.make_bin_func(None, "coursepointer", Profile.TEST)
+    default_features = os.getenv("CARGO_DEFAULT_FEATURES", "true") == "true"
+    extra_features = os.getenv("CARGO_EXTRA_FEATURES", "")
+    return cargo.make_bin_func(
+        None, "coursepointer", Profile.TEST, default_features, extra_features
+    )
 
 
 @pytest.fixture(scope="session")

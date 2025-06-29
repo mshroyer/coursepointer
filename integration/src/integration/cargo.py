@@ -109,7 +109,14 @@ class Cargo:
 
         return Cargo(cargo_bin, workspace_dir())
 
-    def build_bin(self, package: Optional[Path], binary: str, profile: Profile) -> Path:
+    def build_bin(
+        self,
+        package: Optional[Path],
+        binary: str,
+        profile: Profile,
+        extra_features: str,
+        default_features: bool,
+    ) -> Path:
         """Build a rust binary
 
         In a package relative to the project's root directory, uses cargo to
@@ -121,8 +128,6 @@ class Cargo:
         """
 
         args = [self.cargo_bin, "build"]
-        default_features = os.getenv("CARGO_DEFAULT_FEATURES", "true") == "true"
-        extra_features = os.getenv("CARGO_EXTRA_FEATURES", "")
 
         if extra_features != "":
             args.append("-F")
@@ -156,6 +161,14 @@ class Cargo:
         return self.workspace / "target" / profile.target_subdir() / binary_filename
 
     def make_bin_func(
-        self, package: Optional[Path], binary: str, profile: Profile
+        self,
+        package: Optional[Path],
+        binary: str,
+        profile: Profile,
+        extra_features="",
+        default_features=True,
     ) -> RustBinFunc:
-        return RustBinFunc(self.build_bin(package, binary, profile), self.workspace)
+        return RustBinFunc(
+            self.build_bin(package, binary, profile, extra_features, default_features),
+            self.workspace,
+        )
