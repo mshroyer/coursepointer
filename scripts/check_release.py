@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Runs lints on a new release to make sure aren't forgetting anything.
 
 Before running this:

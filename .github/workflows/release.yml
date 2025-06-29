@@ -18,10 +18,7 @@ jobs:
       - name: Check for successful CI run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: scripts/check_ci_run.py ${{ github.sha }}
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        run: python3 scripts/check_ci_run.py ${{ github.sha }}
 
       - name: Check release
-        run: uv run tools/check_release.py
+        run: python3 scripts/check_release.py 0.2.1
