@@ -231,6 +231,7 @@ Used by:
 
 Used by:
 
+- [linux-raw-sys 0.9.4]( https://github.com/sunfishcode/linux-raw-sys )
 - [rustix 1.0.7]( https://github.com/bytecodealliance/rustix )
 
 ```
@@ -1768,6 +1769,8 @@ limitations under the License.
 Used by:
 
 - [anyhow 1.0.98]( https://github.com/dtolnay/anyhow )
+- [libc 0.2.174]( https://github.com/rust-lang/libc )
+- [link-cplusplus 1.0.10]( https://github.com/dtolnay/link-cplusplus )
 - [proc-macro2 1.0.95]( https://github.com/dtolnay/proc-macro2 )
 - [quote 1.0.40]( https://github.com/dtolnay/quote )
 - [rustversion 1.0.21]( https://github.com/dtolnay/rustversion )
@@ -3029,8 +3032,6 @@ Used by:
 - [cxx 1.0.160]( https://github.com/dtolnay/cxx )
 - [cxxbridge-macro 1.0.160]( https://github.com/dtolnay/cxx )
 - [dimensioned 0.8.0]( https://github.com/paholg/dimensioned )
-- [libc 0.2.174]( https://github.com/rust-lang/libc )
-- [link-cplusplus 1.0.10]( https://github.com/dtolnay/link-cplusplus )
 - [siphasher 1.0.1]( https://github.com/jedisct1/rust-siphash )
 - [winapi-i686-pc-windows-gnu 0.4.0]( https://github.com/retep998/winapi-rs )
 - [winapi-x86_64-pc-windows-gnu 0.4.0]( https://github.com/retep998/winapi-rs )
@@ -3246,7 +3247,7 @@ DEALINGS IN THE SOFTWARE.
 
 Used by:
 
-- [coursepointer 0.2.0]( https://github.com/mshroyer/coursepointer/ )
+- [coursepointer 0.2.1]( https://github.com/mshroyer/coursepointer/ )
 
 ```
 Copyright (c) 2025 Mark Shroyer
@@ -3563,6 +3564,7 @@ THE SOFTWARE.
 Used by:
 
 - [byteorder 1.5.0]( https://github.com/BurntSushi/byteorder )
+- [memchr 2.7.5]( https://github.com/BurntSushi/memchr )
 - [regex-automata 0.1.10]( https://github.com/BurntSushi/regex-automata )
 
 ```
