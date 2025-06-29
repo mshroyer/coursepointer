@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf, absolute};
 
 use anyhow::{Context, Result, bail};
 use clap::builder::styling::Styles;
-use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command};
+use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command, crate_version};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{CoursePointType, Kilometer, Mile};
@@ -319,8 +319,9 @@ fn license_cmd() -> Result<String> {
 This executable contains code from third-party open source projects, whose
 licenses are shown here:
 
-https://github.com/mshroyer/coursepointer/blob/main/docs/third_party_licenses.md
-"#
+https://github.com/mshroyer/coursepointer/blob/{}/docs/third_party_licenses.md
+"#,
+        crate_version!(),
     )?;
     Ok(r)
 }
@@ -349,6 +350,6 @@ fn main() -> Result<()> {
         Commands::License => license_cmd(),
     }?;
 
-    print!("{}", report);
+    print!("{report}");
     Ok(())
 }

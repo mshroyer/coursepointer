@@ -32,7 +32,7 @@ num-traits = "0.2.19"
 quick-xml = "0.37.5"
 thiserror = "2.0.12"
 anyhow = { version = "1.0.98", optional = true }
-clap = { version = "4.5.39", optional = true, features = ["derive", "wrap_help"] }
+clap = { version = "4.5.39", optional = true, features = ["cargo", "derive", "wrap_help"] }
 cxx = "1.0.158"
 approx = "0.5.1"
 dimensioned = { version = "0.8.0", features = ["approx"] }
