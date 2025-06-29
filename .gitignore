@@ -7,3 +7,4 @@ target/
 __pycache__/
 
 flamegraph*.svg
+release_notes.md

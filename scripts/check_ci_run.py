@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Ensures a CI run has completed for the commit.
+"""Ensures a CI run has completed for the commit"""
 
 import argparse
 import json

@@ -21,4 +21,7 @@ jobs:
         run: python3 scripts/check_ci_run.py ${{ github.sha }}
 
       - name: Check release
-        run: python3 scripts/check_release.py 0.2.1
+        run: python3 scripts/check_release.py
+
+      - name: Generate release notes
+        run: python3 scripts/gen_release_notes.py
