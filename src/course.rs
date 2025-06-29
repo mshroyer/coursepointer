@@ -727,6 +727,40 @@ mod tests {
     }
 
     #[test]
+    fn test_multiple_routes() -> Result<()> {
+        // A pair of routes and two waypoints, one of which intercepts one
+        // course and the other intercepts both.
+        let mut builder =
+            CourseSetBuilder::new(CourseSetOptions::default().with_threshold(100.0 * M));
+        builder
+            .add_route()
+            .with_route_point(geo_point!(37.25579, -122.19817))
+            .with_route_point(geo_point!(37.25997, -122.18813))
+            .with_route_point(geo_point!(37.26310, -122.17985));
+        builder
+            .add_route()
+            .with_route_point(geo_point!(37.26924, -122.18951))
+            .with_route_point(geo_point!(37.25803, -122.19300))
+            .with_route_point(geo_point!(37.26310, -122.17977));
+        builder.add_waypoint(Waypoint {
+            name: "SingleRoute".to_owned(),
+            point_type: CoursePointType::Generic,
+            point: geo_point!(37.26376, -122.19067).try_into()?,
+        });
+        builder.add_waypoint(Waypoint {
+            name: "DoubleRoute".to_owned(),
+            point_type: CoursePointType::Generic,
+            point: geo_point!(37.26104, -122.18569).try_into()?,
+        });
+
+        let course_set = builder.build()?;
+        assert_eq!(course_set.courses.len(), 2);
+        assert_eq!(course_set.courses[0].course_points.len(), 1);
+        assert_eq!(course_set.courses[1].course_points.len(), 2);
+        Ok(())
+    }
+
+    #[test]
     fn test_intercept_distance_ordering() {
         fn near(distance: Meter<f64>) -> NearIntercept {
             NearIntercept {
