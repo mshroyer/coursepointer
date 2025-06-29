@@ -34,7 +34,7 @@ def successful_run_id(workflow_runs: dict) -> Optional[int]:
             and run["event"] == "push"
         ):
             return run["id"]
-    return False
+    return None
 
 
 def main():
