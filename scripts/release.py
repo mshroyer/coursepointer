@@ -157,8 +157,12 @@ def check_ci(args: argparse.Namespace):
 
 
 def wait_ci(args: argparse.Namespace):
-    max_minutes = 10
+    max_minutes = 15
     while True:
+        # Sleep first to try to prevent racing against the CI workflow being
+        # queued.
+        time.sleep(60)
+
         runs = query_ci_runs(args.hash)
         success_id = successful_run_id(runs)
         if success_id is not None:
@@ -185,7 +189,6 @@ def wait_ci(args: argparse.Namespace):
             f"Waiting on CI run https://github.com/mshroyer/coursepointer/actions/runs/{pending_id} for commit {args.hash}"
         )
         max_minutes -= 1
-        time.sleep(60)
 
 
 def create(args: argparse.Namespace):

@@ -1,6 +1,11 @@
 name: release
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+    branches-ignore:
+      - "**"
 
 permissions:
   actions: read
@@ -16,10 +21,10 @@ jobs:
         with:
           submodules: true
 
-      - name: Check for successful CI run
+      - name: Wait for successful CI run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 scripts/release.py check-ci ${{ github.sha }}
+        run: python3 scripts/release.py wait-ci ${{ github.sha }}
 
       - name: Install cargo-about
         run: cargo install --locked cargo-about
