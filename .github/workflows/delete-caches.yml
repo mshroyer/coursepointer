@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "23 2 * * 1"
 
+permissions:
+  actions: write
+
 jobs:
   delete_caches:
     name: Delete caches
