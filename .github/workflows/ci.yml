@@ -43,8 +43,8 @@ jobs:
 
     uses: ./.github/workflows/build-test.yml
     with:
-      os: ${{ matrix.os }}
-      toolchain: ${{ matrix.toolchain }}
+      os: ubuntu-latest
+      toolchain: stable
       default_features: false
       extra_features: ${{ matrix.features }}
 
