@@ -94,6 +94,10 @@ def main():
         print("Git checkout is modified!", file=sys.stderr)
         sys.exit(1)
 
+    if read_tag(f"v{args.version}") != read_head():
+        print(f"HEAD is not tagged at v{args.version}!", file=sys.stderr)
+        sys.exit(1)
+
     if crate_version() != args.version:
         print("Crate version mismatch!", file=sys.stderr)
         sys.exit(1)
@@ -104,10 +108,6 @@ def main():
 
     if not is_cargo_about_up_to_date():
         print("docs/third_party_licenses.md needs to be updated!", file=sys.stderr)
-        sys.exit(1)
-
-    if read_tag(f"v{args.version}") != read_head():
-        print(f"HEAD is not tagged at v{args.version}!", file=sys.stderr)
         sys.exit(1)
 
     print("Release verified.")

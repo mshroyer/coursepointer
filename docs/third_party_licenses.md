@@ -231,7 +231,6 @@ Used by:
 
 Used by:
 
-- [linux-raw-sys 0.9.4]( https://github.com/sunfishcode/linux-raw-sys )
 - [rustix 1.0.7]( https://github.com/bytecodealliance/rustix )
 
 ```
@@ -677,19 +676,29 @@ Used by:
 - [windows-core 0.61.2]( https://github.com/microsoft/windows-rs )
 - [windows-implement 0.60.0]( https://github.com/microsoft/windows-rs )
 - [windows-interface 0.59.1]( https://github.com/microsoft/windows-rs )
-- [windows-link 0.1.1]( https://github.com/microsoft/windows-rs )
+- [windows-link 0.1.3]( https://github.com/microsoft/windows-rs )
 - [windows-result 0.3.4]( https://github.com/microsoft/windows-rs )
 - [windows-strings 0.4.2]( https://github.com/microsoft/windows-rs )
 - [windows-sys 0.59.0]( https://github.com/microsoft/windows-rs )
+- [windows-sys 0.60.2]( https://github.com/microsoft/windows-rs )
 - [windows-targets 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows-targets 0.53.2]( https://github.com/microsoft/windows-rs )
 - [windows_aarch64_gnullvm 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_aarch64_gnullvm 0.53.0]( https://github.com/microsoft/windows-rs )
 - [windows_aarch64_msvc 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_aarch64_msvc 0.53.0]( https://github.com/microsoft/windows-rs )
 - [windows_i686_gnu 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_i686_gnu 0.53.0]( https://github.com/microsoft/windows-rs )
 - [windows_i686_gnullvm 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_i686_gnullvm 0.53.0]( https://github.com/microsoft/windows-rs )
 - [windows_i686_msvc 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_i686_msvc 0.53.0]( https://github.com/microsoft/windows-rs )
 - [windows_x86_64_gnu 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_x86_64_gnu 0.53.0]( https://github.com/microsoft/windows-rs )
 - [windows_x86_64_gnullvm 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_x86_64_gnullvm 0.53.0]( https://github.com/microsoft/windows-rs )
 - [windows_x86_64_msvc 0.52.6]( https://github.com/microsoft/windows-rs )
+- [windows_x86_64_msvc 0.53.0]( https://github.com/microsoft/windows-rs )
 
 ```
                                  Apache License
@@ -900,9 +909,6 @@ Used by:
 
 Used by:
 
-- [clap_builder 4.5.39]( https://github.com/clap-rs/clap )
-- [clap_derive 4.5.32]( https://github.com/clap-rs/clap )
-- [clap_lex 0.7.4]( https://github.com/clap-rs/clap )
 - [sys-locale 0.3.2]( https://github.com/1Password/sys-locale )
 
 ```
@@ -1331,7 +1337,10 @@ Used by:
 - [anstyle-wincon 3.0.9]( https://github.com/rust-cli/anstyle.git )
 - [anstyle 1.0.11]( https://github.com/rust-cli/anstyle.git )
 - [clap-cargo 0.15.2]( https://github.com/crate-ci/clap-cargo )
-- [clap 4.5.39]( https://github.com/clap-rs/clap )
+- [clap 4.5.40]( https://github.com/clap-rs/clap )
+- [clap_builder 4.5.40]( https://github.com/clap-rs/clap )
+- [clap_derive 4.5.40]( https://github.com/clap-rs/clap )
+- [clap_lex 0.7.5]( https://github.com/clap-rs/clap )
 - [colorchoice 1.0.4]( https://github.com/rust-cli/anstyle.git )
 - [is_terminal_polyfill 1.70.1]( https://github.com/polyfill-rs/is_terminal_polyfill )
 - [once_cell_polyfill 1.70.1]( https://github.com/polyfill-rs/once_cell_polyfill )
@@ -1759,12 +1768,10 @@ limitations under the License.
 Used by:
 
 - [anyhow 1.0.98]( https://github.com/dtolnay/anyhow )
-- [libc 0.2.172]( https://github.com/rust-lang/libc )
-- [link-cplusplus 1.0.10]( https://github.com/dtolnay/link-cplusplus )
 - [proc-macro2 1.0.95]( https://github.com/dtolnay/proc-macro2 )
 - [quote 1.0.40]( https://github.com/dtolnay/quote )
 - [rustversion 1.0.21]( https://github.com/dtolnay/rustversion )
-- [syn 2.0.101]( https://github.com/dtolnay/syn )
+- [syn 2.0.104]( https://github.com/dtolnay/syn )
 - [thiserror-impl 2.0.12]( https://github.com/dtolnay/thiserror )
 - [thiserror 2.0.12]( https://github.com/dtolnay/thiserror )
 - [unicode-ident 1.0.18]( https://github.com/dtolnay/unicode-ident )
@@ -2377,15 +2384,18 @@ limitations under the License.
 Used by:
 
 - [bitflags 2.9.1]( https://github.com/bitflags/bitflags )
-- [bumpalo 3.18.1]( https://github.com/fitzgen/bumpalo )
-- [cfg-if 1.0.0]( https://github.com/alexcrichton/cfg-if )
+- [bumpalo 3.19.0]( https://github.com/fitzgen/bumpalo )
+- [cfg-if 1.0.1]( https://github.com/rust-lang/cfg-if )
 - [core-foundation-sys 0.8.7]( https://github.com/servo/core-foundation-rs )
 - [crossbeam-deque 0.8.6]( https://github.com/crossbeam-rs/crossbeam )
 - [crossbeam-epoch 0.9.18]( https://github.com/crossbeam-rs/crossbeam )
 - [crossbeam-utils 0.8.21]( https://github.com/crossbeam-rs/crossbeam )
 - [either 1.15.0]( https://github.com/rayon-rs/either )
-- [errno 0.3.12]( https://github.com/lambda-fairy/rust-errno )
+- [equivalent 1.0.2]( https://github.com/indexmap-rs/equivalent )
+- [errno 0.3.13]( https://github.com/lambda-fairy/rust-errno )
+- [hashbrown 0.15.4]( https://github.com/rust-lang/hashbrown )
 - [heck 0.5.0]( https://github.com/withoutboats/heck )
+- [indexmap 2.10.0]( https://github.com/indexmap-rs/indexmap )
 - [js-sys 0.3.77]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/js-sys )
 - [lazy_static 1.5.0]( https://github.com/rust-lang-nursery/lazy-static.rs )
 - [linux-raw-sys 0.9.4]( https://github.com/sunfishcode/linux-raw-sys )
@@ -2400,7 +2410,7 @@ Used by:
 - [regex 1.11.1]( https://github.com/rust-lang/regex )
 - [rustix 1.0.7]( https://github.com/bytecodealliance/rustix )
 - [smallvec 1.15.1]( https://github.com/servo/rust-smallvec )
-- [thread_local 1.1.8]( https://github.com/Amanieu/thread_local-rs )
+- [thread_local 1.1.9]( https://github.com/Amanieu/thread_local-rs )
 - [tracing-span-tree 0.1.1]( https://github.com/matklad/tracing-span-tree )
 - [wasm-bindgen-backend 0.2.100]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/backend )
 - [wasm-bindgen-macro-support 0.2.100]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/macro-support )
@@ -3016,9 +3026,11 @@ Used by:
 Used by:
 
 - [chrono 0.4.41]( https://github.com/chronotope/chrono )
-- [cxx 1.0.158]( https://github.com/dtolnay/cxx )
-- [cxxbridge-macro 1.0.158]( https://github.com/dtolnay/cxx )
+- [cxx 1.0.160]( https://github.com/dtolnay/cxx )
+- [cxxbridge-macro 1.0.160]( https://github.com/dtolnay/cxx )
 - [dimensioned 0.8.0]( https://github.com/paholg/dimensioned )
+- [libc 0.2.174]( https://github.com/rust-lang/libc )
+- [link-cplusplus 1.0.10]( https://github.com/dtolnay/link-cplusplus )
 - [siphasher 1.0.1]( https://github.com/jedisct1/rust-siphash )
 - [winapi-i686-pc-windows-gnu 0.4.0]( https://github.com/retep998/winapi-rs )
 - [winapi-x86_64-pc-windows-gnu 0.4.0]( https://github.com/retep998/winapi-rs )
@@ -3195,7 +3207,7 @@ SOFTWARE.
 
 Used by:
 
-- [tracing-attributes 0.1.29]( https://github.com/tokio-rs/tracing )
+- [tracing-attributes 0.1.30]( https://github.com/tokio-rs/tracing )
 - [tracing-core 0.1.34]( https://github.com/tokio-rs/tracing )
 - [tracing-log 0.2.0]( https://github.com/tokio-rs/tracing )
 - [tracing-subscriber 0.3.19]( https://github.com/tokio-rs/tracing )
@@ -3422,7 +3434,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Used by:
 
 - [byteorder 1.5.0]( https://github.com/BurntSushi/byteorder )
-- [memchr 2.7.4]( https://github.com/BurntSushi/memchr )
+- [memchr 2.7.5]( https://github.com/BurntSushi/memchr )
 - [regex-automata 0.1.10]( https://github.com/BurntSushi/regex-automata )
 
 ```
@@ -3551,7 +3563,6 @@ THE SOFTWARE.
 Used by:
 
 - [byteorder 1.5.0]( https://github.com/BurntSushi/byteorder )
-- [memchr 2.7.4]( https://github.com/BurntSushi/memchr )
 - [regex-automata 0.1.10]( https://github.com/BurntSushi/regex-automata )
 
 ```
