@@ -25,8 +25,8 @@ jobs:
     runs-on: ${{ inputs.os }}
 
     env:
-      CARGO_DEFAULT_FEATURES: "${{ input.default_features }}"
-      CARGO_EXTRA_FEATURES: "${{ input.extra_features }}"
+      CARGO_DEFAULT_FEATURES: "${{ inputs.default_features }}"
+      CARGO_EXTRA_FEATURES: "${{ inputs.extra_features }}"
 
     steps:
       - uses: actions/checkout@v4
