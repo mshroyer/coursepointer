@@ -10,12 +10,24 @@ Before running this:
 """
 
 import argparse
+from pathlib import Path
 import re
 import subprocess
 import sys
 import tomllib
+from typing import Optional
 
-from integration.cargo import workspace_dir
+
+def workspace_dir() -> Optional[Path]:
+    exe_parents = Path(sys.executable).parents
+    if len(exe_parents) < 3:
+        return None
+
+    workspace = exe_parents[2]
+    if not (workspace / ".git").is_dir():
+        return None
+
+    return workspace
 
 
 def crate_version() -> str:
@@ -55,6 +67,22 @@ def is_cargo_about_up_to_date() -> bool:
     return is_checkout_unmodified()
 
 
+def rev_parse(rev: str) -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", rev],
+        cwd=workspace_dir(),
+        universal_newlines=True,
+    ).strip()
+
+
+def read_tag(tag: str) -> str:
+    return rev_parse(f"tags/{tag}")
+
+
+def read_head() -> str:
+    return rev_parse("HEAD")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -63,7 +91,7 @@ def main():
     args = parser.parse_args()
 
     if not is_checkout_unmodified():
-        print("Git checkout is modified!")
+        print("Git checkout is modified!", file=sys.stderr)
         sys.exit(1)
 
     if crate_version() != args.version:
@@ -75,8 +103,14 @@ def main():
         sys.exit(1)
 
     if not is_cargo_about_up_to_date():
-        print("docs/third_party_licenses.md needs to be updated!")
+        print("docs/third_party_licenses.md needs to be updated!", file=sys.stderr)
         sys.exit(1)
+
+    if read_tag(f"v{args.version}") != read_head():
+        print(f"HEAD is not tagged at v{args.version}!", file=sys.stderr)
+        sys.exit(1)
+
+    print("Release verified.")
 
 
 if __name__ == "__main__":
