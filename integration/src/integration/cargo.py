@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -120,8 +121,19 @@ class Cargo:
         """
 
         args = [self.cargo_bin, "build"]
+        default_features = os.getenv("CARGO_DEFAULT_FEATURES", "true") == "true"
+        extra_features = os.getenv("CARGO_EXTRA_FEATURES", "")
+
+        if extra_features != "":
+            args.append("-F")
+            args.append(extra_features)
+
+        if not default_features:
+            args.append("--no-default-features")
+
         if package:
             args.extend(["--package", package])
+
         args.extend(["--bin", binary, "--profile", str(profile)])
 
         try:

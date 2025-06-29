@@ -24,6 +24,10 @@ jobs:
   build_and_test:
     runs-on: ${{ inputs.os }}
 
+    env:
+      CARGO_DEFAULT_FEATURES: "${{ input.default_features }}"
+      CARGO_EXTRA_FEATURES: "${{ input.extra_features }}"
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +41,7 @@ jobs:
             ~/.rustup/
             .venv/
             target/
-          key: build_and_test-${{ inputs.toolchain }}-${{ runner.os }}
+          key: build_test-${{ inputs.toolchain }}-${{ runner.os }}
 
       - name: Setup rust
         if: inputs.toolchain != 'stable'  # Runner already comes with the stable toolchain
