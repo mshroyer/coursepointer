@@ -181,6 +181,11 @@ def create(args: argparse.Namespace):
     )
 
 
+def upload(args: argparse.Namespace):
+    version = get_tagged_version("HEAD")
+    subprocess.run(["gh", "release", "upload", f"v{version}", args.file], check=True)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -199,7 +204,15 @@ def main():
     parser_notes = subparsers.add_parser("create", help="Create a release")
     parser_notes.set_defaults(func=create)
 
+    parser_upload = subparsers.add_parser("upload", help="Upload a release asset")
+    parser_upload.set_defaults(func=upload)
+    parser_upload.add_argument("file", type=Path, help="File to upload")
+
     args = parser.parse_args()
+    if "func" not in args:
+        parser.print_help()
+        sys.exit(1)
+
     args.func(args)
 
 
