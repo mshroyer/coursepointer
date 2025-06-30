@@ -1,7 +1,11 @@
 [package]
-name = "integration-stub"
+name = "devtools"
 version = "0.1.0"
 edition = "2024"
+
+[[bin]]
+name = "integration-stub"
+path = "src/bin/integration-stub.rs"
 
 [dependencies]
 anyhow = "1.0.98"

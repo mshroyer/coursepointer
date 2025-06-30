@@ -61,12 +61,15 @@ use dimensioned::si::{Meter, MeterPerSecond};
 pub use fit::FitEncodeError;
 use thiserror::Error;
 use tracing::{Level, debug, span};
-use crate::algorithm::{intercept_distance_floor, karney_interception, AlgorithmError, FromGeoPoints};
+
+use crate::algorithm::{
+    AlgorithmError, FromGeoPoints, intercept_distance_floor, karney_interception,
+};
 use crate::course::{
     Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions,
 };
 pub use crate::fit::{CourseFile, CoursePointType};
-use crate::geographic::{geodesic_inverse, GeographicError};
+use crate::geographic::{GeographicError, geodesic_inverse};
 use crate::gpx::{GpxItem, GpxReader};
 pub use crate::measure::{DEG, Degree};
 use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};
@@ -234,7 +237,7 @@ pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> Result<()>
     println!("s1: {:?}", s1);
     println!("s2: {:?}", s2);
     println!("p:  {:?}", p);
-    
+
     fn p2p_dist(a: &GeoPoint, b: &GeoPoint) -> Result<Meter<f64>> {
         Ok(geodesic_inverse(a, b)?.geo_distance)
     }
@@ -246,12 +249,15 @@ pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> Result<()>
     let s2_xyz: GeoAndXyzPoint = s2.clone().try_into()?;
     let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(&s1_xyz, &s2_xyz)?;
     let p_xyz = GeoAndXyzPoint::try_from(p.clone())?;
-    
+
     let intercept_point = karney_interception(&seg, &p_xyz)?;
     let intercept_dist = geodesic_inverse(&intercept_point, &p)?.geo_distance;
-    
+
     println!("intercept_dist: {intercept_dist}");
-    println!("         floor: {}", intercept_distance_floor(&seg, &p_xyz)?);
+    println!(
+        "         floor: {}",
+        intercept_distance_floor(&seg, &p_xyz)?
+    );
 
     Ok(())
 }

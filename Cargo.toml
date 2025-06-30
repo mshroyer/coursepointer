@@ -72,7 +72,7 @@ winresource = "0.1.22"
 
 [workspace]
 resolver = "2"
-members = ["integration-stub"]
+members = ["devtools"]
 
 [profile.release]
 # Uncomment to enable release build profiling, or set

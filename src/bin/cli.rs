@@ -10,7 +10,10 @@ use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command, crate_vers
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
-use coursepointer::{debug_intercept, ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError, GeoPoint, DEG};
+use coursepointer::{
+    ConversionInfo, CoursePointType, CoursePointerError, DEG, FitEncodeError, GeoPoint,
+    debug_intercept,
+};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
 use regex::Regex;
@@ -342,15 +345,15 @@ fn debug_intercept_cmd() -> Result<String> {
         .find_iter(&input)
         .filter_map(|digits| digits.as_str().parse().ok())
         .collect::<Vec<f64>>();
-    
+
     if ns.len() != 6 {
         bail!("Expected six numbers in input");
     }
-    
+
     let s1 = GeoPoint::new(ns[0] * DEG, ns[1] * DEG, None)?;
     let s2 = GeoPoint::new(ns[2] * DEG, ns[3] * DEG, None)?;
     let p = GeoPoint::new(ns[4] * DEG, ns[5] * DEG, None)?;
-    
+
     debug_intercept(&s1, &s2, &p)?;
     Ok("".to_owned())
 }

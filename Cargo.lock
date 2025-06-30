@@ -362,6 +362,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "devtools"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "coursepointer",
+ "dimensioned",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "dimensioned"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -494,19 +507,6 @@ checksum = "fe4cd85333e22411419a0bcae1297d25e58c9443848b11dc6a86fefe8c78a661"
 dependencies = [
  "equivalent",
  "hashbrown",
-]
-
-[[package]]
-name = "integration-stub"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "coursepointer",
- "dimensioned",
- "serde",
- "serde_json",
 ]
 
 [[package]]

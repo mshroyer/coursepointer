@@ -161,7 +161,7 @@ class Cargo:
 
     def make_bin_func(
         self,
-        package: Optional[Path],
+        package: Optional[str],
         binary: str,
         profile: Profile,
         extra_features="",
