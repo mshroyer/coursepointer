@@ -7,8 +7,6 @@ on:
     tags-ignore:
       - "**"
   pull_request:
-  schedule:
-    - cron: "23 1 * * *"
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,8 +17,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            toolchain: beta
           - os: windows-2025
             toolchain: stable
           - os: macos-latest
@@ -31,38 +27,14 @@ jobs:
       os: ${{ matrix.os }}
       toolchain: ${{ matrix.toolchain }}
 
-  # Make nightly a separate job so we can await it from the lint job.
+  # Make nightly a separate job so we can await it from the lint job without
+  # also having to wait for the longer-running Windows build to complete.
   build_test_nightly:
     name: Build and test
     uses: ./.github/workflows/build-test.yml
     with:
       os: ubuntu-latest
       toolchain: nightly
-
-  # Likewise with stable, for the doc job.
-  build_test_stable:
-    name: Build and test
-    uses: ./.github/workflows/build-test.yml
-    with:
-      os: ubuntu-latest
-      toolchain: stable
-
-  features:
-    name: Test non-default feature sets
-    strategy:
-      matrix:
-        include:
-          - features: ""
-          - features: "rayon"
-          - features: "full-geolib"
-          - features: "cli"
-
-    uses: ./.github/workflows/build-test.yml
-    with:
-      os: ubuntu-latest
-      toolchain: stable
-      default_features: false
-      extra_features: ${{ matrix.features }}
 
   lint:
     name: Lint
@@ -93,19 +65,3 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         with:
           args: "format --check --diff"
-
-  doc:
-    name: Doc
-    runs-on: ubuntu-latest
-    needs: build_test_stable  # Reuse cache
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          toolchain: nightly
-
-      - name: Build docs
-        run: cargo doc

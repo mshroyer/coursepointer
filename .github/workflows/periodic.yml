@@ -1,0 +1,61 @@
+name: Periodic
+on:
+  schedule:
+    - cron: "23 1 * * 1,3,5"
+
+jobs:
+  # Also re-run CI now and then so we don't gather too much entropy in periods
+  # of less active maintenance.
+  ci:
+    name: Build and test
+    uses: ./.github/workflows/ci.yml
+
+  # Alternate platform and toolchain combinations not covered by CI.
+  build_test_alt:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            toolchain: stable
+          - os: ubuntu-latest
+            toolchain: beta
+
+    name: Build and test
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ${{ matrix.os }}
+      toolchain: ${{ matrix.toolchain }}
+
+  # Alternate, non-default combinations of features.
+  test_feature_combinations:
+    name: Test non-default feature sets
+    strategy:
+      matrix:
+        include:
+          - features: ""
+          - features: "rayon"
+          - features: "full-geolib"
+          - features: "cli"
+
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ubuntu-latest
+      toolchain: stable
+      default_features: false
+      extra_features: ${{ matrix.features }}
+
+  doc:
+    name: Doc
+    runs-on: ubuntu-latest
+    needs: build_test_alt  # Reuse cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          toolchain: nightly
+
+      - name: Build docs
+        run: cargo doc
