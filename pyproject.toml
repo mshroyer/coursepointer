@@ -5,7 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.13"
 
 [tool.uv.workspace]
-members = ["integration", "tools"]
+members = ["integration", "devtools"]
 
 [tool.ruff]
 exclude = ["geographiclib/**"]
