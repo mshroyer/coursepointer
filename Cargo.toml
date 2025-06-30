@@ -3,6 +3,7 @@ name = "coursepointer"
 description = "Converts waypoints into Garmin FIT course points"
 version = "0.2.1"
 edition = "2024"
+rust-version = "1.85"
 default-run = "coursepointer"
 license = "MIT"
 authors = ["Mark Shroyer <mark@shroyer.name>"]
