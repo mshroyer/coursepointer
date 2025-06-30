@@ -21,6 +21,7 @@ use crate::types::{GeoPoint, TypeError};
 /// three for the minor.
 pub const PROFILE_VERSION: u16 = 21158;
 
+/// An error when encoding to FIT
 #[derive(Error, Debug)]
 pub enum FitEncodeError {
     #[error("I/O error")]
@@ -553,7 +554,10 @@ impl RecordMessage {
 /// Course point types
 ///
 /// Names and numeric values manually copied from Profile.xlsx in FIT SDK
-/// 21.158.00.
+/// 21.158.00.  See
+/// [docs/point_types.md](https://github.com/mshroyer/coursepointer/blob/main/docs/point_types.md)
+/// for how these may appear on devices in practice.  The `Generic` variant
+/// typically renders as a pin or a flag icon.
 #[repr(u8)]
 #[cfg_attr(
     feature = "cli",
@@ -709,6 +713,7 @@ fn timedelta_from_seconds(s: Second<f64>) -> Result<TimeDelta> {
     ))
 }
 
+/// A write-only Garmin FIT course file
 pub struct CourseFile<'a> {
     course: &'a Course,
     start_time: DateTime<Utc>,
@@ -716,6 +721,10 @@ pub struct CourseFile<'a> {
 }
 
 impl<'a> CourseFile<'a> {
+    /// Creates a new course file
+    ///
+    /// `start_time` and `speed` together determine the timestamps of the
+    /// records that will be written to the course file.
     pub fn new(course: &'a Course, start_time: DateTime<Utc>, speed: MeterPerSecond<f64>) -> Self {
         Self {
             course,
@@ -724,6 +733,7 @@ impl<'a> CourseFile<'a> {
         }
     }
 
+    /// Encode and write the course file
     #[tracing::instrument(name = "encode_fit", level = "debug", skip_all)]
     pub fn encode<W: Write>(&self, mut w: W) -> Result<()> {
         // File header

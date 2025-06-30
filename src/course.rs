@@ -46,11 +46,6 @@
 //! waypoints qualify as course points along any of the given routes.  It
 //! returns a [`CourseSet`] containing [`Course`] instances, which in turn will
 //! contain any identified [`CoursePoint`] instances.
-//!
-//! If route points are given optional elevation data, this will simply be
-//! passed through to the corresponding course points.  No additional geoid data
-//! is applied by this module, and elevations are not used in distance
-//! calculations.
 
 use std::cmp::Ordering;
 
@@ -60,14 +55,15 @@ use rayon::prelude::*;
 use thiserror::Error;
 use tracing::{debug, error, info};
 
+use crate::CoursePointType;
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
     karney_interception,
 };
-use crate::fit::CoursePointType;
 use crate::geographic::{GeographicError, geodesic_inverse};
 use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint};
 
+/// An error computing a [`CourseSet`]
 #[derive(Error, Debug)]
 pub enum CourseError {
     #[error("Geographic calculation error")]
@@ -183,7 +179,7 @@ pub struct Course {
 }
 
 impl Course {
-    /// The total distance of the course.
+    /// The total distance of the course
     pub fn total_distance(&self) -> Meter<f64> {
         self.records
             .last()
@@ -191,13 +187,17 @@ impl Course {
             .unwrap_or(0.0 * M)
     }
 
-    /// Checks whether elevation data is available in this course.
+    /// Checks whether elevation data is available in this course
     pub fn has_elevation(&self) -> bool {
         self.records.iter().all(|r| r.point.ele().is_some())
     }
 }
 
 /// Builds routes and waypoints into courses with associated course points
+///
+/// In general, the property-setting methods like
+/// [`CourseSetBuilder::add_route`] and [`CourseSetBuilder::add_waypoint`] are
+/// "cheap", and the CPU-bound work is confined to [`CourseSetBuilder::build`].
 pub struct CourseSetBuilder {
     options: CourseSetOptions,
     route_builders: Vec<RouteBuilder>,
@@ -214,12 +214,13 @@ impl CourseSetBuilder {
         }
     }
 
-    /// Adds a new [`RouteBuilder`] to this set builder.
+    /// Adds a new [`RouteBuilder`] to this set builder
     pub fn add_route(&mut self) -> &mut RouteBuilder {
         self.route_builders.push(RouteBuilder::new());
         self.last_route_mut().unwrap()
     }
 
+    /// Returns a mutable reference to the most recently-added route
     pub fn last_route_mut(&mut self) -> Result<&mut RouteBuilder> {
         match self.route_builders.last_mut() {
             Some(course) => Ok(course),
@@ -227,7 +228,10 @@ impl CourseSetBuilder {
         }
     }
 
-    /// Adds a waypoint to the set of routes.
+    /// Adds a waypoint to the set of routes
+    ///
+    /// The [`CoursePointType`] given here determines the type that will be used
+    /// should the waypoint be identified as a course point.
     pub fn add_waypoint(
         &mut self,
         point: GeoPoint,
@@ -242,11 +246,12 @@ impl CourseSetBuilder {
         self
     }
 
+    /// Returns the number of routes currently contained in this builder
     pub fn num_routes(&self) -> usize {
         self.route_builders.len()
     }
 
-    /// Build the courses.
+    /// Build the courses
     ///
     /// The geodesic calculations happen in here.
     pub fn build(mut self) -> Result<CourseSet> {
@@ -448,11 +453,10 @@ impl NearbySegment<Meter<f64>> for &InterceptSolution {
     }
 }
 
-/// Builder for [`Course`].
+/// Builds information from a route into a [`Course`]
 ///
-/// Used as part of [`CourseSetBuilder`] to allow composing a course.
-/// Within that context, obtain a new instance with
-/// [`CourseSetBuilder::add_route`].
+/// Used as part of [`CourseSetBuilder`] for composing a course. Within that
+/// context, obtain a new instance with [`CourseSetBuilder::add_route`].
 pub struct RouteBuilder {
     route_points: Vec<GeoPoint>,
     xyz_points: Vec<GeoAndXyzPoint>,
@@ -471,13 +475,13 @@ impl RouteBuilder {
         }
     }
 
-    /// Set the course's name.
+    /// Sets the course's name
     pub fn with_name(&mut self, name: String) -> &mut Self {
         self.name = Some(name);
         self
     }
 
-    /// Add a route point to the course.
+    /// Adds a route point to the course
     ///
     /// Adds GPX route points (or equivalently, track points) to the course in
     /// order of traversal.
@@ -492,7 +496,7 @@ impl RouteBuilder {
         self
     }
 
-    /// Segment the course.
+    /// Segments the course
     ///
     /// Does the initial geodesic calculations of solving the indirect problem
     /// between adjacent points, and lifting points into instances the type
@@ -530,12 +534,12 @@ impl RouteBuilder {
 
 /// A segmented [`Course`] builder.
 ///
-/// This represents an intermediate stage of building a [`RouteBuilder`]: The
-/// initial work of processing route points into geodesic segments along with
-/// distance information, as well as possibly [`XyPoint`] values, has been done.
+/// This represents an intermediate stage of building a [`Course`]: The initial
+/// work of processing route points into geodesic segments along with computing
+/// distance information and [`XyPoint`] values has been done.
 ///
 /// This builder is used internally within [`CourseSetBuilder`] to gather
-/// course points.
+/// process waypoints into course points.
 struct SegmentedCourseBuilder<'a> {
     xyz_points: &'a Vec<GeoAndXyzPoint>,
     segments_and_distances: Vec<(GeoSegment<'a, GeoAndXyzPoint>, Meter<f64>)>,
@@ -593,17 +597,21 @@ impl<'a> SegmentedCourseBuilder<'a> {
     }
 }
 
-/// A course record.
+/// A course record
+///
+/// Represents a single point along a course, analogous to a route point or a
+/// track point.  However, a course record additionally contains the points'
+/// cumulative distances along the course.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Record {
-    /// Position including optional elevation.
+    /// Position including optional elevation
     pub point: GeoPoint,
 
-    /// Cumulative distance along the course.
+    /// Cumulative distance along the course
     pub cumulative_distance: Meter<f64>,
 }
 
-/// A waypoint to be considered as a course point.
+/// A waypoint to be considered as a course point
 ///
 /// In contrast with `GpxWaypoint`, this type specifies a FIT
 /// [`CoursePointType`] instead of a set of optional GPX attributes. And in
@@ -634,18 +642,27 @@ impl TryFrom<Waypoint<GeoPoint>> for Waypoint<GeoAndXyzPoint> {
     }
 }
 
+/// A course point
+///
+/// Represents a point of interest along a course.  Unlike the waypoint from
+/// which this is derived, a course point is known to be specifically *along*
+/// the course, and its distance down the course is known.
 #[derive(Clone, PartialEq, Debug)]
 pub struct CoursePoint {
-    /// Position of the point's interception with the course.
+    /// Position of the point's interception with the course
+    ///
+    /// Note that this is calculated as interception from the waypoint, so the
+    /// course point's position can be different from that of the original
+    /// waypoint.
     pub point: GeoPoint,
 
-    /// Distance at which the point appears along the total course.
+    /// Distance at which the point appears along the total course
     pub distance: Meter<f64>,
 
-    /// Course point type.
+    /// Course point type
     pub point_type: CoursePointType,
 
-    /// Name.
+    /// Name
     pub name: String,
 }
 

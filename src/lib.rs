@@ -27,8 +27,8 @@
 //! to compute the interception points and course distances of waypoints near
 //! routes or tracks, then encodes this all as a FIT course.
 //!
-//! The [`course`] module has types for building up a set of courses and
-//! waypoints
+//! It also provides, in the [`course`] module, lower-lever builders to compose
+//! courses and course points out of routes and waypoints programmatically.
 //!
 //! # Feature flags
 //!
@@ -65,12 +65,13 @@ use tracing::{Level, debug, span};
 use crate::course::{
     Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions,
 };
-pub use crate::fit::CourseFile;
+pub use crate::fit::{CourseFile, CoursePointType};
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
 use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};
 use crate::types::TypeError;
 
+/// An error in a high-level library operation
 #[derive(Error, Debug)]
 pub enum CoursePointerError {
     #[error("I/O error")]
@@ -84,7 +85,7 @@ pub enum CoursePointerError {
     #[error("Course does not contain any records")]
     EmptyRecords,
     #[error("FIT encoding error")]
-    FitEncode(#[from] fit::FitEncodeError),
+    FitEncode(#[from] FitEncodeError),
     #[error("Core type error")]
     Type(#[from] TypeError),
     #[error("Geographic calculation error")]
@@ -95,19 +96,31 @@ pub enum CoursePointerError {
 
 pub type Result<T> = std::result::Result<T, CoursePointerError>;
 
+/// Summarizes the result of converting GPX into a FIT course
+///
+/// The result of a successful invocation of [`convert_gpx`].
+#[derive(Debug)]
 pub struct ConversionInfo {
+    /// The name of the course that was converted, if given
     pub course_name: Option<String>,
+
+    /// The total distance of the course
     pub total_distance: Meter<f64>,
+
+    /// The total number of waypoints specified in the input, including those
+    /// not identified as course points
     pub num_waypoints: usize,
+
+    /// The set of course points identified
     pub course_points: Vec<CoursePoint>,
 }
 
-/// Convert GPX into a FIT course file.
+/// Convert GPX into a FIT course file
 ///
-/// The `BufRead` bound on `gpx_input` is required internally by quick_xml, but
-/// this doesn't imply by contrast this function will construct its own
-/// `BufWrite` for the output. `fit_output` should probably also be given as a
-/// buffered `Write`.
+/// The `BufRead` bound on `gpx_input` is required by quick_xml, but this
+/// doesn't imply by contrast this function will construct its own `BufWrite`
+/// for the output. `fit_output` should probably also be given as a buffered
+/// `Write`.
 ///
 /// The GPX input is required to contain exactly one route or track, and may
 /// contain zero or more waypoints.
@@ -115,6 +128,8 @@ pub struct ConversionInfo {
 /// The `fit_speed` parameter sets a speed for placing timestamps along the FIT
 /// course.  On compatible devices, this will determine the speed of the
 /// "virtual partner".
+///
+/// This combines the behavior of [`read_gpx`] and [`write_fit_course`].
 pub fn convert_gpx<R: BufRead, W: Write>(
     gpx_input: R,
     fit_output: W,
@@ -133,7 +148,7 @@ pub fn convert_gpx<R: BufRead, W: Write>(
     })
 }
 
-/// Read a GPX file into a [`CourseSet`].
+/// Read a GPX file into a [`CourseSet`]
 pub fn read_gpx<R: BufRead>(options: CourseSetOptions, gpx_input: R) -> Result<CourseSet> {
     let mut builder = CourseSetBuilder::new(options);
 
@@ -186,7 +201,11 @@ pub fn read_gpx<R: BufRead>(options: CourseSetOptions, gpx_input: R) -> Result<C
     Ok(builder.build()?)
 }
 
-/// Write a single [`Course`] into a GPX course file.
+/// Write a single [`Course`] into a GPX course file
+///
+/// The `fit_speed` parameter sets a speed for placing timestamps along the FIT
+/// course.  On compatible devices, this will determine the speed of the
+/// "virtual partner".
 pub fn write_fit_course<W: Write>(
     course: &Course,
     fit_speed: MeterPerSecond<f64>,
