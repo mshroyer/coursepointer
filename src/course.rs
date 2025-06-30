@@ -88,8 +88,6 @@ use crate::{CoursePointType, GeoPoint};
 pub enum CourseError {
     #[error("Geographic calculation error")]
     Geographic(#[from] GeographicError),
-    #[error("Attempt to access a missing course")]
-    MissingCourse,
     #[error("Error in geographic calculation")]
     Algorithm(#[from] AlgorithmError),
     #[error("Distance is NaN")]
@@ -274,15 +272,20 @@ impl CourseSetBuilder {
     /// Adds a new [`RouteBuilder`] to this set builder
     pub fn add_route(&mut self) -> &mut RouteBuilder {
         self.route_builders.push(RouteBuilder::new());
-        self.last_route_mut().unwrap()
+        self.route_builders.last_mut().unwrap()
     }
 
-    /// Returns a mutable reference to the most recently-added route
-    pub fn last_route_mut(&mut self) -> Result<&mut RouteBuilder> {
-        match self.route_builders.last_mut() {
-            Some(course) => Ok(course),
-            None => Err(CourseError::MissingCourse),
-        }
+    /// Returns a mutable reference to the indexed route
+    pub fn get_route_mut(&mut self, index: usize) -> Option<&mut RouteBuilder> {
+        self.route_builders.get_mut(index)
+    }
+
+    /// Returns a mutable reference to the last-added route
+    ///
+    /// A convenience helper for callers incrementally building up routes and
+    /// route sets.
+    pub fn last_route_mut(&mut self) -> Option<&mut RouteBuilder> {
+        self.route_builders.last_mut()
     }
 
     /// Adds a waypoint to the set of routes

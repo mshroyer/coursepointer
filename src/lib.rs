@@ -80,6 +80,8 @@ pub enum CoursePointerError {
     Io(#[from] std::io::Error),
     #[error("GPX processing error")]
     Gpx(#[from] gpx::GpxError),
+    #[error("GPX items received in unexpected order")]
+    GpxOrder,
     #[error("Course error")]
     Course(#[from] CourseError),
     #[error("Unexpected number of courses (tracks or routes) in input: {0}")]
@@ -174,11 +176,17 @@ pub fn read_gpx<R: BufRead>(options: CourseSetOptions, gpx_input: R) -> Result<C
                 }
 
                 GpxItem::TrackOrRouteName(name) => {
-                    builder.last_route_mut()?.with_name(name);
+                    builder
+                        .last_route_mut()
+                        .ok_or(CoursePointerError::GpxOrder)?
+                        .with_name(name);
                 }
 
                 GpxItem::TrackOrRoutePoint(p) => {
-                    builder.last_route_mut()?.with_route_point(p);
+                    builder
+                        .last_route_mut()
+                        .ok_or(CoursePointerError::GpxOrder)?
+                        .with_route_point(p);
                 }
 
                 GpxItem::Waypoint(wpt) => {

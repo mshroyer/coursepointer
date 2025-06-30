@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow, bail};
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use coursepointer::course::{CourseSetBuilder, CourseSetOptions};
@@ -68,13 +68,15 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
     let mut fit_file = BufWriter::new(File::create(&out)?);
     let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
     builder.add_route();
-    builder.last_route_mut()?.with_name(spec.name);
+    builder
+        .get_route_mut(builder.num_routes().saturating_sub(1))
+        .ok_or(anyhow!("Missing route builder"))?
+        .with_name(spec.name);
     for point in &spec.records {
-        builder.last_route_mut()?.with_route_point(GeoPoint::new(
-            point.lat * DEG,
-            point.lon * DEG,
-            None,
-        )?);
+        builder
+            .get_route_mut(builder.num_routes().saturating_sub(1))
+            .ok_or(anyhow!("Missing route builder"))?
+            .with_route_point(GeoPoint::new(point.lat * DEG, point.lon * DEG, None)?);
     }
     let course_set = builder.build()?;
     let course = course_set.courses.first().unwrap();
