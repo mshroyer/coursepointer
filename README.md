@@ -1,3 +1,6 @@
+[![CI](https://github.com/mshroyer/coursepointer/actions/workflows/ci.yml/badge.svg)](https://github.com/mshroyer/coursepointer/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/coursepointer.svg)](https://crates.io/crates/coursepointer)
+
 # CoursePointer
 
 A command-line tool that converts GPX routes/tracks and waypoints into Garmin
