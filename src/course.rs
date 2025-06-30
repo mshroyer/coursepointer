@@ -597,10 +597,11 @@ impl RouteBuilder {
 ///
 /// This represents an intermediate stage of building a [`Course`]: The initial
 /// work of processing route points into geodesic segments along with computing
-/// distance information and [`XyPoint`] values has been done.
+/// distance information and [`XyPoint`] values has been done, but course points
+/// have not yet been resolved.
 ///
-/// This builder is used internally within [`CourseSetBuilder`] to gather
-/// process waypoints into course points.
+/// This builder is used internally within [`CourseSetBuilder`] to process
+/// waypoints into course points.
 struct SegmentedCourseBuilder<'a> {
     xyz_points: &'a Vec<GeoAndXyzPoint>,
     segments_and_distances: Vec<(GeoSegment<'a, GeoAndXyzPoint>, Meter<f64>)>,

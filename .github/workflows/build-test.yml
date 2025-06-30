@@ -23,6 +23,7 @@ on:
 jobs:
   build_and_test:
     runs-on: ${{ inputs.os }}
+    timeout-minutes: 15
 
     env:
       CARGO_DEFAULT_FEATURES: "${{ inputs.default_features }}"
