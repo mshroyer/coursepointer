@@ -46,6 +46,27 @@
 //! waypoints qualify as course points along any of the given routes.  It
 //! returns a [`CourseSet`] containing [`Course`] instances, which in turn will
 //! contain any identified [`CoursePoint`] instances.
+//!
+//! # Units of measure
+//!
+//! Courses and related types here us zero-cost unit of measure types from
+//! [dimensioned](https://docs.rs/dimensioned/latest/dimensioned/) to avoid type
+//! confusion of speed and distance quantities, and analogous types implemented
+//! here for angular degrees.
+//!
+//! You can obtain a dimensional quantity by multiplying a constant representing
+//! the unit of measure, for example:
+//!
+//! ```
+//! let distance: Meter<f64> = 5.0 * M;
+//! let latitude: Degree<f64> = 36.3 * DEG;
+//! ```
+//!
+//! And then to get the magnitude from a quantity with a unit of measure:
+//!
+//! ```
+//! let magnitude: f64 = distance.value_unsafe;
+//! ```
 
 use std::cmp::Ordering;
 
@@ -55,13 +76,13 @@ use rayon::prelude::*;
 use thiserror::Error;
 use tracing::{debug, error, info};
 
-use crate::CoursePointType;
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
     karney_interception,
 };
 use crate::geographic::{GeographicError, geodesic_inverse};
-use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint};
+use crate::types::{GeoAndXyzPoint, GeoSegment, HasGeoPoint};
+use crate::{CoursePointType, GeoPoint};
 
 /// An error computing a [`CourseSet`]
 #[derive(Error, Debug)]

@@ -16,6 +16,11 @@ use crate::types::{Result, TypeError};
 
 macro_rules! unit_of_measure {
     ($a:ident as $u:ident) => {
+        unit_of_measure!($a as $u, "");
+    };
+
+    ($a:ident as $u:ident, $doc:literal) => {
+        #[doc = $doc]
         #[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
         pub struct $u<N: Num> {
             pub value_unsafe: N,
@@ -40,6 +45,7 @@ macro_rules! unit_of_measure {
         }
 
         #[allow(dead_code)]
+        #[doc = $doc]
         pub const $a: $u<u8> = $u { value_unsafe: 1u8 };
 
         impl<N> Add for $u<N>
@@ -145,7 +151,7 @@ macro_rules! __constant_mul_impl {
 }
 
 // Angular units:
-unit_of_measure![DEG as Degree];
+unit_of_measure![DEG as Degree, "Angular degree"];
 unit_of_measure![SEMI as Semicircle];
 
 impl TryFrom<Degree<f64>> for Semicircle<i32> {

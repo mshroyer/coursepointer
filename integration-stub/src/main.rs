@@ -6,7 +6,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use coursepointer::course::{CourseSetBuilder, CourseSetOptions};
-use coursepointer::internal::{CourseFile, DEG, GeoPoint};
+use coursepointer::{CourseFile, DEG, GeoPoint};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::M;
 use dimensioned::si::f64consts::HR;

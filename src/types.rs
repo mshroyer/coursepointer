@@ -14,9 +14,16 @@ pub enum TypeError {
 
 pub type Result<T> = std::result::Result<T, TypeError>;
 
-/// A point on the surface of the WGS84 ellipsoid.
+/// A point on the surface of the WGS84 ellipsoid
 ///
-/// Enforces valid latitude and longitude values as type invariants.
+/// Enforces valid latitude and longitude values as type invariants.  May
+/// optionally contain an elevation in addition to latitude and longitude.
+///
+/// # Example
+///
+/// ```
+/// let point = GeoPoint::new(37.45 * DEG, -122.11 * DEG, Some(10.0 * M))
+/// ```
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GeoPoint {
     lat: Degree<f64>,
@@ -205,7 +212,7 @@ impl Default for XyPoint {
     }
 }
 
-/// Instantiate a `GeoPoint` with a tuple-like syntax, optionally including an
+/// Instantiate a [`GeoPoint`] with a tuple-like syntax, optionally including an
 /// elevation in meters.
 #[doc(hidden)]
 #[macro_export]
