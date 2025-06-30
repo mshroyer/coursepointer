@@ -10,7 +10,7 @@ runs:
 
     - name: rustfmt
       run: cargo fmt --check
-      shell: baseh
+      shell: bash
 
     - name: Cargo check
       run: cargo check
