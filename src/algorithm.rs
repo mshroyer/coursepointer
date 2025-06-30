@@ -341,6 +341,9 @@ mod tests {
 
     use anyhow::Result;
     use approx::assert_relative_eq;
+    use dimensioned::si::M;
+    use quickcheck::{Arbitrary, Gen, TestResult};
+    use quickcheck_macros::quickcheck;
     use serde::Deserialize;
 
     use super::{
@@ -516,6 +519,10 @@ mod tests {
         Ok(())
     }
 
+    // Tests below are for the crucial property that the
+    // intercept_distance_floor is in fact smaller than the geodesic intercept
+    // distance produced by karney_intercept.
+
     #[test]
     fn test_intercept_distance_floor() -> Result<()> {
         let intercepts_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -551,5 +558,53 @@ mod tests {
         }
 
         Ok(())
+    }
+
+    impl Arbitrary for GeoPoint {
+        fn arbitrary(_g: &mut Gen) -> Self {
+            let lat = rand::random_range(-90.0..=90.0) * DEG;
+            let lon = rand::random_range(-180.0..=180.0) * DEG;
+            GeoPoint::new(lat, lon, None).unwrap()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    struct InterceptProblem {
+        s1: GeoPoint,
+        s2: GeoPoint,
+        p: GeoPoint,
+    }
+
+    impl Arbitrary for InterceptProblem {
+        fn arbitrary(g: &mut Gen) -> Self {
+            InterceptProblem {
+                s1: GeoPoint::arbitrary(g),
+                s2: GeoPoint::arbitrary(g),
+                p: GeoPoint::arbitrary(g),
+            }
+        }
+    }
+
+    #[quickcheck]
+    fn qc_intercept_distance_floor(prob: InterceptProblem) -> Result<TestResult> {
+        fn dis(p1: &GeoPoint, p2: &GeoPoint) -> Result<bool> {
+            Ok(geodesic_inverse(p1, p2)?.geo_distance > 6_000_000.0 * M)
+        }
+        if dis(&prob.s1, &prob.s2)? || dis(&prob.s1, &prob.p)? || dis(&prob.s2, &prob.p)? {
+            return Ok(TestResult::discard());
+        }
+
+        let s1_xyz: GeoAndXyzPoint = prob.s1.clone().try_into()?;
+        let s2_xyz: GeoAndXyzPoint = prob.s2.clone().try_into()?;
+        let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(&s1_xyz, &s2_xyz)?;
+        let p = GeoAndXyzPoint::try_from(prob.p.clone())?;
+        let intercept_point = karney_interception(&seg, &p)?;
+        let intercept_dist = geodesic_inverse(&intercept_point, &prob.p)?.geo_distance;
+
+        if intercept_distance_floor(&seg, &p)? > intercept_dist {
+            Ok(TestResult::failed())
+        } else {
+            Ok(TestResult::passed())
+        }
     }
 }
