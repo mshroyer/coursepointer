@@ -242,6 +242,6 @@ macro_rules! geo_point {
 #[macro_export]
 macro_rules! geo_points {
     ( $( ( $lat:expr, $lon:expr $(, $ele:expr )? $(,)? ) ),* $(,)? ) => {
-        (|| -> crate::types::Result<Vec<GeoPoint>> { Ok(vec![ $( $crate::geo_point!($lat, $lon $( , $ele )?)? ),* ]) })()
+        (|| -> $crate::types::Result<Vec<GeoPoint>> { Ok(vec![ $( $crate::geo_point!($lat, $lon $( , $ele )?)? ),* ]) })()
     };
 }

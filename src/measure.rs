@@ -20,6 +20,7 @@ macro_rules! unit_of_measure {
     };
 
     ($a:ident as $u:ident, $doc:literal) => {
+        #[allow(clippy::empty_docs)]
         #[doc = $doc]
         #[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
         pub struct $u<N: Num> {
@@ -45,6 +46,7 @@ macro_rules! unit_of_measure {
         }
 
         #[allow(dead_code)]
+        #[allow(clippy::empty_docs)]
         #[doc = $doc]
         pub const $a: $u<u8> = $u { value_unsafe: 1u8 };
 
