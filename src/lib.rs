@@ -75,6 +75,7 @@ use crate::types::TypeError;
 
 /// An error in a high-level library operation
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum CoursePointerError {
     #[error("I/O error")]
     Io(#[from] std::io::Error),

@@ -9,6 +9,7 @@ use crate::measure::{DEG, Degree};
 use crate::types::{GeoAndXyzPoint, GeoPoint, TypeError, XyPoint, XyzPoint};
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum GeographicError {
     #[error("C++ exception from GeographicLib: {0}")]
     Exception(#[from] cxx::Exception),

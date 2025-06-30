@@ -29,6 +29,7 @@ use crate::types::{GeoPoint, TypeError};
 
 /// An error processing a GPX track file.
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum GpxError {
     #[error("I/O error")]
     Io(#[from] std::io::Error),

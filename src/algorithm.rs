@@ -16,6 +16,7 @@ use crate::geographic::{
 use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint, HasXyzPoint, XyPoint};
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum AlgorithmError {
     #[error("Geographic computation")]
     Geographic(#[from] GeographicError),

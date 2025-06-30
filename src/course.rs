@@ -85,6 +85,7 @@ use crate::{CoursePointType, GeoPoint};
 
 /// An error computing a [`CourseSet`]
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum CourseError {
     #[error("Geographic calculation error")]
     Geographic(#[from] GeographicError),

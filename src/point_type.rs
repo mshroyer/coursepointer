@@ -7,6 +7,7 @@ use crate::fit::CoursePointType;
 use crate::gpx::GpxWaypoint;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
+#[non_exhaustive]
 pub enum GpxCreator {
     Unknown,
     GaiaGps,
@@ -29,6 +30,8 @@ pub fn get_course_point_type(creator: GpxCreator, waypoint: &GpxWaypoint) -> Cou
     }
 }
 
+// A map of GPX waypoints' sym sub-element contents to course point types I like
+// for them.  See docs/point_types.md.
 static GAIAGPS_SYMS: phf::Map<&'static str, CoursePointType> = phf_map! {
     "airport-24" => CoursePointType::Transport,
     "bear" => CoursePointType::Danger,

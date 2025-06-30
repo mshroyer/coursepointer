@@ -5,10 +5,11 @@ use thiserror::Error;
 use crate::measure::{DEG, Degree};
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum TypeError {
     #[error("Geographic point invariant: invalid value {1:?} for {0:?}")]
     GeoPointInvariant(GeoPointDimension, Degree<f64>),
-    #[error("Numeric type cast")]
+    #[error("Casting between numeric types")]
     NumericCast,
 }
 

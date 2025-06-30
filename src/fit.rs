@@ -23,6 +23,7 @@ pub const PROFILE_VERSION: u16 = 21158;
 
 /// An error when encoding to FIT
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum FitEncodeError {
     #[error("I/O error")]
     Io(#[from] std::io::Error),
