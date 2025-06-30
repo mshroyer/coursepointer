@@ -22,7 +22,9 @@ pub type Result<T> = std::result::Result<T, TypeError>;
 /// # Example
 ///
 /// ```
-/// let point = GeoPoint::new(37.45 * DEG, -122.11 * DEG, Some(10.0 * M))
+/// use dimensioned::si::M;
+/// use coursepointer::{DEG, GeoPoint};
+/// let point = GeoPoint::new(37.45 * DEG, -122.11 * DEG, Some(10.0 * M));
 /// ```
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GeoPoint {

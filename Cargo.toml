@@ -18,7 +18,6 @@ LegalCopyright = "© 2025 Mark Shroyer - MIT License"
 [lib]
 name = "coursepointer"
 path = "src/lib.rs"
-doctest = false  # Fails on doc comments in private mods
 
 [[bin]]
 name = "coursepointer"

@@ -58,13 +58,12 @@
 //! the unit of measure, for example:
 //!
 //! ```
+//! use dimensioned::si::{Meter, M};
+//! use coursepointer::{Degree, DEG};
 //! let distance: Meter<f64> = 5.0 * M;
 //! let latitude: Degree<f64> = 36.3 * DEG;
-//! ```
 //!
-//! And then to get the magnitude from a quantity with a unit of measure:
-//!
-//! ```
+//! // To retrieve the quantity:
 //! let magnitude: f64 = distance.value_unsafe;
 //! ```
 
@@ -81,7 +80,7 @@ use crate::algorithm::{
     karney_interception,
 };
 use crate::geographic::{GeographicError, geodesic_inverse};
-use crate::types::{GeoAndXyzPoint, GeoSegment, HasGeoPoint};
+use crate::types::{GeoAndXyzPoint, GeoSegment, HasGeoPoint, TypeError};
 use crate::{CoursePointType, GeoPoint};
 
 /// An error computing a [`CourseSet`]
@@ -95,6 +94,8 @@ pub enum CourseError {
     Algorithm(#[from] AlgorithmError),
     #[error("Distance is NaN")]
     NaNDistance,
+    #[error("Type error")]
+    Type(#[from] TypeError),
 }
 
 type Result<T> = std::result::Result<T, CourseError>;
@@ -219,6 +220,41 @@ impl Course {
 /// In general, the property-setting methods like
 /// [`CourseSetBuilder::add_route`] and [`CourseSetBuilder::add_waypoint`] are
 /// "cheap", and the CPU-bound work is confined to [`CourseSetBuilder::build`].
+///
+/// # Example
+///
+/// ```
+/// use coursepointer::course::{CourseError, CourseSetBuilder, CourseSetOptions};
+/// use coursepointer::{CoursePointType, DEG, GeoPoint};
+/// use dimensioned::si::M;
+///
+/// fn main() -> Result<(), CourseError> {
+///     let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
+///     builder
+///         .add_route()
+///         .with_name("My course".to_owned())
+///         .with_route_point(GeoPoint::new(35.52527 * DEG, -101.28564 * DEG, None)?)
+///         .with_route_point(GeoPoint::new(36.05200 * DEG, -90.02610 * DEG, None)?)
+///         .with_route_point(GeoPoint::new(38.13369 * DEG, -78.51238 * DEG, None)?);
+///
+///     builder.add_waypoint(
+///         GeoPoint::new(35.951314 * DEG, -94.973085 * DEG, None)?,
+///         CoursePointType::Transport,
+///         "MyWaypoint".to_owned(),
+///     );
+///
+///     let course_set = builder.build()?;
+///     assert_eq!(course_set.courses.len(), 1);
+///     assert_eq!(course_set.courses[0].course_points.len(), 1);
+///     assert!(course_set.courses[0].total_distance() > 0.0 * M);
+///
+///     let course_point = &course_set.courses[0].course_points[0];
+///     assert_eq!(course_point.name, "MyWaypoint".to_owned());
+///     assert_eq!(course_point.point_type, CoursePointType::Transport);
+///     assert!(course_point.distance > 0.0 * M);
+///     Ok(())
+/// }
+/// ```
 pub struct CourseSetBuilder {
     options: CourseSetOptions,
     route_builders: Vec<RouteBuilder>,

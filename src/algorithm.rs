@@ -178,7 +178,7 @@ where
 ///
 /// # Example
 ///
-/// ```
+/// ```rust,ignore
 /// use coursepointer::algorithm::NearbySegment;
 /// use coursepointer::algorithm::find_nearby_segments;
 ///
