@@ -708,7 +708,7 @@ mod tests {
     #[test]
     fn test_route_builder_single_point() -> Result<()> {
         let mut builder = RouteBuilder::new();
-        builder.with_route_point(geo_point!(1.0, 2.0));
+        builder.with_route_point(geo_point!(1.0, 2.0)?);
         let record_points = builder
             .segment()?
             .build()?
@@ -717,7 +717,7 @@ mod tests {
             .map(|r| r.point)
             .collect::<Vec<_>>();
 
-        let expected_points = geo_points![(1.0, 2.0)];
+        let expected_points = geo_points![(1.0, 2.0)]?;
 
         assert_eq!(record_points, expected_points);
         Ok(())
@@ -727,8 +727,8 @@ mod tests {
     fn test_route_builder_two_points() -> Result<()> {
         let mut builder = RouteBuilder::new();
         builder
-            .with_route_point(geo_point!(1.0, 2.0))
-            .with_route_point(geo_point!(1.1, 2.2));
+            .with_route_point(geo_point!(1.0, 2.0)?)
+            .with_route_point(geo_point!(1.1, 2.2)?);
         let record_points = builder
             .segment()?
             .build()?
@@ -737,7 +737,7 @@ mod tests {
             .map(|r| r.point)
             .collect::<Vec<_>>();
 
-        let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2)];
+        let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2)]?;
 
         assert_eq!(record_points, expected_points);
         Ok(())
@@ -747,18 +747,18 @@ mod tests {
     fn test_repeated_points() -> Result<()> {
         let mut builder = RouteBuilder::new();
         builder
-            .with_route_point(geo_point!(1.0, 2.0))
-            .with_route_point(geo_point!(1.0, 2.0))
-            .with_route_point(geo_point!(1.1, 2.2))
-            .with_route_point(geo_point!(1.1, 2.2))
-            .with_route_point(geo_point!(1.2, 2.1))
-            .with_route_point(geo_point!(1.1, 2.2))
-            .with_route_point(geo_point!(1.1, 2.2));
+            .with_route_point(geo_point!(1.0, 2.0)?)
+            .with_route_point(geo_point!(1.0, 2.0)?)
+            .with_route_point(geo_point!(1.1, 2.2)?)
+            .with_route_point(geo_point!(1.1, 2.2)?)
+            .with_route_point(geo_point!(1.2, 2.1)?)
+            .with_route_point(geo_point!(1.1, 2.2)?)
+            .with_route_point(geo_point!(1.1, 2.2)?);
 
         let course = builder.segment()?.build()?;
         let record_points = course.records.iter().map(|r| r.point).collect::<Vec<_>>();
 
-        let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2), (1.2, 2.1), (1.1, 2.2)];
+        let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2), (1.2, 2.1), (1.1, 2.2)]?;
 
         assert_eq!(record_points, expected_points);
         Ok(())
@@ -769,12 +769,12 @@ mod tests {
         let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
         builder
             .add_route()
-            .with_route_point(geo_point!(35.5252717091331, -101.2856451853322))
-            .with_route_point(geo_point!(36.05200980326534, -90.02610043506964))
-            .with_route_point(geo_point!(38.13369722302025, -78.51238236506529));
+            .with_route_point(geo_point!(35.5252717091331, -101.2856451853322)?)
+            .with_route_point(geo_point!(36.05200980326534, -90.02610043506964)?)
+            .with_route_point(geo_point!(38.13369722302025, -78.51238236506529)?);
 
         builder.add_waypoint(
-            geo_point!(35.951314, -94.973085),
+            geo_point!(35.951314, -94.973085)?,
             CoursePointType::Generic,
             "MyWaypoint".to_owned(),
         );
@@ -800,21 +800,21 @@ mod tests {
             CourseSetBuilder::new(CourseSetOptions::default().with_threshold(100.0 * M));
         builder
             .add_route()
-            .with_route_point(geo_point!(37.25579, -122.19817))
-            .with_route_point(geo_point!(37.25997, -122.18813))
-            .with_route_point(geo_point!(37.26310, -122.17985));
+            .with_route_point(geo_point!(37.25579, -122.19817)?)
+            .with_route_point(geo_point!(37.25997, -122.18813)?)
+            .with_route_point(geo_point!(37.26310, -122.17985)?);
         builder
             .add_route()
-            .with_route_point(geo_point!(37.26924, -122.18951))
-            .with_route_point(geo_point!(37.25803, -122.19300))
-            .with_route_point(geo_point!(37.26310, -122.17977));
+            .with_route_point(geo_point!(37.26924, -122.18951)?)
+            .with_route_point(geo_point!(37.25803, -122.19300)?)
+            .with_route_point(geo_point!(37.26310, -122.17977)?);
         builder.add_waypoint(
-            geo_point!(37.26376, -122.19067),
+            geo_point!(37.26376, -122.19067)?,
             CoursePointType::Generic,
             "SingleRoute".to_owned(),
         );
         builder.add_waypoint(
-            geo_point!(37.26104, -122.18569),
+            geo_point!(37.26104, -122.18569)?,
             CoursePointType::Generic,
             "DoubleRoute".to_owned(),
         );

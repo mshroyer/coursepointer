@@ -443,7 +443,7 @@ mod tests {
             (37.39958, -122.13684),
             (37.39923, -122.13591),
             (37.39888, -122.13498),
-        ];
+        ]?;
 
         let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
@@ -478,7 +478,7 @@ mod tests {
             (37.39958, -122.13684),
             (37.39923, -122.13591),
             (37.39888, -122.13498),
-        ];
+        ]?;
 
         let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
@@ -523,7 +523,7 @@ mod tests {
             (37.39958, -122.13684, 29.9),
             (37.39923, -122.13591, 29.8),
             (37.39888, -122.13498, 31.8),
-        ];
+        ]?;
 
         let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;
@@ -566,7 +566,7 @@ mod tests {
             (37.39958, -122.13684, 29.9),
             (37.39923, -122.13591, 29.8),
             (37.39888, -122.13498, 31.8),
-        ];
+        ]?;
 
         let reader = GpxReader::from_text(xml);
         let items = reader.collect::<Result<Vec<_>>>()?;

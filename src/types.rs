@@ -222,14 +222,14 @@ macro_rules! geo_point {
             $lat * $crate::measure::DEG,
             $lon * $crate::measure::DEG,
             None,
-        )?
+        )
     };
     ( $lat:expr, $lon:expr, $ele:expr ) => {
         $crate::types::GeoPoint::new(
             $lat * $crate::measure::DEG,
             $lon * $crate::measure::DEG,
             Some($ele * ::dimensioned::si::M),
-        )?
+        )
     };
 }
 
@@ -239,6 +239,6 @@ macro_rules! geo_point {
 #[macro_export]
 macro_rules! geo_points {
     ( $( ( $lat:expr, $lon:expr $(, $ele:expr )? $(,)? ) ),* $(,)? ) => {
-        vec![ $( $crate::geo_point!($lat, $lon $( , $ele )?) ),* ]
+        (|| -> crate::types::Result<Vec<GeoPoint>> { Ok(vec![ $( $crate::geo_point!($lat, $lon $( , $ele )?)? ),* ]) })()
     };
 }

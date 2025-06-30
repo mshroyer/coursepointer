@@ -159,7 +159,7 @@ mod tests {
                 cmt: None,
                 sym: None,
                 type_: None,
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::Generic
         );
@@ -170,7 +170,7 @@ mod tests {
                 cmt: None,
                 sym: None,
                 type_: Some("generic".to_string()),
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::Generic
         );
@@ -182,7 +182,7 @@ mod tests {
                 cmt: None,
                 sym: None,
                 type_: Some("food".to_string()),
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::Food
         );
@@ -194,7 +194,7 @@ mod tests {
                 cmt: None,
                 sym: None,
                 type_: Some("general_distance".to_string()),
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::GeneralDistance
         );
@@ -206,7 +206,7 @@ mod tests {
                 cmt: None,
                 sym: None,
                 type_: Some("Wakka wakka".to_string()),
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::Generic
         );
@@ -222,7 +222,7 @@ mod tests {
                 cmt: None,
                 sym: None,
                 type_: None,
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::Generic
         );
@@ -234,7 +234,7 @@ mod tests {
                 cmt: None,
                 sym: Some("UFO".to_string()),
                 type_: None,
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::Generic
         );
@@ -246,7 +246,7 @@ mod tests {
                 cmt: None,
                 sym: Some("bus".to_string()),
                 type_: None,
-                point: geo_point!(0.0, 0.0),
+                point: geo_point!(0.0, 0.0)?,
             }),
             CoursePointType::Transport
         );
