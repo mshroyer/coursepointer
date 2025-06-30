@@ -37,6 +37,8 @@ cxx = "1.0.158"
 approx = "0.5.1"
 dimensioned = { version = "0.8.0", features = ["approx"] }
 clap-cargo = { version = "0.15.2", optional = true }
+lazy_static = { version = "1.5.0" } # Patch for MVS
+rustversion = { version = "1.0.6" } # Patch for MVS
 tracing = { version = "0.1.41", features = ["log"] }
 tracing-subscriber = { version = "0.3.19", optional = true, features = ["env-filter"] }
 tracing-span-tree = "0.1.1"
