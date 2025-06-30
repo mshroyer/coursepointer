@@ -332,7 +332,7 @@ https://github.com/mshroyer/coursepointer/blob/{}/docs/third_party_licenses.md
 
 fn debug_intercept_cmd() -> Result<String> {
     let mut input = String::new();
-    print!("Enter output: ");
+    eprint!("Enter output: ");
     std::io::stdin()
         .read_line(&mut input)
         .expect("Could not read input");
