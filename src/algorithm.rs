@@ -341,7 +341,7 @@ mod tests {
 
     use anyhow::Result;
     use approx::assert_relative_eq;
-    use dimensioned::si::M;
+    use dimensioned::si::{Meter, M};
     use quickcheck::{Arbitrary, Gen, TestResult};
     use quickcheck_macros::quickcheck;
     use serde::Deserialize;
@@ -350,7 +350,7 @@ mod tests {
         FromGeoPoints, NearbySegment, cartesian_intercept_distance, find_nearby_segments,
         intercept_distance_floor, karney_interception,
     };
-    use crate::geographic::{geocentric_forward, geodesic_inverse};
+    use crate::geographic::{geocentric_forward, geodesic_direct, geodesic_inverse};
     use crate::measure::DEG;
     use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, XyzPoint};
 
@@ -568,25 +568,53 @@ mod tests {
         }
     }
 
+    // #[derive(Clone, Debug)]
+    // struct RandomInterceptProblem {
+    //     s1: GeoPoint,
+    //     s2: GeoPoint,
+    //     p: GeoPoint,
+    // }
+    // 
+    // impl Arbitrary for RandomInterceptProblem {
+    //     fn arbitrary(g: &mut Gen) -> Self {
+    //         RandomInterceptProblem {
+    //             s1: GeoPoint::arbitrary(g),
+    //             s2: GeoPoint::arbitrary(g),
+    //             p: GeoPoint::arbitrary(g),
+    //         }
+    //     }
+    // }
+
     #[derive(Clone, Debug)]
-    struct InterceptProblem {
+    struct LocalInterceptProblem {
         s1: GeoPoint,
         s2: GeoPoint,
         p: GeoPoint,
     }
 
-    impl Arbitrary for InterceptProblem {
+    impl LocalInterceptProblem {
+        fn arbitrary_point_within(p0: &GeoPoint, radius: Meter<f64>) -> Result<GeoPoint> {
+            let d = rand::random_range(0.0..radius.value_unsafe) * M;
+            let azimuth = rand::random_range(0.0..360.0) * DEG;
+            Ok(geodesic_direct(p0, azimuth, d)?.point2)
+        }
+    }
+
+    impl Arbitrary for LocalInterceptProblem {
         fn arbitrary(g: &mut Gen) -> Self {
-            InterceptProblem {
-                s1: GeoPoint::arbitrary(g),
-                s2: GeoPoint::arbitrary(g),
-                p: GeoPoint::arbitrary(g),
+            let radius = 100.0 * M;
+
+            let p0 = GeoPoint::arbitrary(g);
+            LocalInterceptProblem {
+                s1: Self::arbitrary_point_within(&p0, radius).unwrap(),
+                s2: Self::arbitrary_point_within(&p0, radius).unwrap(),
+                p: Self::arbitrary_point_within(&p0, radius).unwrap(),
             }
         }
     }
 
     #[quickcheck]
-    fn qc_intercept_distance_floor(prob: InterceptProblem) -> Result<TestResult> {
+    fn qc_intercept_distance_floor(prob: LocalInterceptProblem) -> Result<TestResult> {
         fn dis(p1: &GeoPoint, p2: &GeoPoint) -> Result<bool> {
             Ok(geodesic_inverse(p1, p2)?.geo_distance > 6_000_000.0 * M)
         }

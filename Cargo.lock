@@ -240,6 +240,7 @@ dependencies = [
  "quickcheck_macros",
  "rand 0.9.1",
  "rayon",
+ "regex",
  "rustversion",
  "serde",
  "strum",

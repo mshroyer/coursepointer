@@ -10,9 +10,10 @@ use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command, crate_vers
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
-use coursepointer::{ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError};
+use coursepointer::{debug_intercept, ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError, GeoPoint, DEG};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
+use regex::Regex;
 use strum::Display;
 use sys_locale::get_locale;
 use tracing::level_filters::LevelFilter;
@@ -160,6 +161,9 @@ enum Commands {
 
     /// Print software license info
     License,
+
+    /// Debug an intercept scenario
+    DebugIntercept,
 }
 
 #[instrument(level = "trace", skip_all)]
@@ -326,6 +330,31 @@ https://github.com/mshroyer/coursepointer/blob/{}/docs/third_party_licenses.md
     Ok(r)
 }
 
+fn debug_intercept_cmd() -> Result<String> {
+    let mut input = String::new();
+    print!("Enter output: ");
+    std::io::stdin()
+        .read_line(&mut input)
+        .expect("Could not read input");
+
+    let re = Regex::new(r"-?\d+\.\d+")?;
+    let ns = re
+        .find_iter(&input)
+        .filter_map(|digits| digits.as_str().parse().ok())
+        .collect::<Vec<f64>>();
+    
+    if ns.len() != 6 {
+        bail!("Expected six numbers in input");
+    }
+    
+    let s1 = GeoPoint::new(ns[0] * DEG, ns[1] * DEG, None)?;
+    let s2 = GeoPoint::new(ns[2] * DEG, ns[3] * DEG, None)?;
+    let p = GeoPoint::new(ns[4] * DEG, ns[5] * DEG, None)?;
+    
+    debug_intercept(&s1, &s2, &p)?;
+    Ok("".to_owned())
+}
+
 fn main() -> Result<()> {
     // Intentionally avoid wrapping argument parsing errors in anyhow::Result so
     // we preserve Clap's pretty formatting of usage info.
@@ -348,6 +377,7 @@ fn main() -> Result<()> {
     let report = match &args.cmd {
         Commands::Convert(sub_args) => convert_gpx_cmd(&args, sub_args),
         Commands::License => license_cmd(),
+        Commands::DebugIntercept => debug_intercept_cmd(),
     }?;
 
     print!("{report}");
