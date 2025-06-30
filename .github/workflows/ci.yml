@@ -29,4 +29,3 @@ jobs:
     with:
       os: ${{ matrix.os }}
       toolchain: ${{ matrix.toolchain }}
-      lint: ${{ matrix.toolchain == 'nightly' }}  # We need nightly rustfmt

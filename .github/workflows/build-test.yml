@@ -19,11 +19,6 @@ on:
         description: "Additional crate features to use, comma-separated"
         required: false
         type: string
-      lint:
-        description: "Whether to additionally run lint tasks"
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   build_and_test:
@@ -59,4 +54,4 @@ jobs:
         if: ${{ inputs.default_features || contains(inputs.extra_features, 'cli') }}
 
       - uses: ./.github/actions/lint
-        if: ${{ inputs.lint }}
+        if: ${{ inputs.toolchain == 'nightly' }}
