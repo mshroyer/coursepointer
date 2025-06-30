@@ -562,7 +562,7 @@ impl RouteBuilder {
     /// Does the initial geodesic calculations of solving the indirect problem
     /// between adjacent points, and lifting points into instances the type
     /// parameter `P` (such as [`XyzPoint`]).
-    fn segment(&mut self) -> Result<SegmentedCourseBuilder> {
+    fn segment(&mut self) -> Result<SegmentedCourseBuilder<'_>> {
         self.xyz_points = iter_work!(self.route_points)
             .map(|p| GeoAndXyzPoint::try_from(*p))
             .collect::<std::result::Result<Vec<_>, _>>()?;
