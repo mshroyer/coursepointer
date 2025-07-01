@@ -1,6 +1,7 @@
 use anyhow::bail;
 use clap::Parser;
-use coursepointer::{DEG, GeoPoint, debug_intercept};
+use coursepointer::internal::debug_intercept;
+use coursepointer::{DEG, GeoPoint};
 use regex::Regex;
 
 /// Debugs output from failed quickcheck runs

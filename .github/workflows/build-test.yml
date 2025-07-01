@@ -55,8 +55,9 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
 
-      - run: cargo build --verbose
-      - run: cargo test --verbose
+      - run: cargo build
+      - run: cargo build --package devtools
+      - run: cargo test
 
         # Integration tests need the cli feature.
       - run: uv run --package integration pytest
