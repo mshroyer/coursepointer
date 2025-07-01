@@ -516,7 +516,7 @@ impl NearbySegment<Meter<f64>> for &InterceptSolution {
     }
 }
 
-/// Builds information from a route into a [`Course`]
+/// Compiles information from a route into a [`Course`]
 ///
 /// Used as part of [`CourseSetBuilder`] for composing a course. Within that
 /// context, obtain a new instance with [`CourseSetBuilder::add_route`].
@@ -538,13 +538,13 @@ impl RouteBuilder {
         }
     }
 
-    /// Sets the course's name
+    /// Sets the route's name
     pub fn with_name(&mut self, name: String) -> &mut Self {
         self.name = Some(name);
         self
     }
 
-    /// Adds a route point to the course
+    /// Adds a route point to the route
     ///
     /// Adds GPX route points (or equivalently, track points) to the course in
     /// order of traversal.
@@ -804,6 +804,32 @@ mod tests {
         let expected_points = geo_points![(1.0, 2.0), (1.1, 2.2), (1.2, 2.1), (1.1, 2.2)]?;
 
         assert_eq!(record_points, expected_points);
+        Ok(())
+    }
+
+    #[test]
+    fn test_elevation_passthrough() -> Result<()> {
+        let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
+        builder
+            .add_route()
+            .with_route_point(geo_point!(37.25579, -122.19817, 10.0)?)
+            .with_route_point(geo_point!(37.25997, -122.18813, 11.1)?)
+            .with_route_point(geo_point!(37.26310, -122.17985, 12.2)?);
+
+        let course_set = builder.build()?;
+        let course = course_set.courses.get(0).unwrap();
+
+        let course_elevations = course
+            .records
+            .iter()
+            .map(|r| r.point.ele())
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            course_elevations,
+            vec![Some(10.0 * M), Some(11.1 * M), Some(12.2 * M)]
+        );
+
         Ok(())
     }
 
