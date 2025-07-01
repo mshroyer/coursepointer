@@ -3,10 +3,12 @@ name = "coursepointer"
 version = "0.2.1"
 description = "Add your description here"
 requires-python = ">=3.13"
+dependencies = [
+    "ruff>=0.12.1",
+]
 
 [tool.uv.workspace]
 members = ["integration", "devtools"]
 
 [tool.ruff]
 exclude = ["geographiclib/**"]
-target-version = "py313"
