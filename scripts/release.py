@@ -161,11 +161,11 @@ def check_ci(args: argparse.Namespace):
 
 
 def wait_ci(args: argparse.Namespace):
-    max_minutes = 15
+    max_repeat = 60
     while True:
         # Sleep first to try to prevent racing against the CI workflow being
         # queued.
-        time.sleep(60)
+        time.sleep(15)
 
         runs = query_ci_runs(args.hash)
         success_id = successful_run_id(runs)
@@ -183,7 +183,7 @@ def wait_ci(args: argparse.Namespace):
             )
             sys.exit(1)
 
-        if max_minutes == 0:
+        if max_repeat == 0:
             print(
                 f"Timed out waiting for CI run https://github.com/mshroyer/coursepointer/actions/runs/{pending_id} for commit {args.hash}"
             )
@@ -192,7 +192,7 @@ def wait_ci(args: argparse.Namespace):
         print(
             f"Waiting on CI run https://github.com/mshroyer/coursepointer/actions/runs/{pending_id} for commit {args.hash}"
         )
-        max_minutes -= 1
+        max_repeat -= 1
 
 
 def create(args: argparse.Namespace):

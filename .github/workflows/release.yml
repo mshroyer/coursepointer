@@ -12,6 +12,31 @@ permissions:
   contents: write
 
 jobs:
+  lint_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/
+            ~/.cargo/
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            target/
+          key: lint_release
+
+      - name: Install cargo-about
+        run: cargo install --locked cargo-about
+
+      - name: Lint release
+        run: python3 scripts/release.py lint
+
   await_ci:
     runs-on: ubuntu-latest
 
@@ -26,7 +51,9 @@ jobs:
         run: python3 scripts/release.py wait-ci ${{ github.sha }}
 
   extras:
-    needs: await_ci
+    needs:
+      - lint_release
+      - await_ci
     uses: ./.github/workflows/extras.yml
 
   create_release:
@@ -37,12 +64,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
-      - name: Install cargo-about
-        run: cargo install --locked cargo-about
-
-      - name: Lint release
-        run: python3 scripts/release.py lint
 
       - name: Create draft release
         env:
