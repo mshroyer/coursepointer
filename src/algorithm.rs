@@ -580,22 +580,44 @@ mod tests {
     /// A setup for solving the intercept problem
     ///
     /// Consists of a geodesic segment's start and end points, and a third point
-    /// somewhere.  Different implementations will have different approaches to
-    /// generating arbitrary instances of the problem.
-    trait InterceptProblem {
-        fn s1(&self) -> GeoPoint;
-        fn s2(&self) -> GeoPoint;
-        fn p(&self) -> GeoPoint;
+    /// somewhere.
+    #[derive(Copy, Clone, Debug)]
+    struct InterceptProblem {
+        /// Geodesic segment start point
+        s1: GeoPoint,
+
+        /// Geodesic segment end point
+        s2: GeoPoint,
+
+        /// Intercepting point
+        p: GeoPoint,
     }
 
-    fn check_intercept_problem<P: InterceptProblem>(prob: P) -> Result<TestResult> {
-        let s1_xyz: GeoAndXyzPoint = prob.s1().try_into()?;
-        let s2_xyz: GeoAndXyzPoint = prob.s2().try_into()?;
+    /// A type that can provide an [`InterceptProblem`]
+    ///
+    /// Different implementations will have different approaches to generating
+    /// arbitrary problems for quickcheck.
+    trait HasInterceptProblem<'a> {
+        fn prob(&'a self) -> &'a InterceptProblem;
+    }
+
+    impl<'a> HasInterceptProblem<'a> for GlobalInterceptProblem {
+        fn prob(&'a self) -> &'a InterceptProblem {
+            &self.prob
+        }
+    }
+
+    fn check_intercept_problem<H>(h: H) -> Result<TestResult>
+    where
+        for<'a> H: HasInterceptProblem<'a>,
+    {
+        let s1_xyz: GeoAndXyzPoint = h.prob().s1.clone().try_into()?;
+        let s2_xyz: GeoAndXyzPoint = h.prob().s2.clone().try_into()?;
         let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(&s1_xyz, &s2_xyz)?;
-        let p = GeoAndXyzPoint::try_from(prob.p())?;
+        let p = GeoAndXyzPoint::try_from(h.prob().p.clone())?;
 
         let intercept_point = karney_interception(&seg, &p)?;
-        let intercept_dist = geodesic_inverse(&intercept_point, &prob.p())?.geo_distance;
+        let intercept_dist = geodesic_inverse(&intercept_point, &h.prob().p)?.geo_distance;
 
         if intercept_distance_floor(&seg, &p)? > intercept_dist {
             Ok(TestResult::failed())
@@ -607,53 +629,43 @@ mod tests {
     /// An intercept problem where the points are anywhere on the globe
     #[derive(Clone, Debug)]
     struct GlobalInterceptProblem {
-        s1: GeoPoint,
-        s2: GeoPoint,
-        p: GeoPoint,
+        prob: InterceptProblem,
     }
 
-    impl InterceptProblem for GlobalInterceptProblem {
-        fn s1(&self) -> GeoPoint {
-            self.s1
-        }
-        fn s2(&self) -> GeoPoint {
-            self.s2
-        }
-        fn p(&self) -> GeoPoint {
-            self.p
-        }
-    }
     impl Arbitrary for GlobalInterceptProblem {
         fn arbitrary(g: &mut Gen) -> Self {
-            GlobalInterceptProblem {
-                s1: GeoPoint::arbitrary(g),
-                s2: GeoPoint::arbitrary(g),
-                p: GeoPoint::arbitrary(g),
+            Self {
+                prob: InterceptProblem {
+                    s1: GeoPoint::arbitrary(g),
+                    s2: GeoPoint::arbitrary(g),
+                    p: GeoPoint::arbitrary(g),
+                },
             }
         }
     }
 
     #[quickcheck]
-    fn qc_global_intercept_floor(prob: GlobalInterceptProblem) -> Result<TestResult> {
+    fn qc_global_intercept_floor(h: GlobalInterceptProblem) -> Result<TestResult> {
         // In the case of the global problem, we must separately make sure the
         // points are all within at most 6,000 km of each other or the gnomonic
         // projection starts to break down.
         fn dis(p1: &GeoPoint, p2: &GeoPoint) -> Result<bool> {
             Ok(geodesic_inverse(p1, p2)?.geo_distance > 6_000_000.0 * M)
         }
-        if dis(&prob.s1, &prob.s2)? || dis(&prob.s1, &prob.p)? || dis(&prob.s2, &prob.p)? {
+        if dis(&h.prob.s1, &h.prob.s2)?
+            || dis(&h.prob.s1, &h.prob.p)?
+            || dis(&h.prob.s2, &h.prob.p)?
+        {
             return Ok(TestResult::discard());
         }
-        check_intercept_problem(prob)
+        check_intercept_problem(h)
     }
 
     /// An intercept problem where the points are within a local radius
     #[derive(Clone, Debug)]
     struct LocalInterceptProblem<R: Radius> {
+        problem: InterceptProblem,
         r: PhantomData<R>,
-        s1: GeoPoint,
-        s2: GeoPoint,
-        p: GeoPoint,
     }
 
     trait Radius: Clone + 'static {
@@ -668,15 +680,9 @@ mod tests {
         }
     }
 
-    impl<R: Radius> InterceptProblem for LocalInterceptProblem<R> {
-        fn s1(&self) -> GeoPoint {
-            self.s1
-        }
-        fn s2(&self) -> GeoPoint {
-            self.s2
-        }
-        fn p(&self) -> GeoPoint {
-            self.p
+    impl<'a, R: Radius> HasInterceptProblem<'a> for LocalInterceptProblem<R> {
+        fn prob(&'a self) -> &'a InterceptProblem {
+            &self.problem
         }
     }
 
@@ -684,81 +690,40 @@ mod tests {
         fn arbitrary(g: &mut Gen) -> Self {
             let p0 = GeoPoint::arbitrary(g);
             Self {
+                problem: InterceptProblem {
+                    s1: Self::arbitrary_point_within(&p0).unwrap(),
+                    s2: Self::arbitrary_point_within(&p0).unwrap(),
+                    p: Self::arbitrary_point_within(&p0).unwrap(),
+                },
                 r: PhantomData::<R>::default(),
-                s1: Self::arbitrary_point_within(&p0).unwrap(),
-                s2: Self::arbitrary_point_within(&p0).unwrap(),
-                p: Self::arbitrary_point_within(&p0).unwrap(),
             }
         }
     }
 
-    #[derive(Clone, Debug)]
-    struct Radius1m {}
+    macro_rules! qc_local_intercept_floor {
+        ($name:tt, $radius:expr) => {
+            paste::paste! {
+                #[derive(Clone, Debug)]
+                struct [<Radius $name>] {}
 
-    impl Radius for Radius1m {
-        fn radius() -> Meter<f64> {
-            1.0 * M
+                impl Radius for [<Radius $name>] {
+                    fn radius() -> Meter<f64> {
+                        $radius
+                    }
+                }
+
+                #[quickcheck]
+                fn [<qc_ $name _intercept_floor>](prob: LocalInterceptProblem<[<Radius $name>]>) -> Result<TestResult> {
+                    check_intercept_problem(prob)
+                }
+            }
         }
     }
 
-    #[quickcheck]
-    fn qc_1m_intercept_floor(prob: LocalInterceptProblem<Radius1m>) -> Result<TestResult> {
-        check_intercept_problem(prob)
-    }
-
-    #[derive(Clone, Debug)]
-    struct Radius10m {}
-
-    impl Radius for Radius10m {
-        fn radius() -> Meter<f64> {
-            10.0 * M
-        }
-    }
-
-    #[quickcheck]
-    fn qc_10m_intercept_floor(prob: LocalInterceptProblem<Radius10m>) -> Result<TestResult> {
-        check_intercept_problem(prob)
-    }
-
-    #[derive(Clone, Debug)]
-    struct Radius100m {}
-
-    impl Radius for Radius100m {
-        fn radius() -> Meter<f64> {
-            100.0 * M
-        }
-    }
-
-    #[quickcheck]
-    fn qc_100m_intercept_floor(prob: LocalInterceptProblem<Radius100m>) -> Result<TestResult> {
-        check_intercept_problem(prob)
-    }
-
-    #[derive(Clone, Debug)]
-    struct Radius1km {}
-
-    impl Radius for Radius1km {
-        fn radius() -> Meter<f64> {
-            1_000.0 * M
-        }
-    }
-
-    #[quickcheck]
-    fn qc_1km_intercept_floor(prob: LocalInterceptProblem<Radius1km>) -> Result<TestResult> {
-        check_intercept_problem(prob)
-    }
-
-    #[derive(Clone, Debug)]
-    struct Radius10km {}
-
-    impl Radius for Radius10km {
-        fn radius() -> Meter<f64> {
-            10_000.0 * M
-        }
-    }
-
-    #[quickcheck]
-    fn qc_10km_intercept_floor(prob: LocalInterceptProblem<Radius10km>) -> Result<TestResult> {
-        check_intercept_problem(prob)
-    }
+    qc_local_intercept_floor![10cm, 0.1 * M];
+    qc_local_intercept_floor![1m, 1.0 * M];
+    qc_local_intercept_floor![10m, 10.0 * M];
+    qc_local_intercept_floor![100m, 100.0 * M];
+    qc_local_intercept_floor![1km, 1_000.0 * M];
+    qc_local_intercept_floor![10km, 10_000.0 * M];
 }
