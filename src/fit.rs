@@ -412,18 +412,25 @@ enum FileManufacturer {
     Development = 255,
 }
 
-struct FileIdMessage {
+struct FileIdMessage<'a> {
     file_type: FileType,
     manufacturer: FileManufacturer,
     time_created: FitDateTime,
+    product_name: &'a str,
 }
 
-impl FileIdMessage {
-    fn new(file_type: FileType, manufacturer: FileManufacturer, time_created: FitDateTime) -> Self {
+impl<'a> FileIdMessage<'a> {
+    fn new(
+        file_type: FileType,
+        manufacturer: FileManufacturer,
+        time_created: FitDateTime,
+        product_name: &'a str,
+    ) -> Self {
         Self {
             file_type,
             manufacturer,
             time_created,
+            product_name,
         }
     }
 
@@ -441,7 +448,7 @@ impl FileIdMessage {
         w.write_u8(self.file_type as u8)?;
         w.write_u16::<BigEndian>(self.manufacturer as u16)?;
         w.write_u32::<BigEndian>(self.time_created.value_unsafe)?;
-        write_string_field("CoursePointer", 14, w)?;
+        write_string_field(self.product_name, 14, w)?;
         Ok(())
     }
 }
@@ -869,6 +876,7 @@ impl<'a> CourseFile<'a> {
             FileType::Course,
             FileManufacturer::Development,
             FitDateTime::try_from(self.options.start_time)?,
+            self.options.product_name.as_str(),
         )
         .encode(0u8, &mut dw)?;
 
@@ -988,8 +996,8 @@ impl<'a> CourseFile<'a> {
         )
         .encode(&mut dw)?;
         FileCreatorMessage {
-            software_version: 42u16,
-            hardware_version: 1u8,
+            software_version: self.options.software_version,
+            hardware_version: self.options.hardware_version,
         }
         .encode(6u8, &mut dw)?;
 

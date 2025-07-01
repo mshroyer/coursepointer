@@ -2,11 +2,11 @@ use std::cmp::min;
 use std::fmt::{Display, Write};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use std::path::{absolute, Path, PathBuf};
+use std::path::{Path, PathBuf, absolute};
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use clap::builder::styling::Styles;
-use clap::{command, crate_version, Args, ColorChoice, Parser, Subcommand, ValueEnum};
+use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command, crate_version};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
@@ -14,15 +14,15 @@ use coursepointer::{
     ConversionInfo, CoursePointType, CoursePointerError, FitCourseOptions, FitEncodeError, Sport,
 };
 use dimensioned::f64prefixes::KILO;
-use dimensioned::si::{Meter, HR, M};
+use dimensioned::si::{HR, M, Meter};
 use regex::{Match, Regex};
 use strum::Display;
 use sys_locale::get_locale;
 use tracing::level_filters::LevelFilter;
-use tracing::{debug, enabled, error, info, instrument, warn, Level};
+use tracing::{Level, debug, enabled, error, info, instrument, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::{fmt, Layer, Registry};
+use tracing_subscriber::{Layer, Registry, fmt};
 
 pub const CLAP_STYLING: Styles = Styles::styled()
     .header(HEADER)
@@ -91,6 +91,44 @@ impl DistUnit {
             "en-US" | "en-UK" => Self::Mi,
             _ => Self::Km,
         }
+    }
+}
+
+/// Encode a version number for FIT
+///
+/// Encodes the crate's version number at compilation into a 16-bit unsigned
+/// integer that can be stashed in the FIT file_creator message.  Since this can
+/// store values up to 65,534, we can segment it as base-10 digits with:
+///
+/// - Most significant digit for crate major version number
+/// - Next two for minor version number
+/// - Final two for patch
+///
+/// This is similar to how Garmin stores their own SDK version in FIT files, and
+/// it would let us represent crate major versions up through 5.
+fn encode_version_number() -> Result<u16> {
+    let re = Regex::new(r"^(\d+)\.(\d+)\.(\d+)")?;
+
+    fn part(s: Option<Match>) -> Result<u16> {
+        let val = s
+            .ok_or_else(|| anyhow!("Did not get a version part match"))?
+            .as_str()
+            .parse::<u16>()
+            .map_err(|e| anyhow!("Couldn't parse version part as u16: {e}"))?;
+        if val > 99 {
+            bail!("Can't encode version part with more than two digits");
+        }
+        Ok(val)
+    }
+
+    match re.captures(crate_version!()) {
+        Some(caps) => {
+            let major = part(caps.get(1))?;
+            let minor = part(caps.get(2))?;
+            let patch = part(caps.get(3))?;
+            Ok(10000 * major + 100 * minor + patch)
+        }
+        None => Err(anyhow!("Crate version string didn't match regex")),
     }
 }
 
@@ -222,7 +260,12 @@ fn convert_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
         .with_strategy(sub_args.strategy);
     let fit_options = FitCourseOptions::default()
         .with_speed(sub_args.speed * KILO * M / HR)
-        .with_sport(sub_args.sport);
+        .with_sport(sub_args.sport)
+        .with_product_name("CoursePointer".to_owned())
+        .with_software_version(encode_version_number().unwrap_or_else(|e| {
+            warn!("Unable to encode version number to FIT: {e}");
+            0u16
+        }));
 
     let res = coursepointer::convert_gpx_to_fit(gpx_file, fit_file, course_options, fit_options);
     let info = match &res {

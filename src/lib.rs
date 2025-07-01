@@ -59,7 +59,7 @@ use std::io::{BufRead, Write};
 use dimensioned::si::Meter;
 pub use fit::{FitCourseOptions, FitEncodeError};
 use thiserror::Error;
-use tracing::{debug, span, Level};
+use tracing::{Level, debug, span};
 
 use crate::algorithm::AlgorithmError;
 use crate::course::{
@@ -68,8 +68,8 @@ use crate::course::{
 pub use crate::fit::{CourseFile, CoursePointType, Sport};
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
-pub use crate::measure::{Degree, DEG};
-use crate::point_type::{get_course_point_type, get_gpx_creator, GpxCreator};
+pub use crate::measure::{DEG, Degree};
+use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};
 pub use crate::types::GeoPoint;
 use crate::types::TypeError;
 

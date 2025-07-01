@@ -1,11 +1,12 @@
 """Test the main coursepointer-cli binary"""
 
-from datetime import datetime, timezone
+import re
+import shutil
 import subprocess
+from datetime import datetime, timezone
 from itertools import pairwise
 
 from pytest import approx, raises
-import shutil
 
 from integration import field, garmin_read_file_header
 
@@ -15,6 +16,10 @@ class TestUI:
 
     def test_help(self, coursepointer_cli):
         assert "Print help" in coursepointer_cli("--help").stdout
+
+    def test_version(self, coursepointer_cli):
+        version_pat = re.compile(r"^coursepointer \d+\.\d+\.\d+")
+        assert version_pat.match(coursepointer_cli("--version").stdout) is not None
 
     def test_no_subcommand(self, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
@@ -178,13 +183,21 @@ class TestFIT:
 
         assert field(mesgs, "file_id", 0, "product_name") == "CoursePointer"
 
-    def test_file_creator_versions(self, data, caching_convert, caching_mesgs):
+    def test_file_creator_versions(self, data, coursepointer_cli, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")
         mesgs = caching_mesgs(out_file)
 
+        version_pat = re.compile(r"^coursepointer (\d)+\.(\d)+\.(\d)+")
+        m = version_pat.match(coursepointer_cli("--version").stdout)
+
+        major = int(m.group(1))
+        minor = int(m.group(2))
+        patch = int(m.group(3))
+        expected = 10000 * major + 100 * minor + patch
+
         assert len(mesgs["file_creator_mesgs"]) == 1
-        assert field(mesgs, "file_creator", 0, "software_version") == 42
-        assert field(mesgs, "file_creator", 0, "hardware_version") == 1
+        assert field(mesgs, "file_creator", 0, "software_version") == expected
+        assert field(mesgs, "file_creator", 0, "hardware_version") == 0
 
 
 class TestConvert:
