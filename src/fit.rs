@@ -327,7 +327,13 @@ impl DefinitionFrame {
 /// Names and numeric values manually copied from Profile.xlsx in FIT SDK
 /// 21.171.00.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[cfg_attr(
+    feature = "cli",
+    derive(strum::Display, strum::EnumIter, clap::ValueEnum)
+)]
+#[derive(Clone, Copy, PartialEq, EnumString, Debug)]
+#[strum(serialize_all = "snake_case")]
+#[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
 #[non_exhaustive]
 pub enum Sport {
     Generic = 0u8,

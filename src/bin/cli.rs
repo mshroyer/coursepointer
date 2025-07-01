@@ -11,7 +11,7 @@ use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VAL
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
 use coursepointer::{
-    ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError, WriteFitOptions,
+    ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError, Sport, WriteFitOptions,
 };
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
@@ -119,6 +119,10 @@ struct ConvertArgs {
     #[clap(long, short, default_value = "5.0")]
     speed: f64,
 
+    /// Sport to be designated for the course.
+    #[clap(long, short = 'p', default_value = "cycling")]
+    sport: Sport,
+
     /// Strategy for handling duplicate intercepts (within threshold) of the
     /// course from a waypoint.
     #[clap(long, short = 'r', default_value_t = InterceptStrategy::Nearest)]
@@ -215,7 +219,9 @@ fn convert_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     let course_options = CourseSetOptions::default()
         .with_threshold(sub_args.threshold * M)
         .with_strategy(sub_args.strategy);
-    let fit_options = WriteFitOptions::default().with_speed(sub_args.speed * KILO * M / HR);
+    let fit_options = WriteFitOptions::default()
+        .with_speed(sub_args.speed * KILO * M / HR)
+        .with_sport(sub_args.sport);
 
     let res = coursepointer::convert_gpx_to_fit(gpx_file, fit_file, course_options, fit_options);
     let info = match &res {

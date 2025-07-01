@@ -70,6 +70,12 @@ class TestUI:
             (elapsed * speed).to(ureg.meter).magnitude, rel=0.0001
         )
 
+    def test_sport_arg(self, tmpdir, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr004.gpx", "--sport", "hiking")
+        out = caching_mesgs(out_file)
+
+        assert field(out, "course", 0, "sport") == "hiking"
+
     def test_no_courses(self, tmpdir, data, coursepointer_cli):
         with raises(subprocess.CalledProcessError) as einfo:
             coursepointer_cli(
