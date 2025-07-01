@@ -3,7 +3,25 @@ on:
   workflow_call:
 
 jobs:
-  features:
+  build_test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            toolchain: beta
+          - os: ubuntu-latest
+            toolchain: nightly
+          - os: windows-2025
+            toolchain: stable
+          - os: macos-latest
+            toolchain: stable
+
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ${{ matrix.os }}
+      toolchain: ${{ matrix.toolchain }}
+
+  do_features:
     name: Test non-default feature sets
     strategy:
       matrix:
@@ -19,3 +37,18 @@ jobs:
       toolchain: stable
       default_features: false
       extra_features: ${{ matrix.features }}
+
+  doc:
+    runs-on: ubuntu-latest
+    needs: build_test  # Reuse cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          toolchain: stable
+
+      - name: Build docs
+        run: cargo doc

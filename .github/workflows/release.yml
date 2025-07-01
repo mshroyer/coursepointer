@@ -1,4 +1,4 @@
-name: release
+name: Release
 on:
   workflow_dispatch:
   push:
@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   create_release:
-    name: Create release
     runs-on: ubuntu-latest
 
     steps:
@@ -38,7 +37,6 @@ jobs:
         run: python3 scripts/release.py create
 
   macos_binary:
-    name: Build and upload macOS binary
     runs-on: macos-latest
     needs: create_release
 
@@ -56,7 +54,6 @@ jobs:
         run: scripts/upload_macos.sh
 
   windows_binary:
-    name: Build and upload Windows binary
     runs-on: windows-2025
     needs: create_release
 
