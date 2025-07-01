@@ -12,46 +12,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+# We can keep overall resource usage low by just testing on ubuntu with nightly.  That way we can
 jobs:
-  build_test:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            toolchain: stable
-
+  build_test_lint:
     uses: ./.github/workflows/build-test.yml
     with:
-      os: ${{ matrix.os }}
-      toolchain: ${{ matrix.toolchain }}
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          toolchain: nightly
-
-      - name: Add rust components
-        run: rustup component add rustfmt
-        shell: bash
-
-      - name: rustfmt
-        run: cargo fmt --check
-        shell: bash
-
-      - name: Cargo check
-        run: cargo check
-        shell: bash
-
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "check"
-
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check --diff"
+      os: ubuntu-latest
+      toolchain: nightly

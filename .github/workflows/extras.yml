@@ -8,9 +8,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            toolchain: stable
+          - os: ubuntu-latest
             toolchain: beta
           - os: ubuntu-latest
-            toolchain: nightly
+            toolchain: 1.85.1  # Our rust-version
           - os: windows-2025
             toolchain: stable
           - os: macos-latest
@@ -20,23 +22,6 @@ jobs:
     with:
       os: ${{ matrix.os }}
       toolchain: ${{ matrix.toolchain }}
-
-  do_features:
-    name: Test non-default feature sets
-    strategy:
-      matrix:
-        include:
-          - features: ""
-          - features: "rayon"
-          - features: "full-geolib"
-          - features: "cli"
-
-    uses: ./.github/workflows/build-test.yml
-    with:
-      os: ubuntu-latest
-      toolchain: stable
-      default_features: false
-      extra_features: ${{ matrix.features }}
 
   doc:
     runs-on: ubuntu-latest
@@ -52,3 +37,19 @@ jobs:
 
       - name: Build docs
         run: cargo doc
+
+  do_features:
+    strategy:
+      matrix:
+        include:
+          - features: ""
+          - features: "rayon"
+          - features: "full-geolib"
+          - features: "cli"
+
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ubuntu-latest
+      toolchain: stable
+      default_features: false
+      extra_features: ${{ matrix.features }}
