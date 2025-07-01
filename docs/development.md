@@ -20,7 +20,7 @@ reference implementation of FIT decoding.  Run these with
 [uv](https://docs.astral.sh/uv/):
 
 ```
-uv run --package integration pytest
+uv run pytest
 ```
 
 Some of the integration tests use the nested `integration-stub` binary (in the
@@ -49,7 +49,8 @@ ruff format
 
 ## GitHub Actions and releasing
 
-Using GitHub Actions for CI and the release process.
+Using GitHub Actions for CI and the release process.  Releases are created buy
+pushing a tag containing the new release's version number, e.g. `v1.2.3`.
 
 When creating a release, remember to:
 - Update the crate version
@@ -58,13 +59,13 @@ When creating a release, remember to:
 
 The [release
 workflow](https://github.com/mshroyer/coursepointer/actions/workflows/release.yml)
-will check that these things are correct (and also for regular CI to finish)
-before proceeding, but you can verify them locally before pushing by running
-`scripts/release.py lint`.
+will check that these things are correct (and also run all other automated
+tests) before proceeding, but you can verify them locally before pushing by
+running `scripts/release.py lint`.
 
-Upon success, the new GitHub release will be left in draft state for review
-before publishing.  Publishing the crate to crates.io is also a separate,
-manual step.
+On, the new GitHub release will be left in draft state for review before
+publishing.  Publishing the crate to crates.io is also a separate, manual
+step.
 
 ## Profiling
 
