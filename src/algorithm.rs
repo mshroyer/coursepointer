@@ -560,9 +560,7 @@ mod tests {
 
             assert!(
                 floor <= intercept_distance,
-                "floor = {}, intercept_distance = {}",
-                floor,
-                intercept_distance
+                "floor = {floor}, intercept_distance = {intercept_distance}"
             );
         }
 
@@ -611,10 +609,10 @@ mod tests {
     where
         for<'a> H: HasInterceptProblem<'a>,
     {
-        let s1_xyz: GeoAndXyzPoint = h.prob().s1.clone().try_into()?;
-        let s2_xyz: GeoAndXyzPoint = h.prob().s2.clone().try_into()?;
+        let s1_xyz: GeoAndXyzPoint = h.prob().s1.try_into()?;
+        let s2_xyz: GeoAndXyzPoint = h.prob().s2.try_into()?;
         let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(&s1_xyz, &s2_xyz)?;
-        let p = GeoAndXyzPoint::try_from(h.prob().p.clone())?;
+        let p = GeoAndXyzPoint::try_from(h.prob().p)?;
 
         let intercept_point = karney_interception(&seg, &p)?;
         let intercept_dist = geodesic_inverse(&intercept_point, &h.prob().p)?.geo_distance;
@@ -695,7 +693,7 @@ mod tests {
                     s2: Self::arbitrary_point_within(&p0).unwrap(),
                     p: Self::arbitrary_point_within(&p0).unwrap(),
                 },
-                r: PhantomData::<R>::default(),
+                r: PhantomData::<R>,
             }
         }
     }

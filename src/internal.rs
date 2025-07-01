@@ -15,9 +15,9 @@ use crate::types::{GeoAndXyzPoint, GeoSegment};
 
 /// Print debugging info about an intercept scenario
 pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> crate::Result<()> {
-    println!("s1: {:?}", s1);
-    println!("s2: {:?}", s2);
-    println!("p:  {:?}", p);
+    println!("s1: {s1:?}");
+    println!("s2: {s2:?}");
+    println!("p:  {p:?}");
 
     fn p2p_dist(a: &GeoPoint, b: &GeoPoint) -> crate::Result<Meter<f64>> {
         Ok(geodesic_inverse(a, b)?.geo_distance)

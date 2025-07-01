@@ -604,7 +604,7 @@ mod tests {
         let reader = GpxReader::from_text(xml);
         let result = reader.collect::<Result<Vec<_>>>();
         assert!(
-            matches!(result, Err(GpxError::GpxSchema(mesg)) if mesg == "trackpoint missing lon attribute".to_owned())
+            matches!(result, Err(GpxError::GpxSchema(mesg)) if mesg == "trackpoint missing lon attribute")
         );
 
         Ok(())
