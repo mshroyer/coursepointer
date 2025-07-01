@@ -118,11 +118,11 @@ pub struct CourseSetOptions {
     /// The maximum distance between a waypoint and a route, within which the
     /// waypoint will be considered to be a course point along the corresponding
     /// course.
-    pub threshold: Meter<f64>,
+    threshold: Meter<f64>,
 
     /// What strategy to apply when a waypoint intercepts a single route
     /// multiple times.
-    pub strategy: InterceptStrategy,
+    strategy: InterceptStrategy,
 }
 
 /// A strategy for handling duplicate intercepts from a waypoint.
