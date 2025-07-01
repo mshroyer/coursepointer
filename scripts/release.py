@@ -38,14 +38,18 @@ def is_checkout_unmodified() -> bool:
 
 
 def is_cargo_about_up_to_date() -> bool:
-    with open(Path("docs") / "third_party_licenses.md", "w") as f:
-        subprocess.run(
-            ["cargo", "about", "generate", "about.hbs"],
-            universal_newlines=True,
-            check=True,
-            stdout=f,
-        )
-
+    subprocess.run(
+        [
+            "cargo",
+            "about",
+            "generate",
+            "about.hbs",
+            "-o",
+            Path("docs") / "third_party_licenses.md",
+        ],
+        universal_newlines=True,
+        check=True,
+    )
     return is_checkout_unmodified()
 
 
