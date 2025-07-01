@@ -38,6 +38,13 @@ jobs:
       - name: Build docs
         run: cargo doc
 
+  do_mvs:
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ubuntu-latest
+      toolchain: stable
+      use_minimal_versions: true
+
   do_features:
     strategy:
       matrix:

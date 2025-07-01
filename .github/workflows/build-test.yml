@@ -19,6 +19,11 @@ on:
         description: "Additional crate features to use, comma-separated"
         required: false
         type: string
+      use_minimal_versions:
+        description: "Whether to apply MVS dependency version selection"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build_and_test:
@@ -37,6 +42,10 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
         with:
           toolchain: ${{ inputs.toolchain }}
+
+      - name: Update to minimal dependency versions
+        run: cargo update -Z minimal-versions
+        if: ${{ inputs.use_minimal_versions }}
 
       - name: Setup python
         uses: actions/setup-python@v5
