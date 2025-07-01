@@ -23,11 +23,11 @@ reference implementation of FIT decoding.  Run these with
 uv run --package integration pytest
 ```
 
-Some of the integration tests use the nested `integration-stub` binary crate
-by passing JSON specifications to it and then examining its output.  (This was
-how I bootstrapped my early FIT encoding implementation, which is the first
-part I wrote.)  Most other integration tests build and test against the main
-`coursepointer` command-line binary.
+Some of the integration tests use the nested `integration-stub` binary (in the
+devtools package) by passing JSON specifications to it and then examining its
+output.  (This was how I bootstrapped my early FIT encoding implementation,
+which is the first part I wrote.)  Most other integration tests build and test
+against the main `coursepointer` command-line binary.
 
 ## Formatting
 

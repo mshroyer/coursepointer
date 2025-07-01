@@ -370,6 +370,7 @@ dependencies = [
  "clap",
  "coursepointer",
  "dimensioned",
+ "regex",
  "serde",
  "serde_json",
 ]

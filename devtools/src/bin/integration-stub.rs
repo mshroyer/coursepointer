@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::PathBuf;
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, anyhow};
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use coursepointer::course::{CourseSetBuilder, CourseSetOptions};
