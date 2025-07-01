@@ -52,3 +52,6 @@ jobs:
         # Integration tests need the cli feature.
       - run: uv run --package integration pytest
         if: ${{ inputs.default_features || contains(inputs.extra_features, 'cli') }}
+
+      - uses: ./.github/actions/lint
+        if: ${{ inputs.toolchain == 'nightly' }}
