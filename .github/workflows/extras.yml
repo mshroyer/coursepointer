@@ -1,0 +1,21 @@
+name: Extra Checks
+on:
+  workflow_call:
+
+jobs:
+  features:
+    name: Test non-default feature sets
+    strategy:
+      matrix:
+        include:
+          - features: ""
+          - features: "rayon"
+          - features: "full-geolib"
+          - features: "cli"
+
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ubuntu-latest
+      toolchain: stable
+      default_features: false
+      extra_features: ${{ matrix.features }}

@@ -1,14 +1,13 @@
 name: CI
 
 on:
+  workflow_call:
   push:
     branches:
       - "**"
     tags-ignore:
       - "**"
   pull_request:
-  schedule:
-    - cron: "23 1 * * *"
 
 env:
   CARGO_TERM_COLOR: always
@@ -40,23 +39,6 @@ jobs:
     with:
       os: ubuntu-latest
       toolchain: stable
-
-  features:
-    name: Test non-default feature sets
-    strategy:
-      matrix:
-        include:
-          - features: ""
-          - features: "rayon"
-          - features: "full-geolib"
-          - features: "cli"
-
-    uses: ./.github/workflows/build-test.yml
-    with:
-      os: ubuntu-latest
-      toolchain: stable
-      default_features: false
-      extra_features: ${{ matrix.features }}
 
   doc:
     name: Doc

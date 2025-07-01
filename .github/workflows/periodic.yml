@@ -1,0 +1,11 @@
+name: Periodic
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 1 * * 1,3,5"
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  extras:
+    uses: ./.github/workflows/extras.yml
