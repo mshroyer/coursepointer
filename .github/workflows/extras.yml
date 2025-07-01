@@ -42,7 +42,7 @@ jobs:
     uses: ./.github/workflows/build-test.yml
     with:
       os: ubuntu-latest
-      toolchain: stable
+      toolchain: nightly
       use_minimal_versions: true
 
   do_features:
