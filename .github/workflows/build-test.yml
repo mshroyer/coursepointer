@@ -53,11 +53,11 @@ jobs:
       - run: uv run --package integration pytest
         if: ${{ inputs.default_features || contains(inputs.extra_features, 'cli') }}
 
-        # Restrict to linting with nightly because we only need to do it once,
-        # and we require it for rustfmt anyway:
-      - name: Add rust components
-        run: rustup component add rustfmt
-        if: ${{ inputs.toolchain == 'nightly' }}
+#        # Restrict to linting with nightly because we only need to do it once,
+#        # and we require it for rustfmt anyway:
+#      - name: Add rust components
+#        run: rustup component add rustfmt
+#        if: ${{ inputs.toolchain == 'nightly' }}
 
       - name: rustfmt
         run: cargo fmt --check
