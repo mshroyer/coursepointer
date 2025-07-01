@@ -22,17 +22,17 @@ pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> crate::Res
     fn p2p_dist(a: &GeoPoint, b: &GeoPoint) -> crate::Result<Meter<f64>> {
         Ok(geodesic_inverse(a, b)?.geo_distance)
     }
-    println!("s1 -- s2: {}", p2p_dist(&s1, &s2)?);
-    println!("s1 -- p:  {}", p2p_dist(&s1, &p)?);
-    println!("s2 -- p:  {}", p2p_dist(&s2, &p)?);
+    println!("s1 -- s2: {}", p2p_dist(s1, s2)?);
+    println!("s1 -- p:  {}", p2p_dist(s1, p)?);
+    println!("s2 -- p:  {}", p2p_dist(s2, p)?);
 
-    let s1_xyz: GeoAndXyzPoint = s1.clone().try_into()?;
-    let s2_xyz: GeoAndXyzPoint = s2.clone().try_into()?;
+    let s1_xyz: GeoAndXyzPoint = (*s1).try_into()?;
+    let s2_xyz: GeoAndXyzPoint = (*s2).try_into()?;
     let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(&s1_xyz, &s2_xyz)?;
-    let p_xyz = GeoAndXyzPoint::try_from(p.clone())?;
+    let p_xyz = GeoAndXyzPoint::try_from(*p)?;
 
     let intercept_point = karney_interception(&seg, &p_xyz)?;
-    let intercept_dist = geodesic_inverse(&intercept_point, &p)?.geo_distance;
+    let intercept_dist = geodesic_inverse(&intercept_point, p)?.geo_distance;
 
     println!("intercept_dist: {intercept_dist}");
     println!(
