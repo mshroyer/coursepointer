@@ -1,6 +1,9 @@
+#include <GeographicLib/Config.h>
 #include <GeographicLib/Geocentric.hpp>
 #include <GeographicLib/Geodesic.hpp>
 #include <GeographicLib/Gnomonic.hpp>
+
+#include "rust/cxx.h"
 
 using GeographicLib::Geocentric;
 using GeographicLib::Geodesic;
@@ -44,6 +47,10 @@ void geocentric_forward(
     double& x, double& y, double& z) {
   static auto geocentric = Geocentric::WGS84();
   geocentric.Forward(lat, lon, h, x, y, z);
+}
+
+rust::Str geographiclib_version_string() {
+  return GEOGRAPHICLIB_VERSION_STRING;
 }
 
 }  // namespace CoursePointer

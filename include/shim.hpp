@@ -8,6 +8,8 @@
 #ifndef COURSEPOINTER_GEO_SHIM_H
 #define COURSEPOINTER_GEO_SHIM_H
 
+#include "rust/cxx.h"
+
 namespace CoursePointer {
 
 double geodesic_inverse_with_azimuth(
@@ -29,6 +31,8 @@ void gnomonic_reverse(
 void geocentric_forward(
     double lat, double lon, double h,
     double& x, double& y, double& z);
+
+rust::Str geographiclib_version_string();
 
 }  // namespace CoursePointer
 

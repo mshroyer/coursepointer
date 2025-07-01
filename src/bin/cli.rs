@@ -3,6 +3,7 @@ use std::fmt::{Display, Write};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf, absolute};
+use std::sync::LazyLock;
 
 use anyhow::{Context, Result, anyhow, bail};
 use clap::builder::styling::Styles;
@@ -12,6 +13,7 @@ use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
 use coursepointer::{
     ConversionInfo, CoursePointType, CoursePointerError, FitCourseOptions, FitEncodeError, Sport,
+    geographiclib_version_string,
 };
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
@@ -33,6 +35,15 @@ pub const CLAP_STYLING: Styles = Styles::styled()
     .valid(VALID)
     .invalid(INVALID);
 
+static LONG_VERSION: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "{} (GeographicLib {}, rustc {})",
+        crate_version!(),
+        geographiclib_version_string(),
+        env!("RUSTC_VERSION"),
+    )
+});
+
 /// Convert waypoints into Garmin FIT course points
 ///
 /// Given a route and a set of waypoints, produces a Garmin FIT course file
@@ -44,6 +55,7 @@ pub const CLAP_STYLING: Styles = Styles::styled()
 #[command(
     name = "coursepointer",
     version,
+    long_version = LONG_VERSION.as_str(),
     about,
     color = ColorChoice::Auto,
     styles = CLAP_STYLING,
