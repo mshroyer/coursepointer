@@ -4,8 +4,8 @@ use std::ops::Add;
 use std::sync::LazyLock;
 
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use chrono::{DateTime, TimeDelta, Utc};
-use dimensioned::si::{M, Meter, MeterPerSecond, Second};
+use chrono::{DateTime, TimeDelta, TimeZone, Utc};
+use dimensioned::si::{M, Meter, MeterPerSecond, S, Second};
 use num_traits::cast::NumCast;
 use strum::EnumString;
 use thiserror::Error;
@@ -748,12 +748,92 @@ fn timedelta_from_seconds(s: Second<f64>) -> Result<TimeDelta> {
     ))
 }
 
+/// Options for writing a FIT course.
+#[derive(Clone, Debug)]
+pub struct FitCourseOptions {
+    speed: MeterPerSecond<f64>,
+    start_time: DateTime<Utc>,
+    sport: Sport,
+    product_name: String,
+    software_version: u16,
+    hardware_version: u8,
+}
+
+impl FitCourseOptions {
+    /// Write the fit file using the given speed for record timestamps
+    ///
+    /// This has the effect of setting the speed of the Virtual Partner on
+    /// compatible Garmin devices.
+    pub fn with_speed(mut self, speed: MeterPerSecond<f64>) -> Self {
+        self.speed = speed;
+        self
+    }
+
+    /// Set the timestamp at which the course starts
+    ///
+    /// Controls the timestamps on lap and record messages.  An arbitrary but
+    /// consistent time will be used if left unset.
+    pub fn with_start_time(mut self, start_time: DateTime<Utc>) -> Self {
+        self.start_time = start_time;
+        self
+    }
+
+    /// Set the course's sport
+    ///
+    /// Defaults to Cycling if unset.
+    pub fn with_sport(mut self, sport: Sport) -> Self {
+        self.sport = sport;
+        self
+    }
+
+    /// Set the product name to encode
+    ///
+    /// The first 13 bytes of this string will go in the `file_id` message's
+    /// `product_name` field.  Defaults to the empty string if unset.
+    pub fn with_product_name(mut self, product_name: String) -> Self {
+        self.product_name = product_name;
+        self
+    }
+
+    /// Set the software version to encode
+    ///
+    /// This goes in the `file_creator` message's `software_version` field.
+    /// Zero by default.
+    pub fn with_software_version(mut self, software_version: u16) -> Self {
+        self.software_version = software_version;
+        self
+    }
+
+    /// Set the software version to encode
+    ///
+    /// This goes in the `file_creator` message's `software_version` field.
+    /// Zero by default.
+    pub fn with_hardware_version(mut self, hardware_version: u8) -> Self {
+        self.hardware_version = hardware_version;
+        self
+    }
+}
+
+impl Default for FitCourseOptions {
+    fn default() -> Self {
+        Self {
+            speed: 8.0 * M / S,
+            // Defaulting to Utc::now() would mean FIT writes aren't
+            // reproducible, so let's arbitrarily go with my niece's birthday as
+            // a consistent default.
+            start_time: Utc.with_ymd_and_hms(2019, 11, 23, 00, 00, 00).unwrap(),
+            sport: Sport::Cycling,
+            product_name: "".to_owned(),
+            software_version: 0u16,
+            hardware_version: 0u8,
+        }
+    }
+}
+
 /// A write-only Garmin FIT course file
 pub struct CourseFile<'a> {
     course: &'a Course,
-    start_time: DateTime<Utc>,
-    speed: MeterPerSecond<f64>,
-    sport: Sport,
+    options: FitCourseOptions,
 }
 
 impl<'a> CourseFile<'a> {
@@ -761,18 +841,8 @@ impl<'a> CourseFile<'a> {
     ///
     /// `start_time` and `speed` together determine the timestamps of the
     /// records that will be written to the course file.
-    pub fn new(
-        course: &'a Course,
-        start_time: DateTime<Utc>,
-        speed: MeterPerSecond<f64>,
-        sport: Sport,
-    ) -> Self {
-        Self {
-            course,
-            start_time,
-            speed,
-            sport,
-        }
+    pub fn new(course: &'a Course, options: FitCourseOptions) -> Self {
+        Self { course, options }
     }
 
     /// Encode and write the course file
@@ -798,7 +868,7 @@ impl<'a> CourseFile<'a> {
         FileIdMessage::new(
             FileType::Course,
             FileManufacturer::Development,
-            FitDateTime::try_from(self.start_time)?,
+            FitDateTime::try_from(self.options.start_time)?,
         )
         .encode(0u8, &mut dw)?;
 
@@ -813,7 +883,7 @@ impl<'a> CourseFile<'a> {
                 .name
                 .clone()
                 .unwrap_or("Untitled course".to_owned()),
-            self.sport,
+            self.options.sport,
         )
         .encode(1u8, &mut dw)?;
 
@@ -832,7 +902,7 @@ impl<'a> CourseFile<'a> {
         DefinitionFrame::new(GlobalMessage::Lap, 2u8, LapMessage::field_definitions())
             .encode(&mut dw)?;
         LapMessage::new(
-            FitDateTime::try_from(self.start_time)?,
+            FitDateTime::try_from(self.options.start_time)?,
             self.total_duration()?.try_into()?,
             Centimeter::<u32>::num_cast_from(self.course.total_distance().into())
                 .ok_or(FitEncodeError::NumCast)?,
@@ -846,7 +916,7 @@ impl<'a> CourseFile<'a> {
         EventMessage::new(
             Event::Timer,
             EventType::Start,
-            FitDateTime::try_from(self.start_time)?,
+            FitDateTime::try_from(self.options.start_time)?,
             0,
         )
         .encode(3u8, &mut dw)?;
@@ -859,8 +929,11 @@ impl<'a> CourseFile<'a> {
         .encode(&mut dw)?;
         for record in &self.course.records {
             let distance: Centimeter<f64> = record.cumulative_distance.into();
-            let timedelta: Second<f64> = record.cumulative_distance / self.speed;
-            let timestamp = self.start_time.add(timedelta_from_seconds(timedelta)?);
+            let timedelta: Second<f64> = record.cumulative_distance / self.options.speed;
+            let timestamp = self
+                .options
+                .start_time
+                .add(timedelta_from_seconds(timedelta)?);
             let record_message = RecordMessage::new(
                 record.point.try_into()?,
                 Centimeter::<u32>::num_cast_from(distance).ok_or(FitEncodeError::NumCast)?,
@@ -881,8 +954,11 @@ impl<'a> CourseFile<'a> {
         .encode(&mut dw)?;
         for course_point in &self.course.course_points {
             let distance: Centimeter<f64> = course_point.distance.into();
-            let timedelta: Second<f64> = course_point.distance / self.speed;
-            let timestamp = self.start_time.add(timedelta_from_seconds(timedelta)?);
+            let timedelta: Second<f64> = course_point.distance / self.options.speed;
+            let timestamp = self
+                .options
+                .start_time
+                .add(timedelta_from_seconds(timedelta)?);
             let course_point_message = CoursePointMessage::new(
                 timestamp.try_into()?,
                 course_point.point_type,
@@ -900,7 +976,7 @@ impl<'a> CourseFile<'a> {
         EventMessage::new(
             Event::Timer,
             EventType::Stop,
-            FitDateTime::try_from(self.start_time.add(self.total_duration()?))?,
+            FitDateTime::try_from(self.options.start_time.add(self.total_duration()?))?,
             0,
         )
         .encode(3u8, &mut dw)?;
@@ -940,7 +1016,7 @@ impl<'a> CourseFile<'a> {
     }
 
     fn total_duration_at_distance(&self, distance: Meter<f64>) -> Result<TimeDelta> {
-        timedelta_from_seconds(distance / self.speed)
+        timedelta_from_seconds(distance / self.options.speed)
     }
 
     /// Computes the total size of the data segment of this file, including

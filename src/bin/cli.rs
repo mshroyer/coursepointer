@@ -2,26 +2,27 @@ use std::cmp::min;
 use std::fmt::{Display, Write};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use std::path::{Path, PathBuf, absolute};
+use std::path::{absolute, Path, PathBuf};
 
-use anyhow::{Context, Result, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::builder::styling::Styles;
-use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command, crate_version};
+use clap::{command, crate_version, Args, ColorChoice, Parser, Subcommand, ValueEnum};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
 use coursepointer::{
-    ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError, Sport, WriteFitOptions,
+    ConversionInfo, CoursePointType, CoursePointerError, FitCourseOptions, FitEncodeError, Sport,
 };
 use dimensioned::f64prefixes::KILO;
-use dimensioned::si::{HR, M, Meter};
+use dimensioned::si::{Meter, HR, M};
+use regex::{Match, Regex};
 use strum::Display;
 use sys_locale::get_locale;
 use tracing::level_filters::LevelFilter;
-use tracing::{Level, debug, enabled, error, info, instrument, warn};
+use tracing::{debug, enabled, error, info, instrument, warn, Level};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::{Layer, Registry, fmt};
+use tracing_subscriber::{fmt, Layer, Registry};
 
 pub const CLAP_STYLING: Styles = Styles::styled()
     .header(HEADER)
@@ -219,7 +220,7 @@ fn convert_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     let course_options = CourseSetOptions::default()
         .with_threshold(sub_args.threshold * M)
         .with_strategy(sub_args.strategy);
-    let fit_options = WriteFitOptions::default()
+    let fit_options = FitCourseOptions::default()
         .with_speed(sub_args.speed * KILO * M / HR)
         .with_sport(sub_args.sport);
 
