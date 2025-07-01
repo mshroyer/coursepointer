@@ -9,3 +9,4 @@ members = ["integration", "devtools"]
 
 [tool.ruff]
 exclude = ["geographiclib/**"]
+target-version = "py313"
