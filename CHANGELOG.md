@@ -1,6 +1,6 @@
 # CoursePointer Changelog
 
-## $NEXT
+## v0.2.1
 
 - Made the `course` module a publically-accessible library that can be used to
   programmatically build courses from other forms of input.
