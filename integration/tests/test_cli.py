@@ -1,6 +1,6 @@
 """Test the main coursepointer-cli binary"""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import subprocess
 from itertools import pairwise
 
@@ -164,7 +164,7 @@ class TestFIT:
         mesgs = caching_mesgs(out_file)
 
         time_created = field(mesgs, "file_id", 0, "time_created")
-        assert datetime.now(timezone.utc) - time_created < timedelta(days=1)
+        assert datetime(2019, 11, 23, 00, 00, 00, tzinfo=timezone.utc) == time_created
 
     def test_file_id_product_name(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")

@@ -10,7 +10,9 @@ use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command, crate_vers
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
-use coursepointer::{ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError};
+use coursepointer::{
+    ConversionInfo, CoursePointType, CoursePointerError, FitEncodeError, WriteFitOptions,
+};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
 use strum::Display;
@@ -163,7 +165,7 @@ enum Commands {
 }
 
 #[instrument(level = "trace", skip_all)]
-fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
+fn convert_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     debug!("convert args: {:?}", sub_args);
 
     if sub_args.threshold < 0.0 {
@@ -213,9 +215,9 @@ fn convert_gpx_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     let course_options = CourseSetOptions::default()
         .with_threshold(sub_args.threshold * M)
         .with_strategy(sub_args.strategy);
-    let fit_speed = sub_args.speed * KILO * M / HR;
+    let fit_options = WriteFitOptions::default().with_speed(sub_args.speed * KILO * M / HR);
 
-    let res = coursepointer::convert_gpx(gpx_file, fit_file, course_options, fit_speed);
+    let res = coursepointer::convert_gpx_to_fit(gpx_file, fit_file, course_options, fit_options);
     let info = match &res {
         Err(CoursePointerError::Gpx(_)) => {
             res.context("The <INPUT> is not a valid GPX file. Check that it is correct.")
@@ -346,7 +348,7 @@ fn main() -> Result<()> {
     }
 
     let report = match &args.cmd {
-        Commands::Convert(sub_args) => convert_gpx_cmd(&args, sub_args),
+        Commands::Convert(sub_args) => convert_cmd(&args, sub_args),
         Commands::License => license_cmd(),
     }?;
 

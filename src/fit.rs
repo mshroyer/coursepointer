@@ -322,10 +322,51 @@ impl DefinitionFrame {
     }
 }
 
+/// Course point types
+///
+/// Names and numeric values manually copied from Profile.xlsx in FIT SDK
+/// 21.171.00.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
-enum Sport {
+#[non_exhaustive]
+pub enum Sport {
+    Generic = 0u8,
+    Running = 1u8,
     Cycling = 2u8,
+    Transition = 3u8, // Multisport transition
+    FitnessEquipment = 4u8,
+    Swimming = 5u8,
+    Basketball = 6u8,
+    Soccer = 7u8,
+    Tennis = 8u8,
+    AmericanFootball = 9u8,
+    Training = 10u8,
+    Walking = 11u8,
+    CrossCountrySkiing = 12u8,
+    AlpineSkiing = 13u8,
+    Snowboarding = 14u8,
+    Rowing = 15u8,
+    Mountaineering = 16u8,
+    Hiking = 17u8,
+    Multisport = 18u8,
+    Paddling = 19u8,
+    Flying = 20u8,
+    EBiking = 21u8,
+    Motorcycling = 22u8,
+    Boating = 23u8,
+    Driving = 24u8,
+    Golf = 25u8,
+    HangGliding = 26u8,
+    HorsebackRiding = 27u8,
+    Hunting = 28u8,
+    Fishing = 29u8,
+    InlineSkating = 30u8,
+    RockClimbing = 31u8,
+    Sailing = 32u8,
+    IceSkating = 33u8,
+    SkyDiving = 34u8,
+    Snowshoeing = 35u8,
+    Snowmobiling = 36u8,
 }
 
 struct CourseMessage {
@@ -567,73 +608,60 @@ impl RecordMessage {
 #[derive(Clone, Copy, PartialEq, EnumString, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
+#[non_exhaustive]
 pub enum CoursePointType {
-    // 00
     Generic = 0u8,
     Summit = 1u8,
     Valley = 2u8,
     Water = 3u8,
-    // 01
     Food = 4u8,
     Danger = 5u8,
     Left = 6u8,
     Right = 7u8,
-    // 02
     Straight = 8u8,
     FirstAid = 9u8,
     FourthCategory = 10u8,
     ThirdCategory = 11u8,
-    // 03
     SecondCategory = 12u8,
     FirstCategory = 13u8,
     HorsCategory = 14u8,
     Sprint = 15u8,
-    // 04
     LeftFork = 16u8,
     RightFork = 17u8,
     MiddleFork = 18u8,
     SlightLeft = 19u8,
-    // 05
     SharpLeft = 20u8,
     SlightRight = 21u8,
     SharpRight = 22u8,
     UTurn = 23u8,
-    // 06
     SegmentStart = 24u8,
     SegmentEnd = 25u8,
     Campsite = 27u8,
     AidStation = 28u8,
-    // 07
     RestArea = 29u8,
     GeneralDistance = 30u8, // Used with UpAhead
     Service = 31u8,
     EnergyGel = 32u8,
-    // 08
     SportsDrink = 33u8,
     MileMarker = 34u8,
     Checkpoint = 35u8,
     Shelter = 36u8,
-    // 09
     MeetingSpot = 37u8,
     Overlook = 38u8,
     Toilet = 39u8,
     Shower = 40u8,
-    // 10
     Gear = 41u8,
     SharpCurve = 42u8,
     SteepIncline = 43u8,
     Tunnel = 44u8,
-    // 11
     Bridge = 45u8,
     Obstacle = 46u8,
     Crossing = 47u8,
     Store = 48u8,
-    // 12
     Transition = 49u8,
     Navaid = 50u8,
     Transport = 51u8,
     Alert = 52u8,
-    // 13
     Info = 53u8,
 }
 
@@ -719,6 +747,7 @@ pub struct CourseFile<'a> {
     course: &'a Course,
     start_time: DateTime<Utc>,
     speed: MeterPerSecond<f64>,
+    sport: Sport,
 }
 
 impl<'a> CourseFile<'a> {
@@ -726,11 +755,17 @@ impl<'a> CourseFile<'a> {
     ///
     /// `start_time` and `speed` together determine the timestamps of the
     /// records that will be written to the course file.
-    pub fn new(course: &'a Course, start_time: DateTime<Utc>, speed: MeterPerSecond<f64>) -> Self {
+    pub fn new(
+        course: &'a Course,
+        start_time: DateTime<Utc>,
+        speed: MeterPerSecond<f64>,
+        sport: Sport,
+    ) -> Self {
         Self {
             course,
             start_time,
             speed,
+            sport,
         }
     }
 
@@ -772,7 +807,7 @@ impl<'a> CourseFile<'a> {
                 .name
                 .clone()
                 .unwrap_or("Untitled course".to_owned()),
-            Sport::Cycling,
+            self.sport,
         )
         .encode(1u8, &mut dw)?;
 

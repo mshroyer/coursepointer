@@ -56,8 +56,8 @@ mod types;
 use std::convert::Infallible;
 use std::io::{BufRead, Write};
 
-use chrono::Utc;
-use dimensioned::si::{Meter, MeterPerSecond};
+use chrono::{DateTime, TimeZone, Utc};
+use dimensioned::si::{M, Meter, MeterPerSecond, S};
 pub use fit::FitEncodeError;
 use thiserror::Error;
 use tracing::{Level, debug, span};
@@ -66,7 +66,7 @@ use crate::algorithm::AlgorithmError;
 use crate::course::{
     Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions,
 };
-pub use crate::fit::{CourseFile, CoursePointType};
+pub use crate::fit::{CourseFile, CoursePointType, Sport};
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
 pub use crate::measure::{DEG, Degree};
@@ -106,7 +106,7 @@ pub type Result<T> = std::result::Result<T, CoursePointerError>;
 
 /// Summarizes the result of converting GPX into a FIT course
 ///
-/// The result of a successful invocation of [`convert_gpx`].
+/// The result of a successful invocation of [`convert_gpx_to_fit`].
 #[derive(Debug)]
 pub struct ConversionInfo {
     /// The name of the course that was converted, if given
@@ -138,15 +138,15 @@ pub struct ConversionInfo {
 /// "virtual partner".
 ///
 /// This combines the behavior of [`read_gpx`] and [`write_fit_course`].
-pub fn convert_gpx<R: BufRead, W: Write>(
+pub fn convert_gpx_to_fit<R: BufRead, W: Write>(
     gpx_input: R,
     fit_output: W,
     course_options: CourseSetOptions,
-    fit_speed: MeterPerSecond<f64>,
+    fit_options: WriteFitOptions,
 ) -> Result<ConversionInfo> {
     let mut course_set = read_gpx(course_options, gpx_input)?;
     let course = course_set.courses.remove(0);
-    write_fit_course(&course, fit_speed, fit_output)?;
+    write_fit_course(&course, fit_output, fit_options)?;
 
     Ok(ConversionInfo {
         course_name: course.name.clone(),
@@ -215,6 +215,53 @@ pub fn read_gpx<R: BufRead>(options: CourseSetOptions, gpx_input: R) -> Result<C
     Ok(builder.build()?)
 }
 
+/// Options for writing a FIT course.
+#[derive(Clone, Debug)]
+pub struct WriteFitOptions {
+    speed: MeterPerSecond<f64>,
+    timestamp: DateTime<Utc>,
+    sport: Sport,
+}
+
+impl WriteFitOptions {
+    /// Write the fit file using the given speed for record timestamps
+    ///
+    /// This has the effect of setting the speed of the Virtual Partner on
+    /// compatible Garmin devices.
+    pub fn with_speed(mut self, speed: MeterPerSecond<f64>) -> Self {
+        self.speed = speed;
+        self
+    }
+
+    /// Set the timestamp at which the course starts
+    ///
+    /// Controls the timestamps on lap and record messages.  An arbitrary but
+    /// consistent time will be used if left unset.
+    pub fn with_timestamp(mut self, timestamp: DateTime<Utc>) -> Self {
+        self.timestamp = timestamp;
+        self
+    }
+
+    /// Set the course's sport
+    pub fn with_sport(mut self, sport: Sport) -> Self {
+        self.sport = sport;
+        self
+    }
+}
+
+impl Default for WriteFitOptions {
+    fn default() -> Self {
+        Self {
+            speed: 8.0 * M / S,
+            // Defaulting to Utc::now() would mean FIT writes aren't
+            // reproducible, so let's arbitrarily go with my niece's birthday as
+            // a consistent default.
+            timestamp: Utc.with_ymd_and_hms(2019, 11, 23, 00, 00, 00).unwrap(),
+            sport: Sport::Cycling,
+        }
+    }
+}
+
 /// Write a single [`Course`] into a GPX course file
 ///
 /// The `fit_speed` parameter sets a speed for placing timestamps along the FIT
@@ -222,10 +269,10 @@ pub fn read_gpx<R: BufRead>(options: CourseSetOptions, gpx_input: R) -> Result<C
 /// "virtual partner".
 pub fn write_fit_course<W: Write>(
     course: &Course,
-    fit_speed: MeterPerSecond<f64>,
     fit_output: W,
+    options: WriteFitOptions,
 ) -> Result<()> {
-    let course_file = CourseFile::new(course, Utc::now(), fit_speed);
+    let course_file = CourseFile::new(course, options.timestamp, options.speed, options.sport);
     course_file.encode(fit_output)?;
     Ok(())
 }

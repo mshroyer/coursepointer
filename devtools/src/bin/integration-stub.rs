@@ -6,7 +6,7 @@ use anyhow::{Result, anyhow};
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use coursepointer::course::{CourseSetBuilder, CourseSetOptions};
-use coursepointer::{CourseFile, DEG, GeoPoint};
+use coursepointer::{CourseFile, DEG, GeoPoint, Sport};
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::M;
 use dimensioned::si::f64consts::HR;
@@ -84,6 +84,7 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
         &course,
         parse_rfc9557_utc(&spec.start_time)?,
         18.0 * (KILO * M) / HR,
+        Sport::Cycling,
     );
     course_file.encode(&mut fit_file)?;
     Ok(())

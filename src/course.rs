@@ -114,6 +114,7 @@ macro_rules! iter_work {
 }
 
 /// Options for building a course set
+#[derive(Clone, Debug)]
 pub struct CourseSetOptions {
     /// The maximum distance between a waypoint and a route, within which the
     /// waypoint will be considered to be a course point along the corresponding
@@ -134,6 +135,7 @@ pub struct CourseSetOptions {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "cli", strum(serialize_all = "kebab-case"))]
 #[cfg_attr(feature = "cli", clap(rename_all = "kebab-case"))]
+#[non_exhaustive]
 pub enum InterceptStrategy {
     /// The nearest intercept should be chosen as the course point.
     Nearest,
