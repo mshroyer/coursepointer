@@ -183,7 +183,9 @@ class TestFIT:
 
         assert field(mesgs, "file_id", 0, "product_name") == "CoursePointer"
 
-    def test_file_creator_versions(self, data, coursepointer_cli, caching_convert, caching_mesgs):
+    def test_file_creator_versions(
+        self, data, coursepointer_cli, caching_convert, caching_mesgs
+    ):
         out_file = caching_convert(data / "cptr004.gpx")
         mesgs = caching_mesgs(out_file)
 
