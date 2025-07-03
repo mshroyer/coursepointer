@@ -1,10 +1,11 @@
 [![CI](https://github.com/mshroyer/coursepointer/actions/workflows/ci.yml/badge.svg)](https://github.com/mshroyer/coursepointer/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/coursepointer.svg)](https://crates.io/crates/coursepointer)
+[![API Docs](https://docs.rs/coursepointer/badge.svg)](https://docs.rs/coursepointer)
 
 # CoursePointer
 
-A command-line tool that converts GPX routes/tracks and waypoints into Garmin
-FIT course files with [course
+A command-line tool and library that converts GPX routes/tracks and waypoints
+into Garmin FIT course files with [course
 points](https://support.garmin.com/en-US/?faq=aisqGZTLwH5LvbExSdO6L6). This
 lets your waypoints appear in [Up
 Ahead](https://support.garmin.com/en-US/?faq=lQMibRoY2I5Y4pP8EXgxv7) on
@@ -14,6 +15,9 @@ remaining (and on some devices, estimated time) to reach them.
 This provides a way to author courses in third-party applications that don't
 export to course points, while still using Up Ahead functionality as though
 the course had been created in Garmin Connect.
+
+The library also offers some lower-level features for building arbitrary FIT
+courses.  See [the API docs](https://docs.rs/coursepointer) for details.
 
 ## Usage example
 
