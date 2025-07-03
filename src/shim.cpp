@@ -55,7 +55,7 @@ void geocentric_forward(
 }
 
 rust::Str geographiclib_version() noexcept {
-  return GEOGRAPHICLIB_VERSION_STRING;
+  return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
 }
 
 static std::string ver_string;

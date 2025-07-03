@@ -65,7 +65,6 @@ use crate::algorithm::AlgorithmError;
 use crate::course::{
     Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions,
 };
-pub use crate::ffi::{compiler_version, geographiclib_version};
 pub use crate::fit::{CourseFile, CoursePointType, Sport};
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};

@@ -8,6 +8,7 @@ use dimensioned::si::Meter;
 
 use crate::GeoPoint;
 use crate::algorithm::{FromGeoPoints, intercept_distance_floor, karney_interception};
+pub use crate::ffi::{compiler_version, geographiclib_version};
 pub use crate::fit::PROFILE_VERSION;
 use crate::geographic::geodesic_inverse;
 pub use crate::measure::{Kilometer, Mile};
