@@ -32,7 +32,9 @@ void geocentric_forward(
     double lat, double lon, double h,
     double& x, double& y, double& z);
 
-rust::Str geographiclib_version_string();
+rust::Str geographiclib_version() noexcept;
+
+rust::Str compiler_version() noexcept;
 
 }  // namespace CoursePointer
 

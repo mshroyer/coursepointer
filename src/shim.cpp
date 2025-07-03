@@ -5,6 +5,9 @@
 
 #include "rust/cxx.h"
 
+#define STRINGIFY_IMPL(x) #x
+#define STRINGIFY(x) STRINGIFY_IMPL(x)
+
 using GeographicLib::Geocentric;
 using GeographicLib::Geodesic;
 using GeographicLib::Gnomonic;
@@ -49,8 +52,16 @@ void geocentric_forward(
   geocentric.Forward(lat, lon, h, x, y, z);
 }
 
-rust::Str geographiclib_version_string() {
+rust::Str geographiclib_version() noexcept {
   return GEOGRAPHICLIB_VERSION_STRING;
+}
+
+rust::Str compiler_version() noexcept {
+#ifdef _MSC_VER
+  return "MSVC " STRINGIFY(_MSC_VER);
+#else
+  return "unknown";
+#endif
 }
 
 }  // namespace CoursePointer

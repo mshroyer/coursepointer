@@ -13,7 +13,7 @@ use coursepointer::course::{CourseSetOptions, InterceptStrategy};
 use coursepointer::internal::{Kilometer, Mile};
 use coursepointer::{
     ConversionInfo, CoursePointType, CoursePointerError, FitCourseOptions, FitEncodeError, Sport,
-    geographiclib_version_string,
+    compiler_version, geographiclib_version,
 };
 use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M, Meter};
@@ -37,10 +37,11 @@ pub const CLAP_STYLING: Styles = Styles::styled()
 
 static LONG_VERSION: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "{} (GeographicLib {}, rustc {})",
+        "{} (GeographicLib {}, rustc {}, {})",
         crate_version!(),
-        geographiclib_version_string(),
+        geographiclib_version(),
         env!("RUSTC_VERSION"),
+        compiler_version(),
     )
 });
 

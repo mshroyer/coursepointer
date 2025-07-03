@@ -65,7 +65,7 @@ use crate::algorithm::AlgorithmError;
 use crate::course::{
     Course, CourseError, CoursePoint, CourseSet, CourseSetBuilder, CourseSetOptions,
 };
-pub use crate::ffi::geographiclib_version_string;
+pub use crate::ffi::{compiler_version, geographiclib_version};
 pub use crate::fit::{CourseFile, CoursePointType, Sport};
 use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
@@ -286,6 +286,8 @@ mod ffi {
             z: &mut f64,
         ) -> Result<()>;
 
-        fn geographiclib_version_string() -> &'static str;
+        fn geographiclib_version() -> &'static str;
+
+        fn compiler_version() -> &'static str;
     }
 }
