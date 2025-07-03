@@ -327,10 +327,7 @@ impl DefinitionFrame {
 /// Names and numeric values manually copied from Profile.xlsx in FIT SDK
 /// 21.171.00.
 #[repr(u8)]
-#[cfg_attr(
-    feature = "cli",
-    derive(strum::Display, strum::EnumIter, clap::ValueEnum)
-)]
+#[cfg_attr(feature = "cli", derive(strum::Display, clap::ValueEnum))]
 #[derive(Clone, Copy, PartialEq, EnumString, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
@@ -614,10 +611,7 @@ impl RecordMessage {
 /// for how these may appear on devices in practice.  The `Generic` variant
 /// typically renders as a pin or a flag icon.
 #[repr(u8)]
-#[cfg_attr(
-    feature = "cli",
-    derive(strum::Display, strum::EnumIter, clap::ValueEnum)
-)]
+#[cfg_attr(feature = "cli", derive(strum::Display, clap::ValueEnum))]
 #[derive(Clone, Copy, PartialEq, EnumString, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
