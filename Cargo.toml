@@ -10,7 +10,15 @@ authors = ["Mark Shroyer <mark@shroyer.name>"]
 repository = "https://github.com/mshroyer/coursepointer/"
 readme = "README.md"
 categories = ["command-line-utilities", "science::geo"]
-exclude = ["/.github", "/docs", "/integration", "/scripts", "/testdata"]
+include = [
+    "/.cargo",
+    "/build.rs",
+    "/geographiclib",
+    "/include",
+    "/res",
+    "/src",
+    "/LICENSE.txt",
+]
 
 [package.metadata.winresource]
 FileDescription = "CoursePointer CLI"
