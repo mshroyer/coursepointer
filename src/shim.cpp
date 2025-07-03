@@ -61,12 +61,11 @@ rust::Str geographiclib_version() noexcept {
 
 static std::string ver_string;
 
-const char* msvc_version() noexcept {
+const char* msvc_version(unsigned long full_ver) noexcept {
   if (!ver_string.empty()) {
     return ver_string.c_str();
   }
 
-  unsigned long full_ver = _MSC_FULL_VER;
   auto major = full_ver / 10000000;
   auto minor = (full_ver / 100000) % 100;
   auto patch = full_ver % 100000;
@@ -79,9 +78,16 @@ const char* msvc_version() noexcept {
 
 rust::Str compiler_version() noexcept {
 #if defined(_MSC_FULL_VER)
-  return msvc_version();
+  return msvc_version(_MSC_FULL_VER);
 #elif defined(__clang__)
   return "clang " STRINGIFY(__clang_major__) "." STRINGIFY(__clang_minor__) "." STRINGIFY(__clang_patchlevel__);
+#elif defined(__GNUC__)
+#ifdef __MINGW32__
+#define CCNAME "mingw"
+#else
+#define CCNAME "gcc"
+#endif
+  return CCNAME " " STRINGIFY(__GNUC__) "." STRINGIFY(__GNUC_MINOR__) "." STRINGIFY(__GNUC_PATCHLEVEL__);
 #else
   return "unknown";
 #endif
