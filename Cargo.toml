@@ -42,7 +42,7 @@ lazy_static = { version = "1.5.0", optional = true } # Patch for MVS
 rustversion = { version = "1.0.6", optional = true } # Patch for MVS
 tracing = { version = "0.1.41", features = ["log"] }
 tracing-subscriber = { version = "0.3.19", optional = true, features = ["env-filter"] }
-tracing-span-tree = "0.1.1"
+tracing-span-tree = { version = "0.1.1", optional = true }
 strum = { version = "0.27.1", features = ["derive"] }
 sys-locale = { version = "0.3.2", optional = true }
 phf = { version = "0.12.1", features = ["macros"] }
@@ -62,7 +62,16 @@ serde = { version = "1.0.219", features = ["derive"] }
 
 [features]
 default = ["cli", "rayon"]
-cli = ["dep:anyhow", "dep:clap", "dep:clap-cargo", "dep:regex", "dep:sys-locale", "dep:tracing-appender", "dep:tracing-subscriber"]
+cli = [
+    "dep:anyhow",
+    "dep:clap",
+    "dep:clap-cargo",
+    "dep:regex",
+    "dep:sys-locale",
+    "dep:tracing-appender",
+    "dep:tracing-span-tree",
+    "dep:tracing-subscriber",
+]
 full-geolib = []
 rayon = ["dep:rayon"]
 
@@ -72,7 +81,7 @@ rustc_version = "0.4.1"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winapi = { version = "0.3.9", features = ["winnt"] }
-winresource = "0.1.22"
+winresource = "0.1.22"  # Ideally should only be a dep when cli enabled
 
 [workspace]
 resolver = "2"
