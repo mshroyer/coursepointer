@@ -1,4 +1,3 @@
-#include <optional>
 #include <sstream>
 
 #include <GeographicLib/Config.h>
