@@ -1,3 +1,6 @@
+#include <optional>
+#include <sstream>
+
 #include <GeographicLib/Config.h>
 #include <GeographicLib/Geocentric.hpp>
 #include <GeographicLib/Geodesic.hpp>
@@ -56,9 +59,27 @@ rust::Str geographiclib_version() noexcept {
   return GEOGRAPHICLIB_VERSION_STRING;
 }
 
+static std::string ver_string;
+
+const char* msvc_version() noexcept {
+  if (!ver_string.empty()) {
+    return ver_string.c_str();
+  }
+
+  unsigned long full_ver = _MSC_FULL_VER;
+  auto major = full_ver / 10000000;
+  auto minor = (full_ver / 100000) % 100;
+  auto patch = full_ver % 100000;
+
+  std::ostringstream s;
+  s << "MSVC " << major << "." << minor << "." << patch;
+  ver_string = s.str();
+  return ver_string.c_str();
+}
+
 rust::Str compiler_version() noexcept {
-#if defined(_MSC_VER)
-  return "MSVC " STRINGIFY(_MSC_VER);
+#if defined(_MSC_FULL_VER)
+  return msvc_version();
 #elif defined(__clang__)
   return "clang " STRINGIFY(__clang_major__) "." STRINGIFY(__clang_minor__) "." STRINGIFY(__clang_patchlevel__);
 #else
