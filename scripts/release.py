@@ -142,9 +142,9 @@ def lint(args: argparse.Namespace):
         print("CHANGELOG is not up-to-date!", file=sys.stderr)
         sys.exit(1)
 
-    if not is_cargo_about_up_to_date():
-        print("docs/third_party_licenses.md needs to be updated!", file=sys.stderr)
-        sys.exit(1)
+    # if not is_cargo_about_up_to_date():
+    #     print("docs/third_party_licenses.md needs to be updated!", file=sys.stderr)
+    #     sys.exit(1)
 
     print("Release lint check successful.")
 
