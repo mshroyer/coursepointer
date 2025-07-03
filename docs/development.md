@@ -10,8 +10,8 @@ git submodule update --init
 
 ## Running and testing
 
-The CLI runs with `cargo run -- <CLI_ARGS>`, and Rust-based tests run with
-`cargo test`.
+The CLI runs with `cargo run -F cli -- <CLI_ARGS>`, and Rust-based tests run
+with `cargo test`.
 
 Many of the most important test cases are written as Python-based integration
 tests instead of Rust tests, in order to use the

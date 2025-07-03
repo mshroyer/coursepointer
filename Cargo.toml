@@ -68,7 +68,7 @@ rand = "0.9.1"
 serde = { version = "1.0.219", features = ["derive"] }
 
 [features]
-default = ["cli", "rayon"]
+default = ["rayon"]
 cli = [
     "dep:anyhow",
     "dep:clap",

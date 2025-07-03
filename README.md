@@ -60,7 +60,7 @@ Alternately, to build the latest release from source, install a Rust toolchain
 with [rustup](https://rustup.rs/) and then run:
 
 ```
-cargo install --locked coursepointer
+cargo install --locked -F cli coursepointer
 ```
 
 On your command line, run `coursepointer help` for usage information.

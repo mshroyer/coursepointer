@@ -30,10 +30,12 @@ def cargo() -> Cargo:
 
 @pytest.fixture(scope="session")
 def coursepointer_cli(cargo) -> RustBinFunc:
-    extra_features = os.getenv("CARGO_EXTRA_FEATURES", "")
+    extra_features = set(os.getenv("CARGO_EXTRA_FEATURES", "").split(","))
+    # We always need the cli feature
+    extra_features.add("cli")
     default_features = os.getenv("CARGO_DEFAULT_FEATURES", "true") == "true"
     return cargo.make_bin_func(
-        None, "coursepointer", Profile.TEST, extra_features, default_features
+        None, "coursepointer", Profile.TEST, ",".join(extra_features), default_features
     )
 
 

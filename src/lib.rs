@@ -32,15 +32,19 @@
 //!
 //! # Feature flags
 //!
-//! - `cli` enables the additional dependencies needed by the CLI.  This is
-//!   enabled by default, but may be disabled to prevent unnecessary transient
-//!   dependencies if used as a library.
+//! - `cli` enables the additional dependencies needed by the CLI.  This needs
+//!   to be explicitly enabled if installing the CLI with `cargo install`.
+//!
 //! - `rayon` enables computing course points in parallel using [rayon](https://docs.rs/rayon/latest/rayon/).
 //!   This improves the binary's runtime significantly in stress tests, and at
-//!   least doesn't hurt in more typical cases, on my machine.
+//!   least doesn't hurt in more typical cases, on my machine.  Enabled by
+//!   default.
+//!
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
 //!   of a hand-picked subset.  This is mainly useful when experimenting with
-//!   new FFI additions, otherwise it simply slows the build down.
+//!   new FFI additions, otherwise it simply slows the build down.  This is just
+//!   for convenience when hacking on this crate and experimenting with adding
+//!   new FFIs, and would merely increase build time if enabled on main.
 
 mod algorithm;
 pub mod course;
