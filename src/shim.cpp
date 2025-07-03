@@ -57,8 +57,10 @@ rust::Str geographiclib_version() noexcept {
 }
 
 rust::Str compiler_version() noexcept {
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
   return "MSVC " STRINGIFY(_MSC_VER);
+#elif defined(__clang__)
+  return "clang " STRINGIFY(__clang_major__) "." STRINGIFY(__clang_minor__) "." STRINGIFY(__clang_patchlevel__);
 #else
   return "unknown";
 #endif
