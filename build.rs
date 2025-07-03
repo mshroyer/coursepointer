@@ -75,7 +75,7 @@ fn main() {
     }
 
     let ver = rustc_version::version().expect("Failed to get rustc version");
-    println!("cargo:rustc-env=RUSTC_VERSION={}", ver);
+    println!("cargo:rustc-env=RUSTC_VERSION={ver}");
 
     // Thankfully GeographicLib has a pretty simple build, so we can just compile
     // all the source files here rather than go through CMake.
