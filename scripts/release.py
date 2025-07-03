@@ -43,7 +43,7 @@ def is_cargo_about_up_to_date() -> bool:
             "cargo",
             "about",
             "generate",
-            "about.hbs",
+            "scripts/about.hbs",
             "-o",
             Path("docs") / "third_party_licenses.md",
         ],

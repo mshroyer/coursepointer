@@ -5,4 +5,4 @@
 
 set -e
 
-cargo about generate about.hbs > docs/third_party_licenses.md
+cargo about generate scripts/about.hbs -o docs/third_party_licenses.md
