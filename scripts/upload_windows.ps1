@@ -4,7 +4,7 @@ if ($LASTEXITCODE -ne 0) {
   throw "release.py head failed with exit code $LASTEXITCODE"
 }
 
-cargo build -r
+cargo build -F cli -r
 if ($LASTEXITCODE -ne 0) {
   throw "cargo build failed with exit code $LASTEXITCODE"
 }
