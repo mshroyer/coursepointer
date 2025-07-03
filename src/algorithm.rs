@@ -528,9 +528,9 @@ mod tests {
         Ok(())
     }
 
-    // Tests below are for the crucial property that the
-    // intercept_distance_floor is in fact smaller than the geodesic intercept
-    // distance produced by karney_intercept.
+    // Tests below are to verify the crucial property that the distance returned
+    // by intercept_distance_floor is in fact no greater than the geodesic
+    // intercept distance produced by karney_intercept.
 
     #[test]
     fn test_intercept_distance_floor() -> Result<()> {

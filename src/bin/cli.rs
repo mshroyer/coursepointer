@@ -71,6 +71,10 @@ struct Cli {
     #[clap(long, short = 'L', default_value_t = Level::ERROR)]
     log_level: Level,
 
+    /// Log to a file
+    #[clap(long)]
+    log_file: Option<PathBuf>,
+
     /// The unit of distance used in output on the command line.
     ///
     /// If unspecified, this will default to either km or mi based on your
@@ -211,8 +215,10 @@ struct SampleCoursePointsArgs {
 enum Commands {
     /// Convert a GPX file to a FIT file with course points
     ///
-    /// Given a GPX file containing a single track, converts the track to a
-    /// Garmin FIT course file.
+    /// Given a GPX file containing a single route or track and (optionally)
+    /// waypoints, converts the route or track to a Garmin FIT course file,
+    /// including course points for any of the waypoints that are located along
+    /// the route.
     Convert(ConvertArgs),
 
     /// Print software license info
@@ -395,8 +401,16 @@ fn main() -> Result<()> {
     // we preserve Clap's pretty formatting of usage info.
     let args = Cli::parse();
 
+    let log_w: Box<dyn std::io::Write + Send> = match &args.log_file {
+        Some(path) => Box::new(File::create(path).context("Creating the log file")?),
+        None => Box::new(std::io::stderr()),
+    };
+    let (appender, _guard) = tracing_appender::non_blocking(log_w);
+
     // Enable the TRACE-level span tree layer for fmt logging level DEBUG.
     let fmt_layer = fmt::Layer::new()
+        .with_writer(appender)
+        .with_ansi(args.log_file.is_none())
         .with_target(false)
         .with_span_events(FmtSpan::ENTER | FmtSpan::CLOSE)
         .with_filter(LevelFilter::from_level(args.log_level));
@@ -408,6 +422,8 @@ fn main() -> Result<()> {
     } else {
         tracing::subscriber::set_global_default(Registry::default().with(fmt_layer))?;
     }
+
+    debug!("coursepointer {}", clap::crate_version!());
 
     let report = match &args.cmd {
         Commands::Convert(sub_args) => convert_cmd(&args, sub_args),
