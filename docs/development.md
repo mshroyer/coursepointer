@@ -59,13 +59,17 @@ When creating a release, remember to:
 
 The [release
 workflow](https://github.com/mshroyer/coursepointer/actions/workflows/release.yml)
-will check that these things are correct (and also run all other automated
-tests) before proceeding, but you can verify them locally before pushing by
-running `scripts/release.py lint`.
+will check that most of these things are correct (and also run all other
+automated tests) before proceeding, but you can verify them locally before
+pushing by running `scripts/release.py lint`.
 
-On, the new GitHub release will be left in draft state for review before
-publishing.  Publishing the crate to crates.io is also a separate, manual
-step.
+On workflow success, the new GitHub release will be left in draft state for
+review before publishing.  Publishing the crate to crates.io is also a
+separate, manual step:
+
+```
+cargo publish
+```
 
 ## Profiling
 
