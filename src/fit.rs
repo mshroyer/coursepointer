@@ -322,7 +322,7 @@ impl DefinitionFrame {
     }
 }
 
-/// Course point types
+/// Sport types
 ///
 /// Names and numeric values manually copied from Profile.xlsx in FIT SDK
 /// 21.171.00.
@@ -749,7 +749,7 @@ fn timedelta_from_seconds(s: Second<f64>) -> Result<TimeDelta> {
     ))
 }
 
-/// Options for writing a FIT course.
+/// Options for writing a FIT course
 #[derive(Clone, Debug)]
 pub struct FitCourseOptions {
     speed: MeterPerSecond<f64>,
@@ -761,7 +761,7 @@ pub struct FitCourseOptions {
 }
 
 impl FitCourseOptions {
-    /// Write the fit file using the given speed for record timestamps
+    /// Write the FIT file using the given speed for record timestamps
     ///
     /// This has the effect of setting the speed of the Virtual Partner on
     /// compatible Garmin devices.
@@ -772,8 +772,8 @@ impl FitCourseOptions {
 
     /// Set the timestamp at which the course starts
     ///
-    /// Controls the timestamps on lap and record messages.  An arbitrary but
-    /// consistent time will be used if left unset.
+    /// Controls the timestamps on lap and record messages.  An arbitrary, but
+    /// consistent and reproducible, time will be used if left unset.
     pub fn with_start_time(mut self, start_time: DateTime<Utc>) -> Self {
         self.start_time = start_time;
         self
@@ -781,7 +781,7 @@ impl FitCourseOptions {
 
     /// Set the course's sport
     ///
-    /// Defaults to Cycling if unset.
+    /// Defaults to `cycling` if unset.
     pub fn with_sport(mut self, sport: Sport) -> Self {
         self.sport = sport;
         self
@@ -798,17 +798,17 @@ impl FitCourseOptions {
 
     /// Set the software version to encode
     ///
-    /// This goes in the `file_creator` message's `software_version` field.
-    /// Zero by default.
+    /// This goes in the `file_creator` message's `software_version` field. Zero
+    /// by default.
     pub fn with_software_version(mut self, software_version: u16) -> Self {
         self.software_version = software_version;
         self
     }
 
-    /// Set the software version to encode
+    /// Set the hardware version to encode
     ///
-    /// This goes in the `file_creator` message's `software_version` field.
-    /// Zero by default.
+    /// This goes in the `file_creator` message's `hardware_version` field. Zero
+    /// by default.
     pub fn with_hardware_version(mut self, hardware_version: u8) -> Self {
         self.hardware_version = hardware_version;
         self

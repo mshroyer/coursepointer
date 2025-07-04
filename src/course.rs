@@ -49,10 +49,10 @@
 //!
 //! # Units of measure
 //!
-//! Courses and related types here us zero-cost unit of measure types from
+//! Courses and related types here use zero-cost unit of measure types from
 //! [dimensioned](https://docs.rs/dimensioned/latest/dimensioned/) to avoid type
-//! confusion of speed and distance quantities, and analogous types implemented
-//! here for angular degrees.
+//! confusion of speed and distance quantities, and analogous types are
+//! implemented here for angular degrees.
 //!
 //! You can obtain a dimensional quantity by multiplying a constant representing
 //! the unit of measure, for example:
@@ -157,6 +157,10 @@ impl Default for CourseSetOptions {
 }
 
 impl CourseSetOptions {
+    /// Sets the threshold distance for course point interception
+    ///
+    /// Sets a distance, in meters, below which a waypoint may be considered to
+    /// "intercept" a route, turning it into a course point.
     pub fn with_threshold(self, threshold: Meter<f64>) -> Self {
         Self {
             threshold,
@@ -164,6 +168,10 @@ impl CourseSetOptions {
         }
     }
 
+    /// Set strategy for handling duplicate intercepts
+    ///
+    /// Controls how waypoints that intercept the route multiple times (within
+    /// the threshold) are handled.
     pub fn with_strategy(self, strategy: InterceptStrategy) -> Self {
         Self {
             threshold: self.threshold,
@@ -172,7 +180,7 @@ impl CourseSetOptions {
     }
 }
 
-/// A set of [`Course`]s and their associated course points.
+/// A collection of [`Course`]s and their associated course points.
 pub struct CourseSet {
     /// Courses with any associated course points.
     pub courses: Vec<Course>,
@@ -664,8 +672,8 @@ impl<'a> SegmentedCourseBuilder<'a> {
 /// A course record
 ///
 /// Represents a single point along a course, analogous to a route point or a
-/// track point.  However, a course record additionally contains the points'
-/// cumulative distances along the course.
+/// track point.  However, in contrast with a route point, a course record
+/// additionally contains the points' cumulative distances along the course.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Record {
     /// Position including optional elevation
@@ -715,8 +723,8 @@ impl TryFrom<Waypoint<GeoPoint>> for Waypoint<GeoAndXyzPoint> {
 pub struct CoursePoint {
     /// Position of the point's interception with the course
     ///
-    /// Note that this is calculated as interception from the waypoint, so the
-    /// course point's position can be different from that of the original
+    /// Note that this is calculated as the interception from the waypoint, so
+    /// the course point's position can be different from that of the original
     /// waypoint.
     pub point: GeoPoint,
 

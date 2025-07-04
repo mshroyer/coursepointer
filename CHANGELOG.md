@@ -1,5 +1,9 @@
 # CoursePointer Changelog
 
+## v0.3.1
+
+- Fix issues with rust docs.
+
 ## v0.3.0
 
 - Made the `course` module a public library that can be used to build courses

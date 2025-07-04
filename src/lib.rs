@@ -42,9 +42,7 @@
 //!
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
 //!   of a hand-picked subset.  This is mainly useful when experimenting with
-//!   new FFI additions, otherwise it simply slows the build down.  This is just
-//!   for convenience when hacking on this crate and experimenting with adding
-//!   new FFIs, and would merely increase build time if enabled on main.
+//!   new FFI additions, otherwise it simply slows the build down.
 
 mod algorithm;
 pub mod course;
