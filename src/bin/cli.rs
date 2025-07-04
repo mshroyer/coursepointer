@@ -389,7 +389,7 @@ fn license_cmd() -> Result<String> {
 This executable contains code from third-party open source projects, whose
 licenses are shown here:
 
-https://github.com/mshroyer/coursepointer/blob/{}/docs/third_party_licenses.md
+https://github.com/mshroyer/coursepointer/blob/v{}/docs/third_party_licenses.md
 "#,
         crate_version!(),
     )?;
