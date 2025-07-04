@@ -70,6 +70,12 @@ where
     )?
     .point2;
 
+    // TODO: Experiment with different numbers of gnomonic iterations
+    //
+    // I'm just using 10 iterations here because it's what Karney suggested in
+    // his example solution to the interception problem, and because it works ok
+    // in practice.  But it'd be worth checking whether a smaller number might
+    // work.
     for _ in 0..10 {
         let start = gnomonic_forward(&intercept, segment.start.geo())?;
         let end = gnomonic_forward(&intercept, segment.end.geo())?;
@@ -122,13 +128,14 @@ where
     let dist = cartesian_intercept_distance(segment, point)?;
     let depth = max_chord_depth(segment);
 
-    // Fuzzing with quickcheck revealed that, presumably due to limits of numerical
-    // precision, in some cases with points close together the floor would actually
-    // be larger than the result computed by karney_intercept, by about a nanometer.
+    // Fuzzing with quickcheck revealed that--presumably due to limits of
+    // numeric precision--in some cases where test points were nearby one of a
+    // short segment's endpoints, the floor would actually be larger by about a
+    // nanometer than the result computed by karney_intercept.
     //
-    // Here we just add a micrometer of padding to our lower bound for the
-    // intercept distance, after which I can no longer reproduce that error.
-    // Ok(dist - (depth + 0.000_001 * M))
+    // So on top of the chord depth, here we also subtract a micrometer of
+    // padding from our lower bound for the intercept distance, after which I
+    // can no longer reproduce that error.
     Ok(dist - (depth + 0.000_001 * M))
 }
 
@@ -136,6 +143,9 @@ const WGS84_A: f64 = 6378137.0;
 const WGS84_F: f64 = 1.0 / 298.257223563;
 const WGS84_B: f64 = WGS84_A * (1.0 - WGS84_F);
 
+/// The maximum possible depth on WGS84 of a chord with a given length
+///
+/// See the Mathematica notebook for rationale.
 fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Meter<f64> {
     let chord_length = norm3(subtract_xyzpoints(&segment.start.xyz(), &segment.end.xyz()));
     WGS84_A * (1.0 - (1.0 - chord_length * chord_length / (4.0 * WGS84_B * WGS84_B)).sqrt()) * M
@@ -150,6 +160,9 @@ where
 {
     let b = subtract_xyzpoints(&segment.end.xyz(), &segment.start.xyz());
     let a = subtract_xyzpoints(point, segment.start.xyz());
+
+    // The same calculation used to find segment intercepts in each iteration of
+    // [`karney_intercept`], just in 3D space!
     let intercept = if dot3(a, b) <= 0.0 {
         Vec3 {
             x: 0.0,
@@ -158,10 +171,10 @@ where
         }
     } else {
         let a_proj = b * (dot3(a, b) / dot3(b, b));
-        if dot3(a_proj, a_proj) < dot3(b, b) {
-            a_proj
-        } else {
+        if dot3(a_proj, a_proj) >= dot3(b, b) {
             b
+        } else {
+            a_proj
         }
     };
     Ok(norm3(a - intercept) * M)
