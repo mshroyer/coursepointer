@@ -65,7 +65,7 @@ jobs:
         # for the coursepointer CLI tests anyway, but it would be redundant to
         # run the integration tests here if we're explicitly testing alternative
         # feature combinations without cli.
-      - run: uv run pytest
+      - run: uv run --package integration pytest
         if: ${{ inputs.default_features || contains(inputs.extra_features, 'cli') }}
 
       - uses: ./.github/actions/lint

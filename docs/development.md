@@ -20,7 +20,7 @@ reference implementation of FIT decoding.  Run these with
 [uv](https://docs.astral.sh/uv/):
 
 ```
-uv run pytest
+uv run --package integration pytest
 ```
 
 Some of the integration tests use the nested `integration-stub` binary (in the
