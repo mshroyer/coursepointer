@@ -49,8 +49,8 @@ ruff format
 
 ## GitHub Actions and releasing
 
-Using GitHub Actions for CI and the release process.  Releases are created buy
-pushing a tag containing the new release's version number, e.g. `v1.2.3`.
+I'm using GitHub Actions for CI and the release process.  Releases are created
+by pushing a tag containing the new release's version number, e.g. `v1.2.3`.
 
 When creating a release, remember to:
 - Update the crate version
