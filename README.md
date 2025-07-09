@@ -12,6 +12,8 @@ Ahead](https://support.garmin.com/en-US/?faq=lQMibRoY2I5Y4pP8EXgxv7) on
 compatible Garmin watches and bicycle computers, showing the distance
 remaining (and on some devices, estimated time) to reach them.
 
+![demo on the terminal](docs/img/demo.svg)
+
 This provides a way to author courses in third-party applications that don't
 export to course points, while still using Up Ahead functionality as though
 the course had been created in Garmin Connect.
