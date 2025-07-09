@@ -56,6 +56,7 @@ mod point_type;
 mod types;
 
 use std::convert::Infallible;
+use std::ffi::CStr;
 use std::io::{BufRead, Write};
 
 use dimensioned::si::Meter;
@@ -231,6 +232,18 @@ pub fn write_fit_course<W: Write>(
     Ok(())
 }
 
+pub fn geographiclib_version() -> &'static str {
+    unsafe {
+        CStr::from_ptr(ffi::geographiclib_version())
+            .to_str()
+            .unwrap()
+    }
+}
+
+pub fn compiler_version() -> &'static str {
+    unsafe { CStr::from_ptr(ffi::compiler_version()).to_str().unwrap() }
+}
+
 /// CXX Generated FFI for GeographicLib
 ///
 /// This currently has to be inline in lib.rs because non-inline mods in proc
@@ -287,8 +300,8 @@ mod ffi {
             z: &mut f64,
         ) -> Result<()>;
 
-        fn geographiclib_version() -> &'static str;
+        fn geographiclib_version() -> *const c_char;
 
-        fn compiler_version() -> &'static str;
+        fn compiler_version() -> *const c_char;
     }
 }

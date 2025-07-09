@@ -5,8 +5,6 @@
 #include <GeographicLib/Geodesic.hpp>
 #include <GeographicLib/Gnomonic.hpp>
 
-#include "rust/cxx.h"
-
 #define STRINGIFY_IMPL(x) #x
 #define STRINGIFY(x) STRINGIFY_IMPL(x)
 
@@ -54,7 +52,7 @@ void geocentric_forward(
   geocentric.Forward(lat, lon, h, x, y, z);
 }
 
-rust::Str geographiclib_version() noexcept {
+const char* geographiclib_version() noexcept {
   return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
 }
 
@@ -75,7 +73,7 @@ const char* msvc_version(unsigned long full_ver) noexcept {
   return ver_string.c_str();
 }
 
-rust::Str compiler_version() noexcept {
+const char* compiler_version() noexcept {
 #if defined(_MSC_FULL_VER)
   return msvc_version(_MSC_FULL_VER);
 #elif defined(__clang__)
