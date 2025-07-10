@@ -4,6 +4,7 @@ use thiserror::Error;
 
 use crate::measure::{DEG, Degree};
 
+/// A type invariant error for basic types like [`GeoPoint`]
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum TypeError {
