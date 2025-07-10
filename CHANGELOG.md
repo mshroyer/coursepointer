@@ -1,5 +1,10 @@
 # CoursePointer Changelog
 
+## v0.3.2
+
+- `pub use TypeError` so external users can deal with type invariant errors
+  from `GeoPoint`.
+
 ## v0.3.1
 
 - Fix issues with rust docs.

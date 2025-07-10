@@ -72,8 +72,7 @@ use crate::geographic::GeographicError;
 use crate::gpx::{GpxItem, GpxReader};
 pub use crate::measure::{DEG, Degree};
 use crate::point_type::{GpxCreator, get_course_point_type, get_gpx_creator};
-pub use crate::types::GeoPoint;
-pub use crate::types::TypeError;
+pub use crate::types::{GeoPoint, TypeError};
 
 /// An error in a high-level library operation
 #[derive(Error, Debug)]
