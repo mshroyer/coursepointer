@@ -77,23 +77,27 @@ fn main() {
     let ver = rustc_version::version().expect("Failed to get rustc version");
     println!("cargo:rustc-env=RUSTC_VERSION={ver}");
 
-    // Thankfully GeographicLib has a pretty simple build, so we can just compile
-    // all the source files here rather than go through CMake.
-    cc::Build::new()
-        .cpp(true)
-        .flag_if_supported("-std=c++11")
-        .flag_if_supported("/std:c++11")
-        .file("src/shim.cpp")
-        .files(sources::geographiclib_cpp().unwrap())
-        .flag("-I./include")
-        .flag("-I./geographiclib/include")
-        .compile("geocxx");
+    let target = std::env::var("TARGET").expect("TARGET not set");
 
-    for file in sources::geographiclib_cpp().unwrap() {
-        println!("cargo:rerun-if-changed={}", file.display());
+    if target != "wasm32-unknown-unknown" {
+        // Thankfully GeographicLib has a pretty simple build, so we can just compile
+        // all the source files here rather than go through CMake.
+        cc::Build::new()
+            .cpp(true)
+            .flag_if_supported("-std=c++11")
+            .flag_if_supported("/std:c++11")
+            .file("src/shim.cpp")
+            .files(sources::geographiclib_cpp().unwrap())
+            .flag("-I./include")
+            .flag("-I./geographiclib/include")
+            .compile("geocxx");
+
+        for file in sources::geographiclib_cpp().unwrap() {
+            println!("cargo:rerun-if-changed={}", file.display());
+        }
+        println!("cargo:rerun-if-changed=src/shim.cpp");
+        println!("cargo:rerun-if-changed=include/shim.hpp");
     }
-    println!("cargo:rerun-if-changed=src/shim.cpp");
-    println!("cargo:rerun-if-changed=include/shim.hpp");
 
     #[cfg(target_os = "windows")]
     {
