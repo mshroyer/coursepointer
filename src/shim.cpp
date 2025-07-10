@@ -20,40 +20,60 @@ static_assert(std::is_same<GeographicLib::Math::real, double>::value,
 bool geodesic_inverse_with_azimuth(
     double lat1, double lon1, double lat2, double lon2,
     double& s12, double& azi1, double& azi2, double& a12) {
-  static auto geodesic = Geodesic::WGS84();
-  a12 = geodesic.Inverse(lat1, lon1, lat2, lon2, s12, azi1, azi2);
+  try {
+    static auto geodesic = Geodesic::WGS84();
+    a12 = geodesic.Inverse(lat1, lon1, lat2, lon2, s12, azi1, azi2);
+  } catch (...) {
+    return false;
+  }
   return true;
 }
 
 bool geodesic_direct(
     double lat1, double lon1, double az1, double s12,
     double& lat2, double& lon2, double& a12) {
-  static auto geodesic = Geodesic::WGS84();
-  a12 = geodesic.Direct(lat1, lon1, az1, s12, lat2, lon2);
+  try {
+    static auto geodesic = Geodesic::WGS84();
+    a12 = geodesic.Direct(lat1, lon1, az1, s12, lat2, lon2);
+  } catch (...) {
+    return false;
+  }
   return true;
 }
 
 bool gnomonic_forward(
     double lat0, double lon0, double lat, double lon,
     double& x, double& y) {
-  static auto gnomonic = Gnomonic(Geodesic::WGS84());
-  gnomonic.Forward(lat0, lon0, lat, lon, x, y);
+  try {
+    static auto gnomonic = Gnomonic(Geodesic::WGS84());
+    gnomonic.Forward(lat0, lon0, lat, lon, x, y);
+  } catch (...) {
+    return false;
+  }
   return true;
 }
 
 bool gnomonic_reverse(
     double lat0, double lon0, double x, double y,
     double& lat, double& lon) {
-  static auto gnomonic = Gnomonic(Geodesic::WGS84());
-  gnomonic.Reverse(lat0, lon0, x, y, lat, lon);
+  try {
+    static auto gnomonic = Gnomonic(Geodesic::WGS84());
+    gnomonic.Reverse(lat0, lon0, x, y, lat, lon);
+  } catch (...) {
+    return false;
+  }
   return true;
 }
 
 bool geocentric_forward(
     double lat, double lon, double h,
     double& x, double& y, double& z) {
-  static auto geocentric = Geocentric::WGS84();
-  geocentric.Forward(lat, lon, h, x, y, z);
+  try {
+    static auto geocentric = Geocentric::WGS84();
+    geocentric.Forward(lat, lon, h, x, y, z);
+  } catch (...) {
+    return false;
+  }
   return true;
 }
 

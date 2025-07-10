@@ -262,7 +262,7 @@ mod ffi {
             lat2: &mut f64,
             lon2: &mut f64,
             a12: &mut f64,
-        ) -> Result<bool>;
+        ) -> bool;
 
         fn geodesic_inverse_with_azimuth(
             lat1: f64,
@@ -273,7 +273,7 @@ mod ffi {
             azi1: &mut f64,
             azi2: &mut f64,
             a12: &mut f64,
-        ) -> Result<bool>;
+        ) -> bool;
 
         fn gnomonic_forward(
             lat1: f64,
@@ -282,7 +282,7 @@ mod ffi {
             lon: f64,
             x: &mut f64,
             y: &mut f64,
-        ) -> Result<bool>;
+        ) -> bool;
 
         fn gnomonic_reverse(
             lat1: f64,
@@ -291,7 +291,7 @@ mod ffi {
             y: f64,
             lat: &mut f64,
             lon: &mut f64,
-        ) -> Result<bool>;
+        ) -> bool;
 
         fn geocentric_forward(
             lat: f64,
@@ -300,7 +300,7 @@ mod ffi {
             x: &mut f64,
             y: &mut f64,
             z: &mut f64,
-        ) -> Result<bool>;
+        ) -> bool;
 
         fn geographiclib_version() -> *const c_char;
 
