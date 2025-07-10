@@ -240,6 +240,7 @@ dependencies = [
  "tracing-appender",
  "tracing-span-tree",
  "tracing-subscriber",
+ "wasm-bindgen",
  "winapi",
  "winresource",
 ]
@@ -249,6 +250,8 @@ name = "coursepointer-wasm"
 version = "0.1.0"
 dependencies = [
  "coursepointer",
+ "thiserror 2.0.12",
+ "wasm-bindgen",
 ]
 
 [[package]]

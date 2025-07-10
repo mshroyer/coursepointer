@@ -8,7 +8,12 @@
 #ifndef COURSEPOINTER_GEO_SHIM_H
 #define COURSEPOINTER_GEO_SHIM_H
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#define EXTERN extern "C" EMSCRIPTEN_KEEPALIVE
+#else
 #define EXTERN extern "C"
+#endif  // defined __EMSCRIPTEN__
 
 EXTERN bool geodesic_inverse_with_azimuth(
     double lat1, double lon1, double lat2, double lon2,
