@@ -20,6 +20,13 @@ def crate_version() -> str:
     return cargo["package"]["version"]
 
 
+def pyproject_version() -> str:
+    with open("pyproject.toml", "rb") as f:
+        project = tomllib.load(f)
+
+    return project["project"]["version"]
+
+
 def last_changelog_version() -> str:
     pattern = re.compile(r"^## v(\d+\.\d+\.\d+)")
     with open("CHANGELOG.md") as f:
@@ -50,6 +57,18 @@ def is_cargo_about_up_to_date() -> bool:
         universal_newlines=True,
         check=True,
     )
+    return is_checkout_unmodified()
+
+
+def are_lockfiles_updated() -> bool:
+    """Checks whether lock files are up-to-date
+
+    These can be out of sync if we just committed a new cargo project or
+    pyproject version without synchronizing the lock files.
+
+    """
+    subprocess.run(["cargo", "test"], check=True)
+    subprocess.run(["uv", "sync"], check=True)
     return is_checkout_unmodified()
 
 
@@ -140,6 +159,14 @@ def lint(args: argparse.Namespace):
 
     if last_changelog_version() != version:
         print("CHANGELOG is not up-to-date!", file=sys.stderr)
+        sys.exit(1)
+
+    if pyproject_version() != version:
+        print("pyproject.toml version mismatch!", file=sys.stderr)
+        sys.exit(1)
+
+    if not are_lockfiles_updated():
+        print("lockfiles need to be synced!", file=sys.stderr)
         sys.exit(1)
 
     # if not is_cargo_about_up_to_date():
