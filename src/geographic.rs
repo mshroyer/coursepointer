@@ -43,7 +43,8 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     let mut geo_distance_m = 0.0;
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
-    let arc_distance_deg = crate::ffi::geodesic_inverse_with_azimuth(
+    let mut arc_distance_deg = 0.0;
+    crate::ffi::geodesic_inverse_with_azimuth(
         point1.lat().value_unsafe,
         point1.lon().value_unsafe,
         point2.lat().value_unsafe,
@@ -51,6 +52,7 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
         &mut geo_distance_m,
         &mut azimuth1_deg,
         &mut azimuth2_deg,
+        &mut arc_distance_deg,
     )?;
 
     Ok(InverseSolution {
@@ -82,13 +84,15 @@ pub fn geodesic_direct(
 ) -> Result<DirectSolution> {
     let mut lat2_deg = 0.0;
     let mut lon2_deg = 0.0;
-    let arc_distance_deg = crate::ffi::geodesic_direct(
+    let mut arc_distance_deg = 0.0;
+    crate::ffi::geodesic_direct(
         point1.lat().value_unsafe,
         point1.lon().value_unsafe,
         azimuth.value_unsafe,
         distance.value_unsafe,
         &mut lat2_deg,
         &mut lon2_deg,
+        &mut arc_distance_deg,
     )?;
     Ok(DirectSolution {
         arc_distance: arc_distance_deg * DEG,
