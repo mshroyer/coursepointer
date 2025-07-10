@@ -10,8 +10,6 @@
 
 #define EXTERN extern "C"
 
-#include "rust/cxx.h"
-
 EXTERN bool geodesic_inverse_with_azimuth(
     double lat1, double lon1, double lat2, double lon2,
     double& s12, double& azi1, double& azi2, double& a12);

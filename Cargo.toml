@@ -42,7 +42,6 @@ quick-xml = "0.38.0"
 thiserror = "2.0.12"
 anyhow = { version = "1.0.98", optional = true }
 clap = { version = "4.5.39", optional = true, features = ["cargo", "derive", "wrap_help"] }
-cxx = "1.0.158"
 approx = "0.5.1"
 dimensioned = { version = "0.8.0", features = ["approx"] }
 clap-cargo = { version = "0.15.2", optional = true }
@@ -83,8 +82,8 @@ full-geolib = []
 rayon = ["dep:rayon"]
 
 [build-dependencies]
-cxx-build = "1.0.158"
 rustc_version = "0.4.1"
+cc = "1.2.27"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winapi = { version = "0.3.9", features = ["winnt"] }

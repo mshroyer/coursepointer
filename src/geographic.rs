@@ -11,8 +11,6 @@ use crate::types::{GeoAndXyzPoint, GeoPoint, TypeError, XyPoint, XyzPoint};
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum GeographicError {
-    #[error("C++ exception from GeographicLib: {0}")]
-    Exception(#[from] cxx::Exception),
     #[error("Unknown C++ exception from GeographicLib")]
     UnknownException,
     #[error("Core type error")]
@@ -46,16 +44,18 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
     let mut azimuth1_deg = 0.0;
     let mut azimuth2_deg = 0.0;
     let mut arc_distance_deg = 0.0;
-    let ok = crate::ffi::geodesic_inverse_with_azimuth(
-        point1.lat().value_unsafe,
-        point1.lon().value_unsafe,
-        point2.lat().value_unsafe,
-        point2.lon().value_unsafe,
-        &mut geo_distance_m,
-        &mut azimuth1_deg,
-        &mut azimuth2_deg,
-        &mut arc_distance_deg,
-    );
+    let ok = unsafe {
+        crate::ffi::geodesic_inverse_with_azimuth(
+            point1.lat().value_unsafe,
+            point1.lon().value_unsafe,
+            point2.lat().value_unsafe,
+            point2.lon().value_unsafe,
+            &mut geo_distance_m,
+            &mut azimuth1_deg,
+            &mut azimuth2_deg,
+            &mut arc_distance_deg,
+        )
+    };
 
     if ok {
         Ok(InverseSolution {
@@ -91,15 +91,17 @@ pub fn geodesic_direct(
     let mut lat2_deg = 0.0;
     let mut lon2_deg = 0.0;
     let mut arc_distance_deg = 0.0;
-    let ok = crate::ffi::geodesic_direct(
-        point1.lat().value_unsafe,
-        point1.lon().value_unsafe,
-        azimuth.value_unsafe,
-        distance.value_unsafe,
-        &mut lat2_deg,
-        &mut lon2_deg,
-        &mut arc_distance_deg,
-    );
+    let ok = unsafe {
+        crate::ffi::geodesic_direct(
+            point1.lat().value_unsafe,
+            point1.lon().value_unsafe,
+            azimuth.value_unsafe,
+            distance.value_unsafe,
+            &mut lat2_deg,
+            &mut lon2_deg,
+            &mut arc_distance_deg,
+        )
+    };
 
     if ok {
         Ok(DirectSolution {
@@ -118,14 +120,16 @@ pub fn geodesic_direct(
 /// `point0`.
 pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> {
     let mut result = XyPoint::default();
-    let ok = crate::ffi::gnomonic_forward(
-        point0.lat().value_unsafe,
-        point0.lon().value_unsafe,
-        point.lat().value_unsafe,
-        point.lon().value_unsafe,
-        &mut result.x.value_unsafe,
-        &mut result.y.value_unsafe,
-    );
+    let ok = unsafe {
+        crate::ffi::gnomonic_forward(
+            point0.lat().value_unsafe,
+            point0.lon().value_unsafe,
+            point.lat().value_unsafe,
+            point.lon().value_unsafe,
+            &mut result.x.value_unsafe,
+            &mut result.y.value_unsafe,
+        )
+    };
 
     if ok {
         Ok(result)
@@ -142,14 +146,16 @@ pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> 
 pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XyPoint) -> Result<GeoPoint> {
     let mut lat_deg = 0.0;
     let mut lon_deg = 0.0;
-    let ok = crate::ffi::gnomonic_reverse(
-        point0.lat().value_unsafe,
-        point0.lon().value_unsafe,
-        xypoint.x.value_unsafe,
-        xypoint.y.value_unsafe,
-        &mut lat_deg,
-        &mut lon_deg,
-    );
+    let ok = unsafe {
+        crate::ffi::gnomonic_reverse(
+            point0.lat().value_unsafe,
+            point0.lon().value_unsafe,
+            xypoint.x.value_unsafe,
+            xypoint.y.value_unsafe,
+            &mut lat_deg,
+            &mut lon_deg,
+        )
+    };
 
     if ok {
         Ok(GeoPoint::new(lat_deg * DEG, lon_deg * DEG, None)?)
@@ -162,14 +168,16 @@ pub fn geocentric_forward(point: &GeoPoint) -> Result<XyzPoint> {
     let mut x = 0.0;
     let mut y = 0.0;
     let mut z = 0.0;
-    let ok = crate::ffi::geocentric_forward(
-        point.lat().value_unsafe,
-        point.lon().value_unsafe,
-        0.0,
-        &mut x,
-        &mut y,
-        &mut z,
-    );
+    let ok = unsafe {
+        crate::ffi::geocentric_forward(
+            point.lat().value_unsafe,
+            point.lon().value_unsafe,
+            0.0,
+            &mut x,
+            &mut y,
+            &mut z,
+        )
+    };
 
     if ok {
         Ok(XyzPoint {

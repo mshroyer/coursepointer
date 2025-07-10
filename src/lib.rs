@@ -249,12 +249,11 @@ pub fn compiler_version() -> &'static str {
 /// This currently has to be inline in lib.rs because non-inline mods in proc
 /// macro input are unstable: <https://github.com/rust-lang/rust/issues/54727>
 #[allow(clippy::too_many_arguments)]
-#[cxx::bridge]
 mod ffi {
-    unsafe extern "C++" {
-        include!("coursepointer/include/shim.hpp");
+    use std::ffi::c_char;
 
-        fn geodesic_direct(
+    unsafe extern "C" {
+        pub fn geodesic_direct(
             lat1: f64,
             lon1: f64,
             az1: f64,
@@ -264,7 +263,7 @@ mod ffi {
             a12: &mut f64,
         ) -> bool;
 
-        fn geodesic_inverse_with_azimuth(
+        pub fn geodesic_inverse_with_azimuth(
             lat1: f64,
             lon1: f64,
             lat2: f64,
@@ -275,7 +274,7 @@ mod ffi {
             a12: &mut f64,
         ) -> bool;
 
-        fn gnomonic_forward(
+        pub fn gnomonic_forward(
             lat1: f64,
             lon1: f64,
             lat: f64,
@@ -284,7 +283,7 @@ mod ffi {
             y: &mut f64,
         ) -> bool;
 
-        fn gnomonic_reverse(
+        pub fn gnomonic_reverse(
             lat1: f64,
             lon1: f64,
             x: f64,
@@ -293,7 +292,7 @@ mod ffi {
             lon: &mut f64,
         ) -> bool;
 
-        fn geocentric_forward(
+        pub fn geocentric_forward(
             lat: f64,
             lon: f64,
             h: f64,
@@ -302,8 +301,8 @@ mod ffi {
             z: &mut f64,
         ) -> bool;
 
-        fn geographiclib_version() -> *const c_char;
+        pub fn geographiclib_version() -> *const c_char;
 
-        fn compiler_version() -> *const c_char;
+        pub fn compiler_version() -> *const c_char;
     }
 }
