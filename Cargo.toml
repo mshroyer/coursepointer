@@ -93,7 +93,7 @@ winresource = "0.1.22"  # Ideally should only be a dep when cli enabled
 
 [workspace]
 resolver = "2"
-members = ["devtools", "wasm"]
+members = ["devtools", "web/coursepointer-wasm"]
 
 [profile.release]
 # Uncomment to enable release build profiling, or set
