@@ -5,6 +5,8 @@
 #include <GeographicLib/Geodesic.hpp>
 #include <GeographicLib/Gnomonic.hpp>
 
+#include "shim.hpp"
+
 #define STRINGIFY_IMPL(x) #x
 #define STRINGIFY(x) STRINGIFY_IMPL(x)
 
@@ -12,74 +14,12 @@ using GeographicLib::Geocentric;
 using GeographicLib::Geodesic;
 using GeographicLib::Gnomonic;
 
-namespace CoursePointer {
+namespace {
 
 static_assert(std::is_same<GeographicLib::Math::real, double>::value,
     "ffi implementation requires Math::real to be double");
 
-bool geodesic_inverse_with_azimuth(
-    double lat1, double lon1, double lat2, double lon2,
-    double& s12, double& azi1, double& azi2, double& a12) {
-  try {
-    static auto geodesic = Geodesic::WGS84();
-    a12 = geodesic.Inverse(lat1, lon1, lat2, lon2, s12, azi1, azi2);
-  } catch (...) {
-    return false;
-  }
-  return true;
-}
-
-bool geodesic_direct(
-    double lat1, double lon1, double az1, double s12,
-    double& lat2, double& lon2, double& a12) {
-  try {
-    static auto geodesic = Geodesic::WGS84();
-    a12 = geodesic.Direct(lat1, lon1, az1, s12, lat2, lon2);
-  } catch (...) {
-    return false;
-  }
-  return true;
-}
-
-bool gnomonic_forward(
-    double lat0, double lon0, double lat, double lon,
-    double& x, double& y) {
-  try {
-    static auto gnomonic = Gnomonic(Geodesic::WGS84());
-    gnomonic.Forward(lat0, lon0, lat, lon, x, y);
-  } catch (...) {
-    return false;
-  }
-  return true;
-}
-
-bool gnomonic_reverse(
-    double lat0, double lon0, double x, double y,
-    double& lat, double& lon) {
-  try {
-    static auto gnomonic = Gnomonic(Geodesic::WGS84());
-    gnomonic.Reverse(lat0, lon0, x, y, lat, lon);
-  } catch (...) {
-    return false;
-  }
-  return true;
-}
-
-bool geocentric_forward(
-    double lat, double lon, double h,
-    double& x, double& y, double& z) {
-  try {
-    static auto geocentric = Geocentric::WGS84();
-    geocentric.Forward(lat, lon, h, x, y, z);
-  } catch (...) {
-    return false;
-  }
-  return true;
-}
-
-const char* geographiclib_version() noexcept {
-  return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
-}
+#ifdef _MSC_FULL_VER
 
 static std::string ver_string;
 
@@ -98,7 +38,76 @@ const char* msvc_version(unsigned long full_ver) noexcept {
   return ver_string.c_str();
 }
 
-const char* compiler_version() noexcept {
+#endif  // defined _MSC_FULL_VER
+
+}  // namespace
+
+
+EXTERN bool geodesic_inverse_with_azimuth(
+    double lat1, double lon1, double lat2, double lon2,
+    double& s12, double& azi1, double& azi2, double& a12) {
+  try {
+    static auto geodesic = Geodesic::WGS84();
+    a12 = geodesic.Inverse(lat1, lon1, lat2, lon2, s12, azi1, azi2);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+EXTERN bool geodesic_direct(
+    double lat1, double lon1, double az1, double s12,
+    double& lat2, double& lon2, double& a12) {
+  try {
+    static auto geodesic = Geodesic::WGS84();
+    a12 = geodesic.Direct(lat1, lon1, az1, s12, lat2, lon2);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+EXTERN bool gnomonic_forward(
+    double lat0, double lon0, double lat, double lon,
+    double& x, double& y) {
+  try {
+    static auto gnomonic = Gnomonic(Geodesic::WGS84());
+    gnomonic.Forward(lat0, lon0, lat, lon, x, y);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+EXTERN bool gnomonic_reverse(
+    double lat0, double lon0, double x, double y,
+    double& lat, double& lon) {
+  try {
+    static auto gnomonic = Gnomonic(Geodesic::WGS84());
+    gnomonic.Reverse(lat0, lon0, x, y, lat, lon);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+EXTERN bool geocentric_forward(
+    double lat, double lon, double h,
+    double& x, double& y, double& z) {
+  try {
+    static auto geocentric = Geocentric::WGS84();
+    geocentric.Forward(lat, lon, h, x, y, z);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+EXTERN const char* geographiclib_version() noexcept {
+  return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
+}
+
+EXTERN const char* compiler_version() noexcept {
 #if defined(_MSC_FULL_VER)
   return msvc_version(_MSC_FULL_VER);
 #elif defined(__clang__)
@@ -114,5 +123,3 @@ const char* compiler_version() noexcept {
   return "unknown";
 #endif
 }
-
-}  // namespace CoursePointer

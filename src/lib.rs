@@ -249,7 +249,7 @@ pub fn compiler_version() -> &'static str {
 /// This currently has to be inline in lib.rs because non-inline mods in proc
 /// macro input are unstable: <https://github.com/rust-lang/rust/issues/54727>
 #[allow(clippy::too_many_arguments)]
-#[cxx::bridge(namespace = "CoursePointer")]
+#[cxx::bridge]
 mod ffi {
     unsafe extern "C++" {
         include!("coursepointer/include/shim.hpp");
