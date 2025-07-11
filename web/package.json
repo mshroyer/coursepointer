@@ -1,0 +1,17 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm run build:geographiclib && pnpm run build:coursepointer && tsc && vite build",
+    "build:geographiclib": "em++ -O3 -std=c++11 '-sEXPORTED_FUNCTIONS=[\"_geodesic_inverse_with_azimuth\",\"_geodesic_direct\",\"_gnomonic_forward\",\"_gnomonic_reverse\",\"_geocentric_forward\",\"_geographiclib_version\",\"_compiler_version\"]' -I../include -I../geographiclib/include ../geographiclib/src/DST.cpp ../geographiclib/src/EllipticFunction.cpp ../geographiclib/src/Geocentric.cpp ../geographiclib/src/Geodesic.cpp ../geographiclib/src/GeodesicExact.cpp ../geographiclib/src/GeodesicLine.cpp ../geographiclib/src/GeodesicLineExact.cpp ../geographiclib/src/Gnomonic.cpp ../geographiclib/src/Math.cpp ../src/shim.cpp --no-entry -o geographiclib.js",
+    "build:coursepointer": "wasm-pack build coursepointer-wasm",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  }
+}

@@ -247,7 +247,7 @@ dependencies = [
 
 [[package]]
 name = "coursepointer-wasm"
-version = "0.1.0"
+version = "0.3.3-dev"
 dependencies = [
  "coursepointer",
  "thiserror 2.0.12",
