@@ -96,7 +96,6 @@ fn main() {
             println!("cargo:rerun-if-changed={}", file.display());
         }
         println!("cargo:rerun-if-changed=src/shim.cpp");
-        println!("cargo:rerun-if-changed=include/shim.hpp");
     }
 
     #[cfg(target_os = "windows")]
