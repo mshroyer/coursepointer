@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      coursepointer-wasm:
+        specifier: link:coursepointer-wasm/pkg
+        version: link:coursepointer-wasm/pkg
     devDependencies:
       typescript:
         specifier: ~5.8.3
