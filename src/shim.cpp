@@ -40,6 +40,27 @@ const char* msvc_version(unsigned long full_ver) noexcept {
 
 #endif  // defined _MSC_FULL_VER
 
+const char* compiler_version() noexcept {
+#if defined(_MSC_FULL_VER)
+  return msvc_version(_MSC_FULL_VER);
+#elif defined(__clang__)
+  return "clang " STRINGIFY(__clang_major__) "." STRINGIFY(__clang_minor__) "." STRINGIFY(__clang_patchlevel__);
+#elif defined(__GNUC__)
+#ifdef __MINGW32__
+#define CCNAME "mingw"
+#else
+#define CCNAME "gcc"
+#endif
+  return CCNAME " " STRINGIFY(__GNUC__) "." STRINGIFY(__GNUC_MINOR__) "." STRINGIFY(__GNUC_PATCHLEVEL__);
+#else
+  return "unknown";
+#endif
+}
+
+const char* geographiclib_version() noexcept {
+  return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
+}
+
 }  // namespace
 
 
@@ -103,23 +124,10 @@ EXTERN bool geocentric_forward(
   return true;
 }
 
-EXTERN const char* geographiclib_version() noexcept {
-  return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
+EXTERN void get_geographiclib_version(char* buf, size_t buf_sz) {
+  std::snprintf(buf, buf_sz, "%s", geographiclib_version());
 }
 
-EXTERN const char* compiler_version() noexcept {
-#if defined(_MSC_FULL_VER)
-  return msvc_version(_MSC_FULL_VER);
-#elif defined(__clang__)
-  return "clang " STRINGIFY(__clang_major__) "." STRINGIFY(__clang_minor__) "." STRINGIFY(__clang_patchlevel__);
-#elif defined(__GNUC__)
-#ifdef __MINGW32__
-#define CCNAME "mingw"
-#else
-#define CCNAME "gcc"
-#endif
-  return CCNAME " " STRINGIFY(__GNUC__) "." STRINGIFY(__GNUC_MINOR__) "." STRINGIFY(__GNUC_PATCHLEVEL__);
-#else
-  return "unknown";
-#endif
+EXTERN void get_compiler_version(char* buf, size_t buf_sz) {
+  std::snprintf(buf, buf_sz, "%s", compiler_version());
 }

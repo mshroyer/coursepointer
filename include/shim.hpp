@@ -36,17 +36,21 @@ EXTERN bool geocentric_forward(
     double& x, double& y, double& z);
 
 /**
- * Returns a string with GeographicLib's name and version number
+ * Gets a string with GeographicLib's name and version number
  *
- * The returned pointer has static scope.
+ * The string is written to the provided buffer, truncated if necessary, with a
+ * null terminator.  In native code we could simply return a statically-scoped
+ * string pointer, buf for webassembly this allows GeographicLib and
+ * CoursePointer to be compiled into separate modules that do not necessarily
+ * share memory.
  */
-EXTERN const char* geographiclib_version() noexcept;
+EXTERN void get_geographiclib_version(char* buf, size_t buf_sz);
 
 /**
  * Returns a string with the compiler name and version number
  *
- * The returned pointer has static scope.
+ * Works the same as `get_geographiclib_version`.
  */
-EXTERN const char* compiler_version() noexcept;
+EXTERN void get_compiler_version(char* buf, size_t buf_sz);
 
 #endif  // !defined COURSEPOINTER_GEO_SHIM_H

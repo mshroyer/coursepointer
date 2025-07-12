@@ -56,8 +56,9 @@ mod point_type;
 mod types;
 
 use std::convert::Infallible;
-use std::ffi::CStr;
+use std::ffi::{CStr, c_char};
 use std::io::{BufRead, Write};
+use std::sync::OnceLock;
 
 use dimensioned::si::Meter;
 pub use fit::{FitCourseOptions, FitEncodeError};
@@ -231,16 +232,30 @@ pub fn write_fit_course<W: Write>(
     Ok(())
 }
 
+static GEOGRAPHICLIB_VERSION: OnceLock<String> = OnceLock::new();
+
 pub fn geographiclib_version() -> &'static str {
-    unsafe {
-        CStr::from_ptr(ffi::geographiclib_version())
-            .to_str()
-            .unwrap()
-    }
+    GEOGRAPHICLIB_VERSION.get_or_init(|| {
+        let mut buf = [0u8; 32];
+        unsafe { ffi::get_geographiclib_version(buf.as_mut_ptr() as *mut c_char, buf.len()) };
+        let cstr = unsafe { CStr::from_ptr(buf.as_ptr() as *const c_char) };
+        cstr.to_str()
+            .expect("Invalid UTF-8 in GeographicLib version")
+            .to_owned()
+    })
 }
 
+static COMPILER_VERSION: OnceLock<String> = OnceLock::new();
+
 pub fn compiler_version() -> &'static str {
-    unsafe { CStr::from_ptr(ffi::compiler_version()).to_str().unwrap() }
+    COMPILER_VERSION.get_or_init(|| {
+        let mut buf = [0u8; 32];
+        unsafe { ffi::get_compiler_version(buf.as_mut_ptr() as *mut c_char, buf.len()) };
+        let cstr = unsafe { CStr::from_ptr(buf.as_ptr() as *const c_char) };
+        cstr.to_str()
+            .expect("Invalid UTF-8 in compiler version")
+            .to_owned()
+    })
 }
 
 /// CXX Generated FFI for GeographicLib
@@ -300,8 +315,8 @@ mod ffi {
             z: &mut f64,
         ) -> bool;
 
-        pub fn geographiclib_version() -> *const c_char;
+        pub fn get_geographiclib_version(buf: *const c_char, buf_sz: usize) -> ();
 
-        pub fn compiler_version() -> *const c_char;
+        pub fn get_compiler_version(buf: *const c_char, buf_sz: usize) -> ();
     }
 }
