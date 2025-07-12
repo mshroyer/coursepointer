@@ -10,7 +10,7 @@ use clap::builder::styling::Styles;
 use clap::{Args, ColorChoice, Parser, Subcommand, ValueEnum, command, crate_version};
 use clap_cargo::style::{ERROR, HEADER, INVALID, LITERAL, PLACEHOLDER, USAGE, VALID};
 use coursepointer::course::{CourseSetOptions, InterceptStrategy};
-use coursepointer::internal::{Kilometer, Mile, compiler_version, geographiclib_version};
+use coursepointer::internal::{Kilometer, Mile, compiler_version_str, geographiclib_version_str};
 use coursepointer::{
     ConversionInfo, CoursePointType, CoursePointerError, FitCourseOptions, FitEncodeError, Sport,
 };
@@ -38,9 +38,9 @@ static LONG_VERSION: LazyLock<String> = LazyLock::new(|| {
     format!(
         "{} ({}, rustc {}, {})",
         crate_version!(),
-        geographiclib_version(),
+        geographiclib_version_str(),
         env!("RUSTC_VERSION"),
-        compiler_version(),
+        compiler_version_str(),
     )
 });
 

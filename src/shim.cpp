@@ -53,27 +53,6 @@ const char* msvc_version(unsigned long full_ver) noexcept {
 
 #endif  // defined _MSC_FULL_VER
 
-const char* compiler_version() noexcept {
-#if defined(_MSC_FULL_VER)
-  return msvc_version(_MSC_FULL_VER);
-#elif defined(__clang__)
-  return "clang " STR(__clang_major__) "." STR(__clang_minor__) "." STR(__clang_patchlevel__);
-#elif defined(__GNUC__)
-#ifdef __MINGW32__
-#define CCNAME "mingw"
-#else
-#define CCNAME "gcc"
-#endif
-  return CCNAME " " STR(__GNUC__) "." STR(__GNUC_MINOR__) "." STR(__GNUC_PATCHLEVEL__);
-#else
-  return "unknown";
-#endif
-}
-
-const char* geographiclib_version() noexcept {
-  return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
-}
-
 }  // namespace
 
 
@@ -140,21 +119,28 @@ EXTERN bool geocentric_forward(
 /**
  * Gets a string with GeographicLib's name and version number
  *
- * The string is written to the provided buffer, truncated if necessary, with a
- * null terminator.  In native code we could simply return a statically-scoped
- * string pointer, buf for WebAssembly this allows GeographicLib and
- * CoursePointer to be compiled into separate modules that do not necessarily
- * share memory.
+ * The string returned has static lifetime.
  */
-EXTERN void get_geographiclib_version(char* buf, size_t buf_sz) {
-  std::snprintf(buf, buf_sz, "%s", geographiclib_version());
+EXTERN const char* geographiclib_version() noexcept {
+  return "GeographicLib " GEOGRAPHICLIB_VERSION_STRING;
 }
 
 /**
- * Returns a string with the compiler name and version number
- *
- * Works the same as `get_geographiclib_version`.
+ * Gets a string with the C++ compiler's name and version number
  */
-EXTERN void get_compiler_version(char* buf, size_t buf_sz) {
-  std::snprintf(buf, buf_sz, "%s", compiler_version());
+EXTERN const char* compiler_version() noexcept {
+#if defined(_MSC_FULL_VER)
+  return msvc_version(_MSC_FULL_VER);
+#elif defined(__clang__)
+  return "clang " STR(__clang_major__) "." STR(__clang_minor__) "." STR(__clang_patchlevel__);
+#elif defined(__GNUC__)
+#ifdef __MINGW32__
+#define CCNAME "mingw"
+#else
+#define CCNAME "gcc"
+#endif
+  return CCNAME " " STR(__GNUC__) "." STR(__GNUC_MINOR__) "." STR(__GNUC_PATCHLEVEL__);
+#else
+  return "unknown";
+#endif
 }
