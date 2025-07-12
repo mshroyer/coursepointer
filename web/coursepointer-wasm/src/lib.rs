@@ -25,6 +25,13 @@ pub fn demo_course_set() -> f64 {
             .with_name("Demo route".to_owned())
             .with_route_point(GeoPoint::new(1.1 * DEG, 2.2 * DEG, None)?)
             .with_route_point(GeoPoint::new(3.3 * DEG, 4.4 * DEG, None)?);
-        Ok(builder.build()?.courses.get(0).unwrap().total_distance().value_unsafe)
-    })().unwrap()
+        Ok(builder
+            .build()?
+            .courses
+            .get(0)
+            .unwrap()
+            .total_distance()
+            .value_unsafe)
+    })()
+    .unwrap()
 }

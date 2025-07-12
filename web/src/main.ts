@@ -2,6 +2,8 @@ import './style.css'
 import typescriptLogo from './typescript.svg'
 import viteLogo from '/vite.svg'
 import { setupCounter } from './counter.ts'
+// @ts-ignore
+import geographicLib from './wasm/geographiclib.mjs'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -19,6 +21,16 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       Click on the Vite and TypeScript logos to learn more
     </p>
   </div>
-`
+`;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+const GEO = await geographicLib();
+
+export function compilerVersion() : string {
+    return "";
+}
+
+(window as any).geographicLib = geographicLib;
+(window as any).GEO = GEO;
+(window as any).compilerVersion = compilerVersion;
+
+setupCounter(document.querySelector<HTMLButtonElement>('#counter')!);
