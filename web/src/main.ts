@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import { setupCounter } from './counter.ts'
 // @ts-ignore
 import geographicLib from './wasm/geographiclib.mjs'
+import init, {direct_lon} from "coursepointer-wasm";
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -23,14 +24,20 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </div>
 `;
 
-const GEO = await geographicLib();
+setupCounter(document.querySelector<HTMLButtonElement>('#counter')!);
 
-export function compilerVersion() : string {
-    return "";
-}
+const GEO = await geographicLib();
 
 (window as any).geographicLib = geographicLib;
 (window as any).GEO = GEO;
-(window as any).compilerVersion = compilerVersion;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!);
+(window as any).SHIM = {};
+function geodesic_direct(lat1: number, lon1: number, azi1: number, s12: number): any {
+    return GEO.geodesicDirect(lat1, lon1, azi1, s12);
+}
+(window as any).SHIM.geodesic_direct = geodesic_direct;
+
+await init();
+
+(window as any).direct_lon = direct_lon;
+

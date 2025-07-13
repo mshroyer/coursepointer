@@ -12,11 +12,11 @@ struct DirectSolution {
   double a12;
 };
 
-DirectSolution embind_geodesic_direct(double lat1, double lon1, double az1,
+DirectSolution embind_geodesic_direct(double lat1, double lon1, double azi1,
                                       double s12) {
   DirectSolution sln;
   sln.ok =
-      geodesic_direct(lat1, lon1, az1, s12, &sln.lat2, &sln.lon2, &sln.a12);
+      geodesic_direct(lat1, lon1, azi1, s12, &sln.lat2, &sln.lon2, &sln.a12);
   return sln;
 }
 

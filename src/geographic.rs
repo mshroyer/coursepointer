@@ -2,10 +2,10 @@
 //!
 //! Wraps the CXX FFI for GeographicLib in a friendlier interface.
 
-use dimensioned::si::{M, Meter};
+use dimensioned::si::{Meter, M};
 use thiserror::Error;
 
-use crate::measure::{DEG, Degree};
+use crate::measure::{Degree, DEG};
 use crate::types::{GeoAndXyzPoint, GeoPoint, TypeError, XyPoint, XyzPoint};
 
 #[derive(Error, Debug)]
@@ -33,6 +33,7 @@ pub struct DirectSolution {
 ///
 /// Given a start point, azimuth, and a geodesic distance, computes the point
 /// where we end up and its arc distance from the start point.
+#[cfg(not(feature = "wasm"))]
 pub fn geodesic_direct(
     point1: &GeoPoint,
     azimuth: Degree<f64>,
@@ -57,6 +58,30 @@ pub fn geodesic_direct(
         Ok(DirectSolution {
             arc_distance: arc_distance_deg * DEG,
             point2: GeoPoint::new(lat2_deg * DEG, lon2_deg * DEG, None)?,
+        })
+    } else {
+        Err(GeographicError::UnknownException)
+    }
+}
+
+#[cfg(feature = "wasm")]
+pub fn geodesic_direct(
+    point1: &GeoPoint,
+    azimuth: Degree<f64>,
+    distance: Meter<f64>,
+) -> Result<DirectSolution> {
+    let out_js = wasm_ffi::geodesic_direct(
+        point1.lat().value_unsafe,
+        point1.lon().value_unsafe,
+        azimuth.value_unsafe,
+        distance.value_unsafe,
+    );
+    let out: wasm_ffi::DirectSolution =
+        serde_wasm_bindgen::from_value(out_js).map_err(|_| GeographicError::UnknownException)?;
+    if out.ok {
+        Ok(DirectSolution {
+            arc_distance: out.a12 * DEG,
+            point2: GeoPoint::new(out.lat2 * DEG, out.lon2 * DEG, None)?,
         })
     } else {
         Err(GeographicError::UnknownException)
@@ -204,6 +229,27 @@ impl TryFrom<GeoPoint> for GeoAndXyzPoint {
     fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
         let xyz = geocentric_forward(&value)?;
         Ok(GeoAndXyzPoint { geo: value, xyz })
+    }
+}
+
+#[cfg(feature = "wasm")]
+mod wasm_ffi {
+    use serde::Deserialize;
+    use wasm_bindgen::prelude::*;
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DirectSolution {
+        pub ok: bool,
+        pub lat2: f64,
+        pub lon2: f64,
+        pub a12: f64,
+    }
+
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = ["window", "SHIM"])]
+        pub fn geodesic_direct(lat1: f64, lon1: f64, azi1: f64, s12: f64) -> JsValue;
     }
 }
 

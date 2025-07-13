@@ -11,6 +11,7 @@ use crate::algorithm::{FromGeoPoints, intercept_distance_floor, karney_intercept
 pub use crate::ffi::{compiler_version_str, geographiclib_version_str};
 pub use crate::fit::PROFILE_VERSION;
 use crate::geographic::geodesic_inverse;
+pub use crate::geographic::geodesic_direct;
 pub use crate::measure::{Kilometer, Mile};
 use crate::types::{GeoAndXyzPoint, GeoSegment};
 
