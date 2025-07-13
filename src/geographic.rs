@@ -2,11 +2,14 @@
 //!
 //! Wraps the CXX FFI for GeographicLib in a friendlier interface.
 
-use dimensioned::si::{M, Meter};
+use dimensioned::si::Meter;
 use thiserror::Error;
+pub use wrappers::{
+    geocentric_forward, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
+};
 
-use crate::measure::{DEG, Degree};
-use crate::types::{GeoAndXyzPoint, GeoPoint, TypeError, XyPoint, XyzPoint};
+use crate::measure::Degree;
+use crate::types::{GeoAndXyzPoint, GeoPoint, TypeError, XyzPoint};
 
 #[derive(Error, Debug)]
 #[non_exhaustive]
@@ -31,65 +34,6 @@ pub struct DirectSolution {
     pub point2: GeoPoint,
 }
 
-/// Calculate a solution to the direct geodesic problem.
-///
-/// Given a start point, azimuth, and a geodesic distance, computes the point
-/// where we end up and its arc distance from the start point.
-#[cfg(not(feature = "wasm"))]
-pub fn geodesic_direct(
-    point1: &GeoPoint,
-    azimuth: Degree<f64>,
-    distance: Meter<f64>,
-) -> Result<DirectSolution> {
-    let mut lat2_deg = 0.0;
-    let mut lon2_deg = 0.0;
-    let mut arc_distance_deg = 0.0;
-    let ok = unsafe {
-        crate::ffi::geodesic_direct(
-            point1.lat().value_unsafe,
-            point1.lon().value_unsafe,
-            azimuth.value_unsafe,
-            distance.value_unsafe,
-            &mut lat2_deg,
-            &mut lon2_deg,
-            &mut arc_distance_deg,
-        )
-    };
-
-    if ok {
-        Ok(DirectSolution {
-            arc_distance: arc_distance_deg * DEG,
-            point2: GeoPoint::new(lat2_deg * DEG, lon2_deg * DEG, None)?,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
-    }
-}
-
-#[cfg(feature = "wasm")]
-pub fn geodesic_direct(
-    point1: &GeoPoint,
-    azimuth: Degree<f64>,
-    distance: Meter<f64>,
-) -> Result<DirectSolution> {
-    let out_js = wasm_ffi::geodesic_direct(
-        point1.lat().value_unsafe,
-        point1.lon().value_unsafe,
-        azimuth.value_unsafe,
-        distance.value_unsafe,
-    );
-    let out: wasm_ffi::DirectSolution = serde_wasm_bindgen::from_value(out_js)
-        .map_err(|_| GeographicError::Json("DirectSolution".to_owned()))?;
-    if out.ok {
-        Ok(DirectSolution {
-            arc_distance: out.a12 * DEG,
-            point2: GeoPoint::new(out.lat2 * DEG, out.lon2 * DEG, None)?,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
-    }
-}
-
 /// A solution to the inverse problem in geodesy.
 #[allow(dead_code)]
 pub struct InverseSolution {
@@ -106,194 +50,340 @@ pub struct InverseSolution {
     pub azimuth2: Degree<f64>,
 }
 
-/// Calculate a solution to the inverse geodesic problem.
-///
-/// Finds the shortest geodesic between two points on the surface of WGS84,
-/// ignoring any elevation data.
 #[cfg(not(feature = "wasm"))]
-pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
-    let mut geo_distance_m = 0.0;
-    let mut azimuth1_deg = 0.0;
-    let mut azimuth2_deg = 0.0;
-    let mut arc_distance_deg = 0.0;
-    let ok = unsafe {
-        crate::ffi::geodesic_inverse_with_azimuth(
+mod wrappers {
+    use dimensioned::si::{M, Meter};
+
+    use crate::geographic::{DirectSolution, GeographicError, InverseSolution, Result};
+    use crate::types::{XyPoint, XyzPoint};
+    use crate::{DEG, Degree, GeoPoint};
+
+    /// Calculate a solution to the direct geodesic problem.
+    ///
+    /// Given a start point, azimuth, and a geodesic distance, computes the
+    /// point where we end up and its arc distance from the start point.
+    pub fn geodesic_direct(
+        point1: &GeoPoint,
+        azimuth: Degree<f64>,
+        distance: Meter<f64>,
+    ) -> Result<DirectSolution> {
+        let mut lat2_deg = 0.0;
+        let mut lon2_deg = 0.0;
+        let mut arc_distance_deg = 0.0;
+        let ok = unsafe {
+            crate::ffi::geodesic_direct(
+                point1.lat().value_unsafe,
+                point1.lon().value_unsafe,
+                azimuth.value_unsafe,
+                distance.value_unsafe,
+                &mut lat2_deg,
+                &mut lon2_deg,
+                &mut arc_distance_deg,
+            )
+        };
+
+        if ok {
+            Ok(DirectSolution {
+                arc_distance: arc_distance_deg * DEG,
+                point2: GeoPoint::new(lat2_deg * DEG, lon2_deg * DEG, None)?,
+            })
+        } else {
+            Err(GeographicError::UnknownException)
+        }
+    }
+
+    /// Calculate a solution to the inverse geodesic problem.
+    ///
+    /// Finds the shortest geodesic between two points on the surface of WGS84,
+    /// ignoring any elevation data.
+    pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
+        let mut geo_distance_m = 0.0;
+        let mut azimuth1_deg = 0.0;
+        let mut azimuth2_deg = 0.0;
+        let mut arc_distance_deg = 0.0;
+        let ok = unsafe {
+            crate::ffi::geodesic_inverse_with_azimuth(
+                point1.lat().value_unsafe,
+                point1.lon().value_unsafe,
+                point2.lat().value_unsafe,
+                point2.lon().value_unsafe,
+                &mut geo_distance_m,
+                &mut azimuth1_deg,
+                &mut azimuth2_deg,
+                &mut arc_distance_deg,
+            )
+        };
+
+        if ok {
+            Ok(InverseSolution {
+                arc_distance: arc_distance_deg * DEG,
+                geo_distance: geo_distance_m * M,
+                azimuth1: azimuth1_deg * DEG,
+                azimuth2: azimuth2_deg * DEG,
+            })
+        } else {
+            Err(GeographicError::UnknownException)
+        }
+    }
+
+    /// Calculate the forward gnomonic projection of a point.
+    ///
+    /// Given a projection centerpoint `point0` and a point `point`, finds the
+    /// cartesian position of `point` in the gnomonic projection centered on
+    /// `point0`.
+    pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> {
+        let mut result = XyPoint::default();
+        let ok = unsafe {
+            crate::ffi::gnomonic_forward(
+                point0.lat().value_unsafe,
+                point0.lon().value_unsafe,
+                point.lat().value_unsafe,
+                point.lon().value_unsafe,
+                &mut result.x.value_unsafe,
+                &mut result.y.value_unsafe,
+            )
+        };
+
+        if ok {
+            Ok(result)
+        } else {
+            Err(GeographicError::UnknownException)
+        }
+    }
+
+    /// Calculate the reverse gnomonic projection of a point.
+    ///
+    /// Given a projection centerpoint `point0` and a projected (cartesian)
+    /// point `xypoint`, finds the latitude and longitude corresponding to
+    /// `xypoint` given the gnomonic projection centered on `point0`.
+    pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XyPoint) -> Result<GeoPoint> {
+        let mut lat_deg = 0.0;
+        let mut lon_deg = 0.0;
+        let ok = unsafe {
+            crate::ffi::gnomonic_reverse(
+                point0.lat().value_unsafe,
+                point0.lon().value_unsafe,
+                xypoint.x.value_unsafe,
+                xypoint.y.value_unsafe,
+                &mut lat_deg,
+                &mut lon_deg,
+            )
+        };
+
+        if ok {
+            Ok(GeoPoint::new(lat_deg * DEG, lon_deg * DEG, None)?)
+        } else {
+            Err(GeographicError::UnknownException)
+        }
+    }
+
+    pub fn geocentric_forward(point: &GeoPoint) -> Result<XyzPoint> {
+        let mut x = 0.0;
+        let mut y = 0.0;
+        let mut z = 0.0;
+        let ok = unsafe {
+            crate::ffi::geocentric_forward(
+                point.lat().value_unsafe,
+                point.lon().value_unsafe,
+                0.0,
+                &mut x,
+                &mut y,
+                &mut z,
+            )
+        };
+
+        if ok {
+            Ok(XyzPoint {
+                x: x * M,
+                y: y * M,
+                z: z * M,
+            })
+        } else {
+            Err(GeographicError::UnknownException)
+        }
+    }
+}
+
+#[cfg(feature = "wasm")]
+mod wrappers {
+    use dimensioned::si::{M, Meter};
+
+    use crate::geographic::{DirectSolution, GeographicError, InverseSolution, Result};
+    use crate::types::{XyPoint, XyzPoint};
+    use crate::{DEG, Degree, GeoPoint};
+
+    pub fn geodesic_direct(
+        point1: &GeoPoint,
+        azimuth: Degree<f64>,
+        distance: Meter<f64>,
+    ) -> Result<DirectSolution> {
+        let out_js = ffi::geodesic_direct(
+            point1.lat().value_unsafe,
+            point1.lon().value_unsafe,
+            azimuth.value_unsafe,
+            distance.value_unsafe,
+        );
+        let out: ffi::DirectSolution = serde_wasm_bindgen::from_value(out_js)
+            .map_err(|_| GeographicError::Json("DirectSolution".to_owned()))?;
+        if out.ok {
+            Ok(DirectSolution {
+                arc_distance: out.a12 * DEG,
+                point2: GeoPoint::new(out.lat2 * DEG, out.lon2 * DEG, None)?,
+            })
+        } else {
+            Err(GeographicError::UnknownException)
+        }
+    }
+
+    pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
+        let out_js = ffi::geodesic_inverse(
             point1.lat().value_unsafe,
             point1.lon().value_unsafe,
             point2.lat().value_unsafe,
             point2.lon().value_unsafe,
-            &mut geo_distance_m,
-            &mut azimuth1_deg,
-            &mut azimuth2_deg,
-            &mut arc_distance_deg,
-        )
-    };
-
-    if ok {
-        Ok(InverseSolution {
-            arc_distance: arc_distance_deg * DEG,
-            geo_distance: geo_distance_m * M,
-            azimuth1: azimuth1_deg * DEG,
-            azimuth2: azimuth2_deg * DEG,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
+        );
+        let out: ffi::InverseSolution = serde_wasm_bindgen::from_value(out_js)
+            .map_err(|_| GeographicError::Json("InverseSolution".to_owned()))?;
+        if out.ok {
+            Ok(InverseSolution {
+                arc_distance: out.a12 * DEG,
+                geo_distance: out.s12 * M,
+                azimuth1: out.azi1 * DEG,
+                azimuth2: out.azi2 * DEG,
+            })
+        } else {
+            Err(GeographicError::UnknownException)
+        }
     }
-}
 
-#[cfg(feature = "wasm")]
-pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseSolution> {
-    let out_js = wasm_ffi::geodesic_inverse(
-        point1.lat().value_unsafe,
-        point1.lon().value_unsafe,
-        point2.lat().value_unsafe,
-        point2.lon().value_unsafe,
-    );
-    let out: wasm_ffi::InverseSolution = serde_wasm_bindgen::from_value(out_js)
-        .map_err(|_| GeographicError::Json("InverseSolution".to_owned()))?;
-    if out.ok {
-        Ok(InverseSolution {
-            arc_distance: out.a12 * DEG,
-            geo_distance: out.s12 * M,
-            azimuth1: out.azi1 * DEG,
-            azimuth2: out.azi2 * DEG,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
-    }
-}
-
-/// Calculate the forward gnomonic projection of a point.
-///
-/// Given a projection centerpoint `point0` and a point `point`, finds the
-/// cartesian position of `point` in the gnomonic projection centered on
-/// `point0`.
-#[cfg(not(feature = "wasm"))]
-pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> {
-    let mut result = XyPoint::default();
-    let ok = unsafe {
-        crate::ffi::gnomonic_forward(
+    pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> {
+        let out_js = ffi::gnomonic_forward(
             point0.lat().value_unsafe,
             point0.lon().value_unsafe,
             point.lat().value_unsafe,
             point.lon().value_unsafe,
-            &mut result.x.value_unsafe,
-            &mut result.y.value_unsafe,
-        )
-    };
-
-    if ok {
-        Ok(result)
-    } else {
-        Err(GeographicError::UnknownException)
+        );
+        let out: ffi::XyPoint = serde_wasm_bindgen::from_value(out_js)
+            .map_err(|_| GeographicError::Json("XyPoint".to_owned()))?;
+        if out.ok {
+            Ok(XyPoint {
+                x: out.x * M,
+                y: out.y * M,
+            })
+        } else {
+            Err(GeographicError::UnknownException)
+        }
     }
-}
 
-#[cfg(feature = "wasm")]
-pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> {
-    let out_js = wasm_ffi::gnomonic_forward(
-        point0.lat().value_unsafe,
-        point0.lon().value_unsafe,
-        point.lat().value_unsafe,
-        point.lon().value_unsafe,
-    );
-    let out: wasm_ffi::XyPoint = serde_wasm_bindgen::from_value(out_js)
-        .map_err(|_| GeographicError::Json("XyPoint".to_owned()))?;
-    if out.ok {
-        Ok(XyPoint {
-            x: out.x * M,
-            y: out.y * M,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
-    }
-}
-
-/// Calculate the reverse gnomonic projection of a point.
-///
-/// Given a projection centerpoint `point0` and a projected (cartesian) point
-/// `xypoint`, finds the latitude and longitude corresponding to `xypoint` given
-/// the gnomonic projection centered on `point0`.
-#[cfg(not(feature = "wasm"))]
-pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XyPoint) -> Result<GeoPoint> {
-    let mut lat_deg = 0.0;
-    let mut lon_deg = 0.0;
-    let ok = unsafe {
-        crate::ffi::gnomonic_reverse(
+    pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XyPoint) -> Result<GeoPoint> {
+        let out_js = ffi::gnomonic_reverse(
             point0.lat().value_unsafe,
             point0.lon().value_unsafe,
             xypoint.x.value_unsafe,
             xypoint.y.value_unsafe,
-            &mut lat_deg,
-            &mut lon_deg,
-        )
-    };
-
-    if ok {
-        Ok(GeoPoint::new(lat_deg * DEG, lon_deg * DEG, None)?)
-    } else {
-        Err(GeographicError::UnknownException)
+        );
+        let out: ffi::GeoPoint = serde_wasm_bindgen::from_value(out_js)
+            .map_err(|_| GeographicError::Json("GeoPoint".to_owned()))?;
+        if out.ok {
+            Ok(GeoPoint::new(out.lat * DEG, out.lon * DEG, None)?)
+        } else {
+            Err(GeographicError::UnknownException)
+        }
     }
-}
 
-#[cfg(feature = "wasm")]
-pub fn gnomonic_reverse(point0: &GeoPoint, xypoint: &XyPoint) -> Result<GeoPoint> {
-    let out_js = wasm_ffi::gnomonic_reverse(
-        point0.lat().value_unsafe,
-        point0.lon().value_unsafe,
-        xypoint.x.value_unsafe,
-        xypoint.y.value_unsafe,
-    );
-    let out: wasm_ffi::GeoPoint = serde_wasm_bindgen::from_value(out_js)
-        .map_err(|_| GeographicError::Json("GeoPoint".to_owned()))?;
-    if out.ok {
-        Ok(GeoPoint::new(out.lat * DEG, out.lon * DEG, None)?)
-    } else {
-        Err(GeographicError::UnknownException)
+    pub fn geocentric_forward(point: &GeoPoint) -> Result<XyzPoint> {
+        let out_js =
+            ffi::geocentric_forward(point.lat().value_unsafe, point.lon().value_unsafe, 0.0);
+        let out: ffi::XyzPoint = serde_wasm_bindgen::from_value(out_js)
+            .map_err(|_| GeographicError::Json("XyzPoint".to_owned()))?;
+        if out.ok {
+            Ok(XyzPoint {
+                x: out.x * M,
+                y: out.y * M,
+                z: out.z * M,
+            })
+        } else {
+            Err(GeographicError::UnknownException)
+        }
     }
-}
 
-#[cfg(not(feature = "wasm"))]
-pub fn geocentric_forward(point: &GeoPoint) -> Result<XyzPoint> {
-    let mut x = 0.0;
-    let mut y = 0.0;
-    let mut z = 0.0;
-    let ok = unsafe {
-        crate::ffi::geocentric_forward(
-            point.lat().value_unsafe,
-            point.lon().value_unsafe,
-            0.0,
-            &mut x,
-            &mut y,
-            &mut z,
-        )
-    };
+    mod ffi {
+        use serde::Deserialize;
+        use wasm_bindgen::prelude::*;
 
-    if ok {
-        Ok(XyzPoint {
-            x: x * M,
-            y: y * M,
-            z: z * M,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
-    }
-}
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct DirectSolution {
+            pub ok: bool,
+            pub lat2: f64,
+            pub lon2: f64,
+            pub a12: f64,
+        }
 
-#[cfg(feature = "wasm")]
-pub fn geocentric_forward(point: &GeoPoint) -> Result<XyzPoint> {
-    let out_js =
-        wasm_ffi::geocentric_forward(point.lat().value_unsafe, point.lon().value_unsafe, 0.0);
-    let out: wasm_ffi::XyzPoint = serde_wasm_bindgen::from_value(out_js)
-        .map_err(|_| GeographicError::Json("XyzPoint".to_owned()))?;
-    if out.ok {
-        Ok(XyzPoint {
-            x: out.x * M,
-            y: out.y * M,
-            z: out.z * M,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_namespace = ["window", "GEO"])]
+            pub fn geodesic_direct(lat1: f64, lon1: f64, azi1: f64, s12: f64) -> JsValue;
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct InverseSolution {
+            pub ok: bool,
+            pub s12: f64,
+            pub azi1: f64,
+            pub azi2: f64,
+            pub a12: f64,
+        }
+
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_namespace = ["window", "GEO"])]
+            pub fn geodesic_inverse(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> JsValue;
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct XyPoint {
+            pub ok: bool,
+            pub x: f64,
+            pub y: f64,
+        }
+
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_namespace = ["window", "GEO"])]
+            pub fn gnomonic_forward(lat0: f64, lon0: f64, lat: f64, lon: f64) -> JsValue;
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct GeoPoint {
+            pub ok: bool,
+            pub lat: f64,
+            pub lon: f64,
+        }
+
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_namespace = ["window", "GEO"])]
+            pub fn gnomonic_reverse(lat0: f64, lon0: f64, x: f64, y: f64) -> JsValue;
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct XyzPoint {
+            pub ok: bool,
+            pub x: f64,
+            pub y: f64,
+            pub z: f64,
+        }
+
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_namespace = ["window", "GEO"])]
+            pub fn geocentric_forward(lat: f64, lon: f64, h: f64) -> JsValue;
+        }
     }
 }
 
@@ -311,86 +401,6 @@ impl TryFrom<GeoPoint> for GeoAndXyzPoint {
     fn try_from(value: GeoPoint) -> std::result::Result<Self, Self::Error> {
         let xyz = geocentric_forward(&value)?;
         Ok(GeoAndXyzPoint { geo: value, xyz })
-    }
-}
-
-#[cfg(feature = "wasm")]
-mod wasm_ffi {
-    use serde::Deserialize;
-    use wasm_bindgen::prelude::*;
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct DirectSolution {
-        pub ok: bool,
-        pub lat2: f64,
-        pub lon2: f64,
-        pub a12: f64,
-    }
-
-    #[wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = ["window", "GEO"])]
-        pub fn geodesic_direct(lat1: f64, lon1: f64, azi1: f64, s12: f64) -> JsValue;
-    }
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct InverseSolution {
-        pub ok: bool,
-        pub s12: f64,
-        pub azi1: f64,
-        pub azi2: f64,
-        pub a12: f64,
-    }
-
-    #[wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = ["window", "GEO"])]
-        pub fn geodesic_inverse(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> JsValue;
-    }
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct XyPoint {
-        pub ok: bool,
-        pub x: f64,
-        pub y: f64,
-    }
-
-    #[wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = ["window", "GEO"])]
-        pub fn gnomonic_forward(lat0: f64, lon0: f64, lat: f64, lon: f64) -> JsValue;
-    }
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct GeoPoint {
-        pub ok: bool,
-        pub lat: f64,
-        pub lon: f64,
-    }
-
-    #[wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = ["window", "GEO"])]
-        pub fn gnomonic_reverse(lat0: f64, lon0: f64, x: f64, y: f64) -> JsValue;
-    }
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct XyzPoint {
-        pub ok: bool,
-        pub x: f64,
-        pub y: f64,
-        pub z: f64,
-    }
-
-    #[wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = ["window", "GEO"])]
-        pub fn geocentric_forward(lat: f64, lon: f64, h: f64) -> JsValue;
     }
 }
 
