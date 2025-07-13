@@ -90,30 +90,30 @@ EMSCRIPTEN_BINDINGS(geographiclib_shim) {
       .field("lon2", &DirectSolution::lon2)
       .field("a12", &DirectSolution::a12);
 
-  function("geodesicDirect", &embind_geodesic_direct);
+  function("geodesic_direct", &embind_geodesic_direct);
 
   value_object<InverseSolution>("InverseSolution")
       .field("ok", &InverseSolution::ok)
       .field("s12", &InverseSolution::s12)
       .field("azi1", &InverseSolution::azi1)
       .field("azi2", &InverseSolution::azi2)
-      .field("s12", &InverseSolution::s12);
+      .field("a12", &InverseSolution::a12);
 
-  function("geodesicInverse", &embind_geodesic_inverse);
+  function("geodesic_inverse", &embind_geodesic_inverse);
 
   value_object<XyPoint>("XyPoint")
       .field("ok", &XyPoint::ok)
       .field("x", &XyPoint::x)
       .field("y", &XyPoint::y);
 
-  function("gnomonicForward", &embind_gnomonic_forward);
+  function("gnomonic_forward", &embind_gnomonic_forward);
 
   value_object<GeoPoint>("GeoPoint")
       .field("ok", &GeoPoint::ok)
       .field("lat", &GeoPoint::lat)
       .field("lon", &GeoPoint::lon);
 
-  function("gnomonicReverse", &embind_gnomonic_reverse);
+  function("gnomonic_reverse", &embind_gnomonic_reverse);
 
   value_object<XyzPoint>("XyzPoint")
       .field("ok", &XyzPoint::ok)
@@ -121,9 +121,9 @@ EMSCRIPTEN_BINDINGS(geographiclib_shim) {
       .field("y", &XyzPoint::y)
       .field("z", &XyzPoint::z);
 
-  function("geocentricForward", &embind_geocentric_forward);
+  function("geocentric_forward", &embind_geocentric_forward);
 
-  function("geographiclibVersion", &embind_geographiclib_version);
+  function("geographiclib_version", &embind_geographiclib_version);
 
-  function("compilerVersion", &embind_compiler_version);
+  function("compiler_version", &embind_compiler_version);
 }

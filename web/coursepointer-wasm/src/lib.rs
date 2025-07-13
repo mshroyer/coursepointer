@@ -1,4 +1,5 @@
-use coursepointer::{GeoPoint, DEG};
+use coursepointer::course::{CourseSetBuilder, CourseSetOptions};
+use coursepointer::{DEG, GeoPoint};
 use dimensioned::si::M;
 use thiserror::Error;
 use wasm_bindgen::prelude::*;
@@ -14,27 +15,33 @@ pub enum WasmWrapperError {
     Course(#[from] coursepointer::course::CourseError),
 }
 
+impl From<WasmWrapperError> for JsValue {
+    fn from(err: WasmWrapperError) -> JsValue {
+        // JsValue::from_str(&err.to_string())
+        JsValue::from_str(format!("{err:?}").as_str())
+    }
+}
+
 pub type Result<T> = std::result::Result<T, WasmWrapperError>;
 
-// #[wasm_bindgen]
-// pub fn demo_course_set() -> f64 {
-//     (|| -> Result<f64> {
-//         let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
-//         builder
-//             .add_route()
-//             .with_name("Demo route".to_owned())
-//             .with_route_point(GeoPoint::new(1.1 * DEG, 2.2 * DEG, None)?)
-//             .with_route_point(GeoPoint::new(3.3 * DEG, 4.4 * DEG, None)?);
-//         Ok(builder
-//             .build()?
-//             .courses
-//             .get(0)
-//             .unwrap()
-//             .total_distance()
-//             .value_unsafe)
-//     })()
-//     .unwrap()
-// }
+#[wasm_bindgen]
+pub fn demo_course_set() -> Result<f64> {
+    (|| -> Result<f64> {
+        let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
+        builder
+            .add_route()
+            .with_name("Demo route".to_owned())
+            .with_route_point(GeoPoint::new(1.1 * DEG, 2.2 * DEG, None)?)
+            .with_route_point(GeoPoint::new(3.3 * DEG, 4.4 * DEG, None)?);
+        Ok(builder
+            .build()?
+            .courses
+            .get(0)
+            .unwrap()
+            .total_distance()
+            .value_unsafe)
+    })()
+}
 
 #[wasm_bindgen]
 pub fn direct_lon(lat1: f64, lon1: f64, azi1: f64, s12: f64) -> f64 {
