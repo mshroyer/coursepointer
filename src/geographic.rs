@@ -19,6 +19,50 @@ pub enum GeographicError {
 
 type Result<T> = std::result::Result<T, GeographicError>;
 
+/// A solution to the direct problem in geodesy.
+#[allow(dead_code)]
+pub struct DirectSolution {
+    /// Arc distance between the points.
+    pub arc_distance: Degree<f64>,
+
+    /// Destination point.
+    pub point2: GeoPoint,
+}
+
+/// Calculate a solution to the direct geodesic problem.
+///
+/// Given a start point, azimuth, and a geodesic distance, computes the point
+/// where we end up and its arc distance from the start point.
+pub fn geodesic_direct(
+    point1: &GeoPoint,
+    azimuth: Degree<f64>,
+    distance: Meter<f64>,
+) -> Result<DirectSolution> {
+    let mut lat2_deg = 0.0;
+    let mut lon2_deg = 0.0;
+    let mut arc_distance_deg = 0.0;
+    let ok = unsafe {
+        crate::ffi::geodesic_direct(
+            point1.lat().value_unsafe,
+            point1.lon().value_unsafe,
+            azimuth.value_unsafe,
+            distance.value_unsafe,
+            &mut lat2_deg,
+            &mut lon2_deg,
+            &mut arc_distance_deg,
+        )
+    };
+
+    if ok {
+        Ok(DirectSolution {
+            arc_distance: arc_distance_deg * DEG,
+            point2: GeoPoint::new(lat2_deg * DEG, lon2_deg * DEG, None)?,
+        })
+    } else {
+        Err(GeographicError::UnknownException)
+    }
+}
+
 /// A solution to the inverse problem in geodesy.
 #[allow(dead_code)]
 pub struct InverseSolution {
@@ -63,50 +107,6 @@ pub fn geodesic_inverse(point1: &GeoPoint, point2: &GeoPoint) -> Result<InverseS
             geo_distance: geo_distance_m * M,
             azimuth1: azimuth1_deg * DEG,
             azimuth2: azimuth2_deg * DEG,
-        })
-    } else {
-        Err(GeographicError::UnknownException)
-    }
-}
-
-/// A solution to the direct problem in geodesy.
-#[allow(dead_code)]
-pub struct DirectSolution {
-    /// Arc distance between the points.
-    pub arc_distance: Degree<f64>,
-
-    /// Destination point.
-    pub point2: GeoPoint,
-}
-
-/// Calculate a solution to the direct geodesic problem.
-///
-/// Given a start point, azimuth, and a geodesic distance, computes the point
-/// where we end up and its arc distance from the start point.
-pub fn geodesic_direct(
-    point1: &GeoPoint,
-    azimuth: Degree<f64>,
-    distance: Meter<f64>,
-) -> Result<DirectSolution> {
-    let mut lat2_deg = 0.0;
-    let mut lon2_deg = 0.0;
-    let mut arc_distance_deg = 0.0;
-    let ok = unsafe {
-        crate::ffi::geodesic_direct(
-            point1.lat().value_unsafe,
-            point1.lon().value_unsafe,
-            azimuth.value_unsafe,
-            distance.value_unsafe,
-            &mut lat2_deg,
-            &mut lon2_deg,
-            &mut arc_distance_deg,
-        )
-    };
-
-    if ok {
-        Ok(DirectSolution {
-            arc_distance: arc_distance_deg * DEG,
-            point2: GeoPoint::new(lat2_deg * DEG, lon2_deg * DEG, None)?,
         })
     } else {
         Err(GeographicError::UnknownException)
