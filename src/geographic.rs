@@ -5,7 +5,8 @@
 use dimensioned::si::Meter;
 use thiserror::Error;
 pub use wrappers::{
-    geocentric_forward, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
+    compiler_version_str, geocentric_forward, geodesic_direct, geodesic_inverse,
+    geographiclib_version_str, gnomonic_forward, gnomonic_reverse,
 };
 
 use crate::measure::Degree;
@@ -52,11 +53,14 @@ pub struct InverseSolution {
 
 #[cfg(not(feature = "wasm"))]
 mod wrappers {
-    use dimensioned::si::{M, Meter};
+    use std::ffi::CStr;
 
+    use dimensioned::si::{Meter, M};
+
+    use crate::geographic::wrappers::ffi::{compiler_version, geographiclib_version};
     use crate::geographic::{DirectSolution, GeographicError, InverseSolution, Result};
     use crate::types::{XyPoint, XyzPoint};
-    use crate::{DEG, Degree, GeoPoint};
+    use crate::{Degree, GeoPoint, DEG};
 
     /// Calculate a solution to the direct geodesic problem.
     ///
@@ -71,7 +75,7 @@ mod wrappers {
         let mut lon2_deg = 0.0;
         let mut arc_distance_deg = 0.0;
         let ok = unsafe {
-            crate::ffi::geodesic_direct(
+            ffi::geodesic_direct(
                 point1.lat().value_unsafe,
                 point1.lon().value_unsafe,
                 azimuth.value_unsafe,
@@ -102,7 +106,7 @@ mod wrappers {
         let mut azimuth2_deg = 0.0;
         let mut arc_distance_deg = 0.0;
         let ok = unsafe {
-            crate::ffi::geodesic_inverse_with_azimuth(
+            ffi::geodesic_inverse_with_azimuth(
                 point1.lat().value_unsafe,
                 point1.lon().value_unsafe,
                 point2.lat().value_unsafe,
@@ -134,7 +138,7 @@ mod wrappers {
     pub fn gnomonic_forward(point0: &GeoPoint, point: &GeoPoint) -> Result<XyPoint> {
         let mut result = XyPoint::default();
         let ok = unsafe {
-            crate::ffi::gnomonic_forward(
+            ffi::gnomonic_forward(
                 point0.lat().value_unsafe,
                 point0.lon().value_unsafe,
                 point.lat().value_unsafe,
@@ -160,7 +164,7 @@ mod wrappers {
         let mut lat_deg = 0.0;
         let mut lon_deg = 0.0;
         let ok = unsafe {
-            crate::ffi::gnomonic_reverse(
+            ffi::gnomonic_reverse(
                 point0.lat().value_unsafe,
                 point0.lon().value_unsafe,
                 xypoint.x.value_unsafe,
@@ -182,7 +186,7 @@ mod wrappers {
         let mut y = 0.0;
         let mut z = 0.0;
         let ok = unsafe {
-            crate::ffi::geocentric_forward(
+            ffi::geocentric_forward(
                 point.lat().value_unsafe,
                 point.lon().value_unsafe,
                 0.0,
@@ -202,15 +206,86 @@ mod wrappers {
             Err(GeographicError::UnknownException)
         }
     }
+
+    pub fn geographiclib_version_str() -> &'static str {
+        unsafe { CStr::from_ptr(geographiclib_version()).to_str().unwrap() }
+    }
+
+    pub fn compiler_version_str() -> &'static str {
+        unsafe { CStr::from_ptr(compiler_version()).to_str().unwrap() }
+    }
+
+    /// CXX Generated FFI for GeographicLib
+    ///
+    /// This currently has to be inline in lib.rs because non-inline mods in
+    /// proc macro input are unstable: <https://github.com/rust-lang/rust/issues/54727>
+    #[allow(clippy::too_many_arguments)]
+    mod ffi {
+        use std::ffi::c_char;
+
+        unsafe extern "C" {
+            pub fn geodesic_direct(
+                lat1: f64,
+                lon1: f64,
+                az1: f64,
+                s12: f64,
+                lat2: &mut f64,
+                lon2: &mut f64,
+                a12: &mut f64,
+            ) -> bool;
+
+            pub fn geodesic_inverse_with_azimuth(
+                lat1: f64,
+                lon1: f64,
+                lat2: f64,
+                lon2: f64,
+                s12: &mut f64,
+                azi1: &mut f64,
+                azi2: &mut f64,
+                a12: &mut f64,
+            ) -> bool;
+
+            pub fn gnomonic_forward(
+                lat1: f64,
+                lon1: f64,
+                lat: f64,
+                lon: f64,
+                x: &mut f64,
+                y: &mut f64,
+            ) -> bool;
+
+            pub fn gnomonic_reverse(
+                lat1: f64,
+                lon1: f64,
+                x: f64,
+                y: f64,
+                lat: &mut f64,
+                lon: &mut f64,
+            ) -> bool;
+
+            pub fn geocentric_forward(
+                lat: f64,
+                lon: f64,
+                h: f64,
+                x: &mut f64,
+                y: &mut f64,
+                z: &mut f64,
+            ) -> bool;
+
+            pub fn geographiclib_version() -> *const c_char;
+
+            pub fn compiler_version() -> *const c_char;
+        }
+    }
 }
 
 #[cfg(feature = "wasm")]
 mod wrappers {
-    use dimensioned::si::{M, Meter};
+    use dimensioned::si::{Meter, M};
 
     use crate::geographic::{DirectSolution, GeographicError, InverseSolution, Result};
     use crate::types::{XyPoint, XyzPoint};
-    use crate::{DEG, Degree, GeoPoint};
+    use crate::{Degree, GeoPoint, DEG};
 
     pub fn geodesic_direct(
         point1: &GeoPoint,
@@ -307,6 +382,14 @@ mod wrappers {
         }
     }
 
+    pub fn geographiclib_version_str() -> String {
+        ffi::geographiclib_version()
+    }
+
+    pub fn compiler_version_str() -> String {
+        ffi::compiler_version()
+    }
+
     mod ffi {
         use serde::Deserialize;
         use wasm_bindgen::prelude::*;
@@ -383,6 +466,18 @@ mod wrappers {
         extern "C" {
             #[wasm_bindgen(js_namespace = ["window", "GEO"])]
             pub fn geocentric_forward(lat: f64, lon: f64, h: f64) -> JsValue;
+        }
+
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_namespace = ["window", "GEO"])]
+            pub fn geographiclib_version() -> String;
+        }
+
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_namespace = ["window", "GEO"])]
+            pub fn compiler_version() -> String;
         }
     }
 }
