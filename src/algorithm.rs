@@ -7,11 +7,11 @@
 
 use std::ops::{Mul, Sub};
 
-use dimensioned::si::{Meter, M};
+use dimensioned::si::{M, Meter};
 use thiserror::Error;
 
 use crate::geographic::{
-    geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse, GeographicError,
+    GeographicError, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
 };
 use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, HasGeoPoint, HasXyzPoint, XyPoint};
 
@@ -365,8 +365,8 @@ mod tests {
     use serde::Deserialize;
 
     use super::{
-        cartesian_intercept_distance, find_nearby_segments, intercept_distance_floor, karney_interception,
-        FromGeoPoints, NearbySegment,
+        FromGeoPoints, NearbySegment, cartesian_intercept_distance, find_nearby_segments,
+        intercept_distance_floor, karney_interception,
     };
     use crate::geographic::{geocentric_forward, geodesic_inverse};
     use crate::measure::DEG;
@@ -582,14 +582,11 @@ mod qc {
     use std::marker::PhantomData;
 
     use anyhow::Result;
-    use dimensioned::si::{Meter, M};
+    use dimensioned::si::{M, Meter};
     use quickcheck::{Arbitrary, Gen, TestResult};
     use quickcheck_macros::quickcheck;
 
-    use super::{
-        intercept_distance_floor,
-        karney_interception, FromGeoPoints,
-    };
+    use super::{FromGeoPoints, intercept_distance_floor, karney_interception};
     use crate::geographic::{geodesic_direct, geodesic_inverse};
     use crate::measure::DEG;
     use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment};

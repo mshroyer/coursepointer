@@ -51,16 +51,16 @@ pub struct InverseSolution {
     pub azimuth2: Degree<f64>,
 }
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(not(feature = "jsffi"))]
 mod wrappers {
     use std::ffi::CStr;
 
-    use dimensioned::si::{Meter, M};
+    use dimensioned::si::{M, Meter};
 
     use crate::geographic::wrappers::ffi::{compiler_version, geographiclib_version};
     use crate::geographic::{DirectSolution, GeographicError, InverseSolution, Result};
     use crate::types::{XyPoint, XyzPoint};
-    use crate::{Degree, GeoPoint, DEG};
+    use crate::{DEG, Degree, GeoPoint};
 
     /// Calculate a solution to the direct geodesic problem.
     ///
@@ -279,13 +279,13 @@ mod wrappers {
     }
 }
 
-#[cfg(feature = "wasm")]
+#[cfg(feature = "jsffi")]
 mod wrappers {
-    use dimensioned::si::{Meter, M};
+    use dimensioned::si::{M, Meter};
 
     use crate::geographic::{DirectSolution, GeographicError, InverseSolution, Result};
     use crate::types::{XyPoint, XyzPoint};
-    use crate::{Degree, GeoPoint, DEG};
+    use crate::{DEG, Degree, GeoPoint};
 
     pub fn geodesic_direct(
         point1: &GeoPoint,
