@@ -95,22 +95,33 @@ more information about the method used here.
 
 ## Wait, can't I just import my GPX into Garmin Connect?
 
-Actually no, and this is a common source of confusion!
+As of around 2025-07-13, you can!
 
-Importing a GPX file with a route and waypoints into Garmin Connect's web
-application does convert any waypoints within about 35m of the course into
-course points.  However, at the time of writing it doesn't compute their
+Previously, importing a GPX file with a route and waypoints into Garmin
+Connect's web application did convert any waypoints within about 35m of the
+course into course points.  However, at that time it wouldn't compute their
 distances, instead setting them to zero.
 
-This leads to surprising behavior when you navigate this course on your
-device: Your course points show up at the correct positions on the map, and
-may appear in Up Ahead before you begin.  But as soon as you start recording
-your course and pass distance zero, they'll all disappear!
+This led to surprising behavior when you'd navigate this course on your
+device: Your course points would show up at the correct positions on the map,
+and may appear in Up Ahead before you begin.  But as soon as you'd start
+recording your course and pass distance zero, they would all disappear!
 
-This is a longstanding limitation that has been discussed [on
+This was a longstanding limitation that has been discussed [on
 Reddit](https://www.reddit.com/r/Garmin/comments/1ds478x/how_does_up_ahead_actually_work/)
 and [in Garmin's
-forums](https://forums.garmin.com/outdoor-recreation/outdoor-recreation/f/fenix-7-series/369450/is-garmin-going-to-ever-fix-a-glaring-bug-with-garmin-connect-gpx-course-import-which-results-in-up-ahead-simply-not-working?pifragment-1292=3).
+forums](https://forums.garmin.com/outdoor-recreation/outdoor-recreation/f/fenix-7-series/369450/is-garmin-going-to-ever-fix-a-glaring-bug-with-garmin-connect-gpx-course-import-which-results-in-up-ahead-simply-not-working?pifragment-1292=3),
+and it's what prompted me to create this program to begin with.
+
+Even though Garmin Connect appears to be fixed now, there are still some
+reasons you might find coursepointer useful:
+
+- It provides greater control over course points, including repeated course
+  points and control over the distance threshold.
+- It supports non-`generic` course point types.
+- It works without an internet connection, and doesn't upload your route
+  anywhere (in case you're Jason Bourne and you're planning a super secret
+  route).
 
 ## Supported route creators
 
