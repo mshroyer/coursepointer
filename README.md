@@ -113,15 +113,14 @@ and [in Garmin's
 forums](https://forums.garmin.com/outdoor-recreation/outdoor-recreation/f/fenix-7-series/369450/is-garmin-going-to-ever-fix-a-glaring-bug-with-garmin-connect-gpx-course-import-which-results-in-up-ahead-simply-not-working?pifragment-1292=3),
 and it's what prompted me to create this program to begin with.
 
-Even though Garmin Connect appears to be fixed now, there are still some
-reasons you might find coursepointer useful:
+Even though Garmin Connect is fixed now, maybe you'll still find coursepointer
+useful if:
 
-- It provides greater control over course points, including repeated course
-  points and control over the distance threshold.
-- It supports non-`generic` course point types.
-- It works without an internet connection, and doesn't upload your route
-  anywhere (in case you're Jason Bourne and you're planning a super secret
-  route).
+- You want greater control over how course points are interpreted, such as
+  repeating course points or control over the interception threshold
+- You'd like something that automatically interprets non-`generic` course
+  point types in Ride with GPS and Gaia GPS exports
+- You want to generate course points offline
 
 ## Supported route creators
 
