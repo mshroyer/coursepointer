@@ -43,6 +43,10 @@
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
 //!   of a hand-picked subset.  This is mainly useful when experimenting with
 //!   new FFI additions, otherwise it simply slows the build down.
+//!
+//! - `jsffi` replaces the normal C API used to interface with GeographicLib
+//!   with wasm-bindgen bindings.  This is for use in wasm32-unknown-unknown
+//!   builds in which GeographcLib is running as a separate WASM module.
 
 mod algorithm;
 pub mod course;

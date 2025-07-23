@@ -31,14 +31,9 @@ const GEO = await geographicLib();
 (window as any).geographicLib = geographicLib;
 (window as any).GEO = GEO;
 
-(window as any).SHIM = {};
-function geodesic_direct(lat1: number, lon1: number, azi1: number, s12: number): any {
-    return GEO.geodesicDirect(lat1, lon1, azi1, s12);
-}
-(window as any).SHIM.geodesic_direct = geodesic_direct;
-
 await init();
 
+// Functions exported by coursepointer WASM
 (window as any).direct_lon = direct_lon;
 (window as any).demo_course_set = demo_course_set;
 

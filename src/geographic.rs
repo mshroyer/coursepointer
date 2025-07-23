@@ -504,12 +504,16 @@ mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
     use dimensioned::si::M;
+    use wasm_bindgen_test::wasm_bindgen_test;
 
     use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
     use crate::measure::DEG;
     use crate::types::GeoPoint;
 
+    // wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
     #[test]
+    #[wasm_bindgen_test]
     fn test_geodesic_inverse() -> Result<()> {
         let point1 = GeoPoint::new(0.0 * DEG, 0.0 * DEG, None)?;
         let point2 = GeoPoint::new(5.0 * DEG, 5.0 * DEG, None)?;
