@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+# emsdk_env.sh appears to require bash vs. Ubuntu's dash
 
 # Use same as in setup_wasm_sdks.sh:
 EMSDK="$HOME/emsdk"
