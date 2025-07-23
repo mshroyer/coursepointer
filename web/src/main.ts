@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error: Missing module declaration
 import geographicLib from "./wasm/geographiclib.mjs";
 import init, {
   demo_course_set,
@@ -22,8 +22,8 @@ function setupPicker(p: HTMLInputElement) {
 
     const buf = await file.arrayBuffer();
     console.time("read_gpx_bytes");
-    let course = new Uint8Array(buf);
-    let info = convert_gpx_to_fit_bytes(course);
+    const course = new Uint8Array(buf);
+    const info = convert_gpx_to_fit_bytes(course);
     console.timeEnd("read_gpx_bytes");
     document.querySelector<HTMLPreElement>("#report")!.innerHTML = info.report;
     const blob = new Blob([info.fit_bytes], {
@@ -35,7 +35,7 @@ function setupPicker(p: HTMLInputElement) {
 `;
     document
       .querySelector<HTMLButtonElement>("#downloadbtn")!
-      .addEventListener("click", (_) => {
+      .addEventListener("click", () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -48,6 +48,8 @@ function setupPicker(p: HTMLInputElement) {
 
 setupPicker(document.querySelector<HTMLInputElement>("#picker")!);
 
+/* eslint-disable */
+
 const GEO = await geographicLib();
 (window as any).GEO = GEO;
 await init();
@@ -55,3 +57,5 @@ await init();
 // Functions exported by coursepointer WASM
 (window as any).direct_lon = direct_lon;
 (window as any).demo_course_set = demo_course_set;
+
+/* eslint-enable */

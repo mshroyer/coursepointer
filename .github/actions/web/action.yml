@@ -24,10 +24,11 @@ runs:
         pnpm install
       shell: bash
 
-    - name: Check JS/TS format
+    - name: Lint .js and .ts
       run: |
         cd web
         pnpm run format:check
+        pnpm run lint
       shell: bash
 
     - name: PNPM build
