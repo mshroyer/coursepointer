@@ -19,4 +19,11 @@ jobs:
     with:
       os: ubuntu-latest
       toolchain: nightly
+      web: false
+
+  build_test_web:
+    uses: ./.github/workflows/build-test.yml
+    with:
+      os: ubuntu-latest
+      toolchain: 1.88.0
       web: true
