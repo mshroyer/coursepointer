@@ -71,8 +71,14 @@ jobs:
       - uses: ./.github/actions/lint
         if: ${{ inputs.toolchain == 'nightly' }}
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+        if: ${{ inputs.os == 'ubuntu-latest' && inputs.toolchain == 'nightly' }}
+
       - name: PNPM build
         run: |
           cd web
+          pnpm install
           pnpm build
         if: ${{ inputs.os == 'ubuntu-latest' && inputs.toolchain == 'nightly' }}
