@@ -43,6 +43,10 @@
 //! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
 //!   of a hand-picked subset.  This is mainly useful when experimenting with
 //!   new FFI additions, otherwise it simply slows the build down.
+//!
+//! - `jsffi` replaces the normal C API used to interface with GeographicLib
+//!   with wasm-bindgen bindings.  This is for use in wasm32-unknown-unknown
+//!   builds in which GeographcLib is running as a separate WASM module.
 
 mod algorithm;
 pub mod course;
@@ -107,7 +111,7 @@ pub type Result<T> = std::result::Result<T, CoursePointerError>;
 /// Summarizes the result of converting GPX into a FIT course
 ///
 /// The result of a successful invocation of [`convert_gpx_to_fit`].
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ConversionInfo {
     /// The name of the course that was converted, if given
     pub course_name: Option<String>,
@@ -228,66 +232,4 @@ pub fn write_fit_course<W: Write>(
     let course_file = CourseFile::new(course, options);
     course_file.encode(fit_output)?;
     Ok(())
-}
-
-/// CXX Generated FFI for GeographicLib
-///
-/// This currently has to be inline in lib.rs because non-inline mods in proc
-/// macro input are unstable: <https://github.com/rust-lang/rust/issues/54727>
-#[allow(clippy::too_many_arguments)]
-#[cxx::bridge(namespace = "CoursePointer")]
-mod ffi {
-    unsafe extern "C++" {
-        include!("coursepointer/include/shim.hpp");
-
-        fn geodesic_direct(
-            lat1: f64,
-            lon1: f64,
-            az1: f64,
-            s12: f64,
-            lat2: &mut f64,
-            lon2: &mut f64,
-        ) -> Result<f64>;
-
-        fn geodesic_inverse_with_azimuth(
-            lat1: f64,
-            lon1: f64,
-            lat2: f64,
-            lon2: f64,
-            s12: &mut f64,
-            azi1: &mut f64,
-            azi2: &mut f64,
-        ) -> Result<f64>;
-
-        fn gnomonic_forward(
-            lat1: f64,
-            lon1: f64,
-            lat: f64,
-            lon: f64,
-            x: &mut f64,
-            y: &mut f64,
-        ) -> Result<()>;
-
-        fn gnomonic_reverse(
-            lat1: f64,
-            lon1: f64,
-            x: f64,
-            y: f64,
-            lat: &mut f64,
-            lon: &mut f64,
-        ) -> Result<()>;
-
-        fn geocentric_forward(
-            lat: f64,
-            lon: f64,
-            h: f64,
-            x: &mut f64,
-            y: &mut f64,
-            z: &mut f64,
-        ) -> Result<()>;
-
-        fn geographiclib_version() -> &'static str;
-
-        fn compiler_version() -> &'static str;
-    }
 }

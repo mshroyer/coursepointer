@@ -1,0 +1,16 @@
+[package]
+name = "coursepointer-wasm"
+version = "0.3.3-dev"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+coursepointer = { version = "0.3.3-dev", path = "../..", default-features = false, features = ["jsffi"] }
+dimensioned = "0.8.0"
+thiserror = "2.0.12"
+wasm-bindgen = "0.2.100"
+log = "0.4.27"
+wasm-logger = "0.2.0"
+anyhow = "1.0.98"

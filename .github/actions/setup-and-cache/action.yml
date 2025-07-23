@@ -28,7 +28,8 @@ runs:
           ~/.rustup/settings.toml
           .venv/
           target/
-        key: build_test-${{ runner.os }}-${{ runner.os }}-${{ inputs.default_features }}
+          ~/emsdk/
+        key: build_test-${{ runner.os }}-${{ inputs.toolchain }}-${{ inputs.default_features }}
 
     - name: Setup rust
       if: inputs.toolchain != 'stable'  # Runner already comes with the stable toolchain

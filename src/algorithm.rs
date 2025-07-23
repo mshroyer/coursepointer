@@ -358,21 +358,17 @@ fn norm3(vec: Vec3) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use std::marker::PhantomData;
     use std::path::PathBuf;
 
     use anyhow::Result;
     use approx::assert_relative_eq;
-    use dimensioned::si::{M, Meter};
-    use quickcheck::{Arbitrary, Gen, TestResult};
-    use quickcheck_macros::quickcheck;
     use serde::Deserialize;
 
     use super::{
         FromGeoPoints, NearbySegment, cartesian_intercept_distance, find_nearby_segments,
         intercept_distance_floor, karney_interception,
     };
-    use crate::geographic::{geocentric_forward, geodesic_direct, geodesic_inverse};
+    use crate::geographic::{geocentric_forward, geodesic_inverse};
     use crate::measure::DEG;
     use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment, XyzPoint};
 
@@ -579,6 +575,21 @@ mod tests {
 
         Ok(())
     }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod qc {
+    use std::marker::PhantomData;
+
+    use anyhow::Result;
+    use dimensioned::si::{M, Meter};
+    use quickcheck::{Arbitrary, Gen, TestResult};
+    use quickcheck_macros::quickcheck;
+
+    use super::{FromGeoPoints, intercept_distance_floor, karney_interception};
+    use crate::geographic::{geodesic_direct, geodesic_inverse};
+    use crate::measure::DEG;
+    use crate::types::{GeoAndXyzPoint, GeoPoint, GeoSegment};
 
     impl Arbitrary for GeoPoint {
         fn arbitrary(_g: &mut Gen) -> Self {

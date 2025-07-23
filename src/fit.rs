@@ -10,6 +10,8 @@ use num_traits::cast::NumCast;
 use strum::EnumString;
 use thiserror::Error;
 use tracing::debug;
+#[cfg(feature = "jsffi")]
+use wasm_bindgen::prelude::*;
 
 use crate::course::Course;
 use crate::measure::{Centimeter, Millisecond, Nanosecond, SEMI, Semicircle};
@@ -616,6 +618,7 @@ impl RecordMessage {
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
 #[non_exhaustive]
+#[cfg_attr(feature = "jsffi", wasm_bindgen)]
 pub enum CoursePointType {
     Generic = 0u8,
     Summit = 1u8,

@@ -1,0 +1,53 @@
+name: web
+author: mshroyer
+description: web
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
+    - name: Install PNPM dependencies
+      run: |
+        cd web
+        pnpm install
+      shell: bash
+
+    - name: Check JS/TS format
+      run: |
+        cd web
+        pnpm run format:check
+      shell: bash
+
+    - name: Install emscripten
+      run: |
+        EMSDK="$HOME/emsdk"
+        if [ ! -d $EMSDK ]; then
+          git clone https://github.com/emscripten-core/emsdk.git $EMSDK
+          cd $EMSDK
+        else
+          cd $EMSDK
+          git pull
+        fi
+        ./emsdk install latest
+        ./emsdk activate latest
+        echo $EMSDK/upstream/bin >>$GITHUB_PATH
+        echo $EMSDK/upstream/emscripten >>$GITHUB_PATH
+      shell: bash
+
+    - run: cargo install --locked wasm-pack
+      shell: bash
+
+    - name: PNPM build
+      run: |
+        cd web
+        pnpm build
+      shell: bash
+
+    - run: scripts/node_tests.sh
+      shell: bash

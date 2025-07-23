@@ -19,3 +19,4 @@ jobs:
     with:
       os: ubuntu-latest
       toolchain: nightly
+      web: true
