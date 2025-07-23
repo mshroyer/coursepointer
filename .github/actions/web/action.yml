@@ -12,6 +12,18 @@ runs:
       with:
         version: 10
 
+    - name: Install PNPM dependencies
+      run: |
+        cd web
+        pnpm install
+      shell: bash
+
+    - name: Check JS/TS format
+      run: |
+        cd web
+        pnpm run format:check
+      shell: bash
+
     - name: Install emscripten
       run: |
         EMSDK="$HOME/emsdk"
@@ -34,7 +46,6 @@ runs:
     - name: PNPM build
       run: |
         cd web
-        pnpm install
         pnpm build
       shell: bash
 
