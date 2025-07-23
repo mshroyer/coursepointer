@@ -4,9 +4,15 @@ description: web
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 22
+    - name: Setup WASM SDKs
+      run: |
+        scripts/setup_wasm_sdks.sh
+        . scripts/activate_wasm_sdks.sh
+        
+        # Use the node version pinned by emsdk, and save an separate node 
+        # installation step.
+        echo "$(dirname "$EMSDK_NODE")" >>$GITHUB_PATH
+      shell: bash
 
     - uses: pnpm/action-setup@v4
       with:
@@ -24,22 +30,6 @@ runs:
         pnpm run format:check
       shell: bash
 
-    - name: Install emscripten
-      run: |
-        EMSDK="$HOME/emsdk"
-        if [ ! -d $EMSDK ]; then
-          git clone https://github.com/emscripten-core/emsdk.git $EMSDK
-          cd $EMSDK
-        else
-          cd $EMSDK
-          git pull
-        fi
-        ./emsdk install latest
-        ./emsdk activate latest
-        echo $EMSDK/upstream/bin >>$GITHUB_PATH
-        echo $EMSDK/upstream/emscripten >>$GITHUB_PATH
-      shell: bash
-
     - run: cargo install --locked wasm-pack
       shell: bash
 
@@ -50,4 +40,8 @@ runs:
       shell: bash
 
     - run: scripts/node_tests.sh
+      shell: bash
+
+    - name: Show dist files
+      run: tree web/dist
       shell: bash

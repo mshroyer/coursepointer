@@ -14,3 +14,8 @@ wasm-bindgen = "0.2.100"
 log = "0.4.27"
 wasm-logger = "0.2.0"
 anyhow = "1.0.98"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+    "-O3",
+]

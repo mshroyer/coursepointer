@@ -29,6 +29,7 @@ runs:
           .venv/
           target/
           ~/emsdk/
+          ~/wasm-pack/
         key: build_test-${{ runner.os }}-${{ inputs.toolchain }}-${{ inputs.default_features }}
 
     - name: Setup rust
