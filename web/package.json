@@ -9,12 +9,22 @@
     "build:geographiclib-direct": "em++ -O3 -std=c++11 '-sEXPORTED_RUNTIME_METHODS=[\"wasmMemory\",\"HEAPU8\",\"UTF8ToString\"]' '-sEXPORTED_FUNCTIONS=[\"_geodesic_inverse_with_azimuth\",\"_geodesic_direct\",\"_gnomonic_forward\",\"_gnomonic_reverse\",\"_geocentric_forward\",\"_get_geographiclib_version\",\"_get_compiler_version\"]' -I../include -I../geographiclib/include ../geographiclib/src/DST.cpp ../geographiclib/src/EllipticFunction.cpp ../geographiclib/src/Geocentric.cpp ../geographiclib/src/Geodesic.cpp ../geographiclib/src/GeodesicExact.cpp ../geographiclib/src/GeodesicLine.cpp ../geographiclib/src/GeodesicLineExact.cpp ../geographiclib/src/Gnomonic.cpp ../geographiclib/src/Math.cpp ../src/shim.cpp --no-entry -o src/wasm/geographiclib.mjs",
     "build:geographiclib": "make -C src/wasm all",
     "build:coursepointer": "wasm-pack build --target web coursepointer-wasm",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
+    "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json}'",
+    "format:check": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json}' --check",
     "clean": "rm src/wasm/geographiclib.*",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@eslint/js": "^9.31.0",
+    "eslint": "^9.31.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.3",
+    "prettier": "^3.6.2",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4"
+    "typescript-eslint": "^8.38.0",
+    "vite": "^7.0.5"
   },
   "dependencies": {
     "coursepointer-wasm": "link:coursepointer-wasm/pkg"

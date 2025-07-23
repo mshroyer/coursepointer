@@ -1,3 +1,3 @@
 export function geographiclibVersion(): string {
-    return ""
+  return "";
 }
