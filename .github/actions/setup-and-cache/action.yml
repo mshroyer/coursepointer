@@ -29,7 +29,7 @@ runs:
           .venv/
           target/
           ~/emsdk/
-        key: build_test-${{ runner.os }}-${{ runner.os }}-${{ inputs.default_features }}
+        key: build_test-${{ runner.os }}-${{ inputs.toolchain }}-${{ inputs.default_features }}
 
     - name: Setup rust
       if: inputs.toolchain != 'stable'  # Runner already comes with the stable toolchain
