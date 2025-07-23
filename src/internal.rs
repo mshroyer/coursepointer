@@ -4,8 +4,6 @@
 //! `integration-stub` binary, but they are not intended for use by external
 //! code. This module's API may change without semantic versioning!
 
-use std::fmt::Display;
-
 use dimensioned::si::Meter;
 
 use crate::GeoPoint;

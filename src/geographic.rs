@@ -535,9 +535,21 @@ mod tests {
         );
 
         // Tautological:
-        assert_relative_eq!(result.arc_distance, 7.066683438361678 * DEG,);
-        assert_relative_eq!(result.azimuth1, 45.082714387297614 * DEG,);
-        assert_relative_eq!(result.azimuth2, 45.30115933946962 * DEG,);
+        assert_relative_eq!(
+            result.arc_distance,
+            7.066683438361678 * DEG,
+            epsilon = 0.000_001
+        );
+        assert_relative_eq!(
+            result.azimuth1,
+            45.082714387297614 * DEG,
+            epsilon = 0.000_001
+        );
+        assert_relative_eq!(
+            result.azimuth2,
+            45.30115933946962 * DEG,
+            epsilon = 0.000_001
+        );
         Ok(())
     }
 
@@ -554,7 +566,11 @@ mod tests {
         assert_relative_eq!(result.point2, point2);
 
         // Tautological:
-        assert_relative_eq!(result.arc_distance, 59.27300787802938 * DEG);
+        assert_relative_eq!(
+            result.arc_distance,
+            59.27300787802938 * DEG,
+            epsilon = 0.000_001
+        );
         Ok(())
     }
 
@@ -571,8 +587,8 @@ mod tests {
         assert!(result.y.value_unsafe < 0.0);
 
         // Tautological:
-        assert_relative_eq!(result.x, 534315.8196288919 * M);
-        assert_relative_eq!(result.y, -325530.9051618818 * M);
+        assert_relative_eq!(result.x, 534315.8196288919 * M, epsilon = 0.000_001 * M);
+        assert_relative_eq!(result.y, -325530.9051618818 * M, epsilon = 0.000_001 * M);
         Ok(())
     }
 
@@ -595,9 +611,9 @@ mod tests {
         let xyz_point = geocentric_forward(&point)?;
 
         // Tautological:
-        assert_relative_eq!(xyz_point.x, 4720510.708340171 * M);
-        assert_relative_eq!(xyz_point.y, -3960978.794336638 * M);
-        assert_relative_eq!(xyz_point.z, 1640100.1401958915 * M);
+        assert_relative_eq!(xyz_point.x, 4720510.708340171 * M, epsilon = 0.000_001 * M);
+        assert_relative_eq!(xyz_point.y, -3960978.794336638 * M, epsilon = 0.000_001 * M);
+        assert_relative_eq!(xyz_point.z, 1640100.1401958915 * M, epsilon = 0.000_001 * M);
         Ok(())
     }
 }
