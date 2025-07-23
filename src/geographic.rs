@@ -506,11 +506,20 @@ mod tests {
     use dimensioned::si::M;
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use super::{geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse};
+    use super::{
+        geocentric_forward, geodesic_direct, geodesic_inverse, gnomonic_forward, gnomonic_reverse,
+    };
     use crate::measure::DEG;
     use crate::types::GeoPoint;
 
-    // wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+    // Some of the assertions below are commented as "taugological".  This means
+    // that the value being asserted was derived by simply running the native, C
+    // FFI version of the function and examining its output, rather than testing
+    // against output from some other implementation like Mathematica.
+    //
+    // There wouldn't be much point to this on its own, but we can then run the
+    // same test in node with `jsffi` and verify the wasm-bindgen and embind
+    // bindings are correct.
 
     #[test]
     #[wasm_bindgen_test]
@@ -524,10 +533,16 @@ mod tests {
             784029.0 * M,
             max_relative = 0.000_001 * M
         );
+
+        // Tautological:
+        assert_relative_eq!(result.arc_distance, 7.066683438361678 * DEG,);
+        assert_relative_eq!(result.azimuth1, 45.082714387297614 * DEG,);
+        assert_relative_eq!(result.azimuth2, 45.30115933946962 * DEG,);
         Ok(())
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_geodesic_direct() -> Result<()> {
         let point1 = GeoPoint::new(10.0 * DEG, -20.0 * DEG, None)?;
         let point2 = GeoPoint::new(30.0 * DEG, 40.0 * DEG, None)?;
@@ -537,10 +552,14 @@ mod tests {
         // The direct result should reproduce the target point used to obtain
         // the inverse solution.
         assert_relative_eq!(result.point2, point2);
+
+        // Tautological:
+        assert_relative_eq!(result.arc_distance, 59.27300787802938 * DEG);
         Ok(())
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_gnomonic_forward() -> Result<()> {
         let point0 = GeoPoint::new(20.0 * DEG, -40.0 * DEG, None)?;
         let point = GeoPoint::new(17.0 * DEG, -35.0 * DEG, None)?;
@@ -550,10 +569,15 @@ mod tests {
         assert!(result.x.value_unsafe > 0.0);
         // point's latitude is south of point0's
         assert!(result.y.value_unsafe < 0.0);
+
+        // Tautological:
+        assert_relative_eq!(result.x, 534315.8196288919 * M);
+        assert_relative_eq!(result.y, -325530.9051618818 * M);
         Ok(())
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_gnomonic_reverse() -> Result<()> {
         let point0 = GeoPoint::new(20.0 * DEG, -40.0 * DEG, None)?;
         let point = GeoPoint::new(17.0 * DEG, -35.0 * DEG, None)?;
@@ -561,6 +585,19 @@ mod tests {
         let xypoint = gnomonic_forward(&point0, &point)?;
         let result = gnomonic_reverse(&point0, &xypoint)?;
         assert_relative_eq!(result, point);
+        Ok(())
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_geocentric_forward() -> Result<()> {
+        let point = GeoPoint::new(15.0 * DEG, -40.0 * DEG, None)?;
+        let xyz_point = geocentric_forward(&point)?;
+
+        // Tautological:
+        assert_relative_eq!(xyz_point.x, 4720510.708340171 * M);
+        assert_relative_eq!(xyz_point.y, -3960978.794336638 * M);
+        assert_relative_eq!(xyz_point.z, 1640100.1401958915 * M);
         Ok(())
     }
 }
