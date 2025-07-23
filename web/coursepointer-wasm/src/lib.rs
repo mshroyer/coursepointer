@@ -1,7 +1,10 @@
 use std::io::Cursor;
 
 use coursepointer::course::{Course, CoursePoint, CourseSetBuilder, CourseSetOptions, Record};
-use coursepointer::{CoursePointType, DEG, GeoPoint, read_gpx};
+use coursepointer::internal::Kilometer;
+use coursepointer::{
+    ConversionInfo, CoursePointType, DEG, FitCourseOptions, GeoPoint, convert_gpx_to_fit, read_gpx,
+};
 use dimensioned::si::M;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
@@ -16,6 +19,8 @@ pub enum WasmWrapperError {
     TypeInvariant(#[from] coursepointer::TypeError),
     #[error("Error building course")]
     Course(#[from] coursepointer::course::CourseError),
+    #[error("Miscellaneous error")]
+    Anyhow(#[from] anyhow::Error),
 }
 
 impl From<WasmWrapperError> for JsValue {
@@ -108,6 +113,40 @@ impl From<Course> for JsCourse {
 pub fn read_gpx_bytes(data: &[u8]) -> Result<JsCourse> {
     let set = read_gpx(CourseSetOptions::default(), Cursor::new(data))?;
     Ok(set.courses[0].clone().into())
+}
+
+#[derive(Clone)]
+#[wasm_bindgen(getter_with_clone)]
+pub struct JsConversionInfo {
+    pub course_name: String,
+    pub total_distance_m: f64,
+    pub num_waypoints: usize,
+    pub course_points: Vec<JsCoursePoint>,
+    pub fit_bytes: Box<[u8]>,
+    pub report: String,
+}
+
+#[wasm_bindgen]
+pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8]) -> Result<JsConversionInfo> {
+    let mut fit_output = Vec::new();
+    let info = convert_gpx_to_fit(
+        Cursor::new(gpx_input),
+        &mut fit_output,
+        CourseSetOptions::default(),
+        FitCourseOptions::default(),
+    )?;
+
+    let report =
+        coursepointer::internal::report::conversion_report::<Kilometer<f64>>(info.clone())?;
+
+    Ok(JsConversionInfo {
+        course_name: info.course_name.unwrap_or_default(),
+        total_distance_m: info.total_distance.value_unsafe,
+        num_waypoints: info.num_waypoints,
+        course_points: info.course_points.into_iter().map(Into::into).collect(),
+        fit_bytes: fit_output.into_boxed_slice(),
+        report,
+    })
 }
 
 #[wasm_bindgen]

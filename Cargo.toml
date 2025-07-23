@@ -81,7 +81,7 @@ cli = [
 ]
 full-geolib = []
 rayon = ["dep:rayon"]
-jsffi = ["dep:serde", "dep:serde-wasm-bindgen", "dep:wasm-bindgen"]
+jsffi = ["dep:anyhow", "dep:serde", "dep:serde-wasm-bindgen", "dep:wasm-bindgen"]
 
 [build-dependencies]
 rustc_version = "0.4.1"

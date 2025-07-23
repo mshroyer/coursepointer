@@ -111,7 +111,7 @@ pub type Result<T> = std::result::Result<T, CoursePointerError>;
 /// Summarizes the result of converting GPX into a FIT course
 ///
 /// The result of a successful invocation of [`convert_gpx_to_fit`].
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ConversionInfo {
     /// The name of the course that was converted, if given
     pub course_name: Option<String>,

@@ -251,6 +251,7 @@ dependencies = [
 name = "coursepointer-wasm"
 version = "0.3.3-dev"
 dependencies = [
+ "anyhow",
  "coursepointer",
  "dimensioned",
  "log",

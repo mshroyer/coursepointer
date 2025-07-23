@@ -4,6 +4,8 @@
 //! `integration-stub` binary, but they are not intended for use by external
 //! code. This module's API may change without semantic versioning!
 
+use std::fmt::Display;
+
 use dimensioned::si::Meter;
 
 use crate::GeoPoint;
@@ -42,4 +44,69 @@ pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> crate::Res
     );
 
     Ok(())
+}
+
+#[cfg(any(feature = "cli", feature = "jsffi"))]
+pub mod report {
+    use std::cmp::min;
+    use std::fmt::{Display, Write};
+
+    use anyhow::Result;
+    use dimensioned::si::Meter;
+
+    use crate::ConversionInfo;
+
+    pub fn conversion_report<T>(info: ConversionInfo) -> Result<String>
+    where
+        T: From<Meter<f64>> + Display,
+    {
+        // Build a report to print after the tracing span surrounding this function
+        // has exited. If debug logging is enabled, this ensures the report to
+        // STDOUT will be printed after all the tracing stuff.
+        let mut r = String::new();
+        match info.course_name {
+            Some(name) => writeln!(
+                &mut r,
+                "Converted course {:?} of length {:.02}\n",
+                name,
+                T::from(info.total_distance)
+            )?,
+            None => writeln!(
+                &mut r,
+                "Converted an unnamed course of length {:.02}\n",
+                T::from(info.total_distance)
+            )?,
+        };
+        writeln!(
+            &mut r,
+            "Processed {} waypoints, {} of which {}{}",
+            info.num_waypoints,
+            info.course_points.len(),
+            if info.course_points.len() == 1 {
+                "was identified as a course point"
+            } else {
+                "were identified as course points"
+            },
+            if !info.course_points.is_empty() {
+                ":"
+            } else {
+                ""
+            },
+        )?;
+        let max_listing = 24usize;
+        for i in 0..min(max_listing, info.course_points.len()) {
+            let point = &info.course_points[i];
+            writeln!(
+                &mut r,
+                "- {} at {:.02}{}",
+                point.name,
+                T::from(point.distance),
+                if i == 0 { " along the course" } else { "" }
+            )?;
+        }
+        if info.course_points.len() > max_listing {
+            writeln!(&mut r, "(and others)")?;
+        }
+        Ok(r)
+    }
 }
