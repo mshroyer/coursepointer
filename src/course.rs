@@ -743,6 +743,7 @@ mod tests {
     use anyhow::Result;
     use approx::assert_relative_eq;
     use dimensioned::si::{M, Meter};
+    use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::course::{CourseSetBuilder, InterceptSolution, NearIntercept, RouteBuilder};
     use crate::fit::CoursePointType;
@@ -750,6 +751,7 @@ mod tests {
     use crate::{CourseSetOptions, geo_point, geo_points};
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_route_builder_empty() -> Result<()> {
         let course = RouteBuilder::new().segment()?.build()?;
         assert_eq!(course.records, vec![]);
@@ -757,6 +759,7 @@ mod tests {
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_route_builder_single_point() -> Result<()> {
         let mut builder = RouteBuilder::new();
         builder.with_route_point(geo_point!(1.0, 2.0)?);
@@ -775,6 +778,7 @@ mod tests {
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_route_builder_two_points() -> Result<()> {
         let mut builder = RouteBuilder::new();
         builder
@@ -795,6 +799,7 @@ mod tests {
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_repeated_points() -> Result<()> {
         let mut builder = RouteBuilder::new();
         builder
@@ -816,6 +821,7 @@ mod tests {
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_elevation_passthrough() -> Result<()> {
         let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
         builder
@@ -842,6 +848,7 @@ mod tests {
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_intercept_long_segments() -> Result<()> {
         let mut builder = CourseSetBuilder::new(CourseSetOptions::default());
         builder
@@ -870,6 +877,7 @@ mod tests {
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_multiple_routes() -> Result<()> {
         // A pair of routes and two waypoints, one of which intercepts one
         // course and the other intercepts both.
@@ -904,6 +912,7 @@ mod tests {
     }
 
     #[test]
+    #[wasm_bindgen_test]
     fn test_intercept_distance_ordering() {
         fn near(distance: Meter<f64>) -> NearIntercept {
             NearIntercept {
