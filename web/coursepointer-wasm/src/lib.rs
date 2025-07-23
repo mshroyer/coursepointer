@@ -1,5 +1,7 @@
+use std::io::Cursor;
+
 use coursepointer::course::{Course, CoursePoint, CourseSetBuilder, CourseSetOptions, Record};
-use coursepointer::{CoursePointType, DEG, GeoPoint};
+use coursepointer::{CoursePointType, DEG, GeoPoint, read_gpx};
 use dimensioned::si::M;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
@@ -100,6 +102,12 @@ impl From<Course> for JsCourse {
             name: c.name.unwrap_or_default(),
         }
     }
+}
+
+#[wasm_bindgen]
+pub fn read_gpx_bytes(data: &[u8]) -> Result<JsCourse> {
+    let set = read_gpx(CourseSetOptions::default(), Cursor::new(data))?;
+    Ok(set.courses[0].clone().into())
 }
 
 #[wasm_bindgen]
