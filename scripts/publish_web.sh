@@ -16,7 +16,7 @@ pnpm build
 
 aws s3 sync ./dist/ $BUCKET \
   --exclude "assets/*" \
-  --cache-control "public, max-age=3600, must-revalidate"
+  --cache-control "public, max-age=14400, must-revalidate"
 
 # Cache hashed assets for 30 days:
 aws s3 sync ./dist/assets/ $BUCKET/assets \
