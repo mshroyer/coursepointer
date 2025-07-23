@@ -62,7 +62,7 @@ jobs:
 
       - run: cargo build -F cli
       - run: cargo build --package devtools
-      - run: cargo test
+      - run: cargo test -F cli
 
         # Integration tests need the cli feature.
         #
@@ -92,4 +92,7 @@ jobs:
           cd web
           pnpm install
           pnpm build
+        if: ${{ inputs.web }}
+
+      - run: bash scripts/node_tests.sh
         if: ${{ inputs.web }}
