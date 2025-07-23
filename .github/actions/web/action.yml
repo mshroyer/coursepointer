@@ -30,9 +30,6 @@ runs:
         pnpm run format:check
       shell: bash
 
-    - run: cargo install --locked wasm-pack
-      shell: bash
-
     - name: PNPM build
       run: |
         cd web
