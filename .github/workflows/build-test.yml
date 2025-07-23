@@ -52,8 +52,8 @@ jobs:
         run: cargo update -Z minimal-versions
         if: ${{ inputs.use_minimal_versions }}
 
-      - run: cargo build -F cli
       - run: cargo build --package devtools
+      - run: cargo build -F cli
       - run: cargo test -F cli
 
         # Integration tests need the cli feature.
