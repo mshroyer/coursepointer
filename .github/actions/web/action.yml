@@ -12,7 +12,20 @@ runs:
       with:
         version: 10
 
-    - run: sudo apt install emscripten
+    - name: Install emscripten
+      run: |
+        EMSDK="$HOME/emsdk"
+        if [ ! -d $EMSDK ]; then
+          git clone https://github.com/emscripten-core/emsdk.git $EMSDK
+          cd $EMSDK
+        else
+          cd $EMSDK
+          git pull
+        fi
+        ./emsdk install latest
+        ./emsdk activate latest
+        echo $EMSDK/upstream/bin >>$GITHUB_PATH
+        echo $EMSDK/upstream/emscripten >>$GITHUB_PATH
       shell: bash
 
     - run: cargo install --locked wasm-pack

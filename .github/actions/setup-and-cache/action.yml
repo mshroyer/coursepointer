@@ -28,6 +28,7 @@ runs:
           ~/.rustup/settings.toml
           .venv/
           target/
+          ~/emsdk/
         key: build_test-${{ runner.os }}-${{ runner.os }}-${{ inputs.default_features }}
 
     - name: Setup rust

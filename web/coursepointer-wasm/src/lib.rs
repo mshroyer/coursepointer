@@ -3,7 +3,7 @@ use std::io::Cursor;
 use coursepointer::course::{Course, CoursePoint, CourseSetBuilder, CourseSetOptions, Record};
 use coursepointer::internal::Kilometer;
 use coursepointer::{
-    ConversionInfo, CoursePointType, DEG, FitCourseOptions, GeoPoint, convert_gpx_to_fit, read_gpx,
+    CoursePointType, DEG, FitCourseOptions, GeoPoint, convert_gpx_to_fit, read_gpx,
 };
 use dimensioned::si::M;
 use thiserror::Error;
