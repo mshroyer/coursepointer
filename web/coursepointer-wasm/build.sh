@@ -6,4 +6,6 @@ set -e
 # some arbitrary one.
 . "$(dirname "$0")/../../scripts/activate_wasm_sdks.sh"
 
+echo "which wasm-opt: $(which wasm-opt)"
+
 exec wasm-pack build --target web coursepointer-wasm $@
