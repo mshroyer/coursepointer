@@ -195,6 +195,7 @@ pub struct CourseSet {
 ///
 /// This contains the distance data needed as input for a FIT course file, but
 /// it does not represent speeds or timestamps.
+#[derive(Clone)]
 pub struct Course {
     /// The records (coordinates and cumulative distances) that define the
     /// course, in order of physical traversal.
