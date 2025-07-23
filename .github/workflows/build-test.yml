@@ -70,3 +70,9 @@ jobs:
 
       - uses: ./.github/actions/lint
         if: ${{ inputs.toolchain == 'nightly' }}
+
+      - name: PNPM build
+        run: |
+          cd web
+          pnpm build
+        if: ${{ inputs.os == 'ubuntu-latest' && inputs.toolchain == 'nightly' }}
