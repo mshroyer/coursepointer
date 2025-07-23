@@ -1,0 +1,30 @@
+name: web
+author: mshroyer
+description: web
+runs:
+  using: "composite"
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10
+      if: ${{ inputs.web }}
+
+    - run: sudo apt install emscripten
+      shell: bash
+
+    - run: cargo install --locked wasm-pack
+      shell: bash
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: PNPM build
+      run: |
+        cd web
+        pnpm install
+        pnpm build
+      shell: bash
+
+    - run: scripts/node_tests.sh
+      shell: bash
