@@ -25,6 +25,11 @@ impl From<WasmWrapperError> for JsValue {
 
 pub type Result<T> = std::result::Result<T, WasmWrapperError>;
 
+#[wasm_bindgen(start)]
+pub fn init() {
+    wasm_logger::init(wasm_logger::Config::new(log::Level::Debug));
+}
+
 #[derive(Copy, Clone)]
 #[wasm_bindgen]
 pub struct JsGeoPoint {

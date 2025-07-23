@@ -11,3 +11,5 @@ coursepointer = { version = "0.3.3-dev", path = "../..", default-features = fals
 dimensioned = "0.8.0"
 thiserror = "2.0.12"
 wasm-bindgen = "0.2.100"
+log = "0.4.27"
+wasm-logger = "0.2.0"
