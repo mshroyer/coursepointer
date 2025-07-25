@@ -48,9 +48,22 @@ function setupPicker(p: HTMLInputElement) {
     const buf = await file.arrayBuffer();
     console.time("convert_gpx_to_fit_bytes");
     const course = new Uint8Array(buf);
-    const info = convert_gpx_to_fit_bytes(course);
-    console.timeEnd("convert_gpx_to_fit_bytes");
-    document.querySelector<HTMLPreElement>("#report")!.innerHTML = info.report;
+    const report = document.querySelector<HTMLInputElement>("#report")!;
+    var info;
+    try {
+      info = convert_gpx_to_fit_bytes(course);
+    } catch (e) {
+      report.innerText = `Error converting that file:
+
+${e}
+
+Ensure it's a valid GPX file containing exactly one route or track.
+`;
+      return;
+    } finally {
+      console.timeEnd("convert_gpx_to_fit_bytes");
+    }
+    report.innerText = info.report;
     const blob = new Blob([info.fit_bytes], {
       type: "application/octet-stream",
     });
