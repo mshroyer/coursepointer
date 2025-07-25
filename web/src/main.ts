@@ -1,3 +1,4 @@
+import "./style.css";
 // @ts-expect-error: Missing module declaration
 import geographicLib from "./wasm/geographiclib.mjs";
 import init, {
@@ -7,11 +8,20 @@ import init, {
 } from "coursepointer-wasm";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
-  <div>
+  <header>
+    <p>Header</p>
+  </header>
+  <main>
     <input id="picker" type="file" />
     <pre id="report"></pre>
     <div id="download"></div>
-  </div>
+  </main>
+  <aside>
+    <p>Sidebar</p>
+  </aside>
+  <footer>
+    <p>Footer</p>
+  </footer>
 `;
 
 function setupPicker(p: HTMLInputElement) {
