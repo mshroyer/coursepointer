@@ -15,19 +15,22 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <div id="explainer">
       <div>
         <p>Choose a GPX file containing exactly one route or track. This will generate a corresponding Garmin FIT course 
-        file, in which any waypoints located along the route have been converted to FIT course points.</p>
+        file, in which any waypoints located along the route have been converted to FIT course points for navigation
+        with <a href="https://support.garmin.com/en-US/?faq=lQMibRoY2I5Y4pP8EXgxv7">Up Ahead</a>.</p>
         <p>See the <a href="https://github.com/mshroyer/coursepointer/blob/main/README.md">README</a>
-        for more about what this does, and why.</p>
+        for more about what this does and why.</p>
       </div>
     </div>
   </main>
   <aside>
     <input id="picker" type="file" />
     <p>CoursePointer runs in your browser using WebAssembly. It does not upload your course anywhere.</p>
+    <p>This is an alpha web version of an existing <a href="https://github.com/mshroyer/coursepointer/">command-line tool</a>.
+    This currently lacks some features present in the command line version, including specifying conversion options.</p>
   </aside>
   <footer>
-    <p>© 2025 Mark Shroyer, <a href="https://github.com/mshroyer/coursepointer/blob/main/docs/third_party_licenses.md">MIT licensed</a>.
-     Source code is on <a href="https://github.com/mshroyer/coursepointer">GitHub</a>.</p>
+    <p>© 2025 Mark Shroyer <a href="https://github.com/mshroyer/coursepointer/blob/main/docs/third_party_licenses.md">and others</a>.
+     Source code on <a href="https://github.com/mshroyer/coursepointer">GitHub</a>.</p>
   </footer>
 `;
 
@@ -43,10 +46,10 @@ function setupPicker(p: HTMLInputElement) {
 `;
 
     const buf = await file.arrayBuffer();
-    console.time("read_gpx_bytes");
+    console.time("convert_gpx_to_fit_bytes");
     const course = new Uint8Array(buf);
     const info = convert_gpx_to_fit_bytes(course);
-    console.timeEnd("read_gpx_bytes");
+    console.timeEnd("convert_gpx_to_fit_bytes");
     document.querySelector<HTMLPreElement>("#report")!.innerHTML = info.report;
     const blob = new Blob([info.fit_bytes], {
       type: "application/octet-stream",

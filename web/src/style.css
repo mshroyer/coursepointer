@@ -11,10 +11,10 @@ html, body, #app {
 #app {
   display: grid;
   grid-template-rows: 60px 1fr 40px;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 300px 1fr;
   grid-template-areas:
         "header  header"
-        "main    sidebar"
+        "sidebar main"
         "footer  footer";
 }
 
@@ -34,7 +34,7 @@ html, body, #app {
 #app > main {
   grid-area: main;
   overflow: auto;
-  margin: 7px;
+  margin: 7px 18px;
   font-family: var(--main-font-family);
   font-size: var(--main-font-size);
 }
@@ -48,6 +48,10 @@ html, body, #app {
   margin: 0 5px 0;
   font-family: var(--main-font-family);
   font-size: var(--main-font-size);
+}
+
+#picker {
+  margin-bottom: 1.5em;
 }
 
 /* https://www.reasonable.work/colors/chartreuse/ */
@@ -78,12 +82,12 @@ html, body, #app {
 
 @media (max-width: 768px) {
   #app {
-    grid-template-rows: 60px 1fr auto 40px;
+    grid-template-rows: 60px auto 1fr 40px;
     grid-template-columns: 1fr;
     grid-template-areas:
           "header"
-          "main"
           "sidebar"
+          "main"
           "footer";
   }
   #app > aside {
