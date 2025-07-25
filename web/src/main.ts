@@ -49,12 +49,11 @@ function setupPicker(p: HTMLInputElement) {
     console.time("convert_gpx_to_fit_bytes");
     const course = new Uint8Array(buf);
     const report = document.querySelector<HTMLInputElement>("#report")!;
-    var info;
+    let info;
     try {
       info = convert_gpx_to_fit_bytes(course);
     } catch (e) {
       report.innerText = `Error converting that file:
-
 ${e}
 
 Ensure it's a valid GPX file containing exactly one route or track.
