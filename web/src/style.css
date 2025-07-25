@@ -1,6 +1,6 @@
 :root {
-  --main-font-family: "Verdana", "Helvetica", sans-serif;
-  --main-font-size: 12px;
+  --main-font-family: "Helvetica", "Arial", sans-serif;
+  --main-font-size: 13px;
 }
 
 html, body, #app {
@@ -28,7 +28,7 @@ html, body, #app {
   padding: 0 1rem;
   margin: 5px;
   font-family: var(--main-font-family);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 #app > main {
