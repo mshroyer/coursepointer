@@ -10,7 +10,7 @@ html, body, #app {
 }
 #app {
   display: grid;
-  grid-template-rows: 60px 1fr 40px;
+  grid-template-rows: auto 1fr auto;
   grid-template-columns: 300px 1fr;
   grid-template-areas:
         "header  header"
@@ -25,10 +25,16 @@ html, body, #app {
   border: 2px solid #8df0ff;
   align-items: center;
   text-align: center;
-  padding: 0 1rem;
+  padding: 0.1em 1rem;
   margin: 5px;
   font-family: var(--main-font-family);
-  font-size: 15px;
+  font-size: 14px;
+}
+#app > header img {
+  height: 2em;
+  width: 2em;
+  margin: 0.3em 0.6em;
+  vertical-align: -0.9em;
 }
 
 #app > main {
@@ -44,7 +50,7 @@ html, body, #app {
   border: 2px solid #e2e2e2;
   grid-area: sidebar;
   overflow: hidden;
-  padding: 1rem;
+  padding: 0.8em;
   margin: 0 5px 0;
   font-family: var(--main-font-family);
   font-size: var(--main-font-size);
@@ -63,8 +69,12 @@ html, body, #app {
   align-items: center;
   justify-content: center;
   margin: 5px;
+  padding: 0.4em 0;
   font-family: var(--main-font-family);
   font-size: var(--main-font-size);
+}
+#app > footer p {
+  margin: 0;
 }
 
 #explainer {
@@ -82,7 +92,7 @@ html, body, #app {
 
 @media (max-width: 768px) {
   #app {
-    grid-template-rows: 60px auto 1fr 40px;
+    grid-template-rows: auto auto 1fr 40px;
     grid-template-columns: 1fr;
     grid-template-areas:
           "header"
@@ -93,5 +103,8 @@ html, body, #app {
   #app > aside {
     width: auto;
     overflow: visible;
+  }
+  #elevatorpitch {
+    display: none;
   }
 }

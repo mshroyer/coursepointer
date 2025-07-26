@@ -9,7 +9,7 @@ import init, {
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header>
-    <p><b>CoursePointer</b> — Convert GPX waypoints to FIT course points</p>
+    <img alt="CoursePointer icon" src="/coursepointer.svg" /><b>CoursePointer</b><span id="elevatorpitch"> – Convert GPX waypoints to FIT course points</span>
   </header>
   <main>
     <div id="explainer">
