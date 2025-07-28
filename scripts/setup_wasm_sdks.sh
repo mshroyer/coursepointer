@@ -10,6 +10,9 @@ WPACK_VERSION=0.13.1
 
 EMSDK="$HOME/emsdk"
 WPACK="$HOME/wasm-pack"
+WBIND="$HOME/wasm-bindgen"
+
+PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 
 if [ -d "$EMSDK" ]; then
 	cd "$EMSDK"
@@ -23,6 +26,19 @@ fi
 cd "$EMSDK"
 ./emsdk install $EMSDK_VERSION
 ./emsdk activate $EMSDK_VERSION
+
+wbind_version() {
+	grep -A1 'name = "wasm-bindgen"' "$PROJECT/Cargo.lock" \
+		| tail -n1 \
+		| sed -e 's/version = "\(.*\)"/\1/'
+}
+
+cd
+if [ ! -d "$WBIND" ]; then
+	mkdir "$WBIND"
+fi
+echo cargo install --version "$(wbind_version)" wasm-bindgen-cli --root "$WBIND"
+cargo install --version "$(wbind_version)" wasm-bindgen-cli --root "$WBIND"
 
 if [ ! -d "$WPACK" ]; then
 	mkdir "$WPACK"

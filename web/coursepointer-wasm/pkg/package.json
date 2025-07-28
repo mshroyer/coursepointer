@@ -1,0 +1,15 @@
+{
+  "name": "coursepointer-wasm",
+  "type": "module",
+  "version": "0.3.3-dev",
+  "files": [
+    "coursepointer_wasm_bg.wasm",
+    "coursepointer_wasm.js",
+    "coursepointer_wasm.d.ts"
+  ],
+  "main": "coursepointer_wasm.js",
+  "types": "coursepointer_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
