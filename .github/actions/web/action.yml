@@ -6,8 +6,8 @@ runs:
   steps:
     - name: Setup WASM SDKs
       run: |
-        scripts/setup_wasm_sdks.sh
-        . scripts/activate_wasm_sdks.sh
+        scripts/install_wasm_tools.sh
+        . scripts/activate_wasm_tools.sh
         
         # Use the node version pinned by emsdk, and save an separate node 
         # installation step.
