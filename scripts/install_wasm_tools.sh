@@ -8,11 +8,15 @@ set -e
 EMSDK_VERSION=4.0.11
 WPACK_VERSION=0.13.1
 
-EMSDK="$HOME/emsdk"
-WPACK="$HOME/wasm-pack"
-WBIND="$HOME/wasm-bindgen"
-
 PROJECT=$(cd "$(dirname "$0")/.." && pwd)
+WASM_TOOLS="$PROJECT/.wasm_tools"
+
+if [ ! -d "$WASM_TOOLS" ]; then
+	mkdir "$WASM_TOOLS"
+fi
+
+EMSDK="$WASM_TOOLS/emsdk"
+WBIND="$WASM_TOOLS/wasm-bindgen"
 
 if [ -d "$EMSDK" ]; then
 	cd "$EMSDK"
@@ -40,8 +44,4 @@ fi
 echo cargo install --version "$(wbind_version)" wasm-bindgen-cli --root "$WBIND"
 cargo install --version "$(wbind_version)" wasm-bindgen-cli --root "$WBIND"
 
-if [ ! -d "$WPACK" ]; then
-	mkdir "$WPACK"
-fi
-cd
-cargo install --version $WPACK_VERSION wasm-pack --root "$WPACK"
+rustup target add wasm32-unknown-unknown

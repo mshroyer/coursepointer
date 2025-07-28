@@ -3,6 +3,7 @@
 # IDEs
 .idea/
 
+.wasm_tools/
 target/
 __pycache__/
 

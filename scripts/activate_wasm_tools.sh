@@ -2,12 +2,18 @@
 
 # emsdk_env.sh appears to require bash vs. Ubuntu's dash
 
-# Use same as in setup_wasm_sdks.sh:
-EMSDK="$HOME/emsdk"
-WBIND="$HOME/wasm-bindgen"
-WPACK="$HOME/wasm-pack"
+if [ -z "$BASH_SOURCE" ]; then
+	echo "This script needs BASH_SOURCE to be available" >&2
+	exit 1
+fi
 
-PATH="$WBIND/bin:$WPACK/bin:$PATH"
+# Use same as in setup_wasm_sdks.sh:
+PROJECT=$(cd "$(dirname "$BASH_SOURCE")/.." && pwd)
+WASM_TOOLS="$PROJECT/.wasm_tools"
+EMSDK="$WASM_TOOLS/emsdk"
+WBIND="$WASM_TOOLS/wasm-bindgen"
+
+PATH="$WBIND/bin:$PATH"
 . "$EMSDK/emsdk_env.sh"
 
 # Explicitly put Emscripten's tools directory ahead on the path, which

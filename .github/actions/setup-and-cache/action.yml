@@ -27,9 +27,8 @@ runs:
           ~/.rustup/update-hashes
           ~/.rustup/settings.toml
           .venv/
+          .wasm_tools/
           target/
-          ~/emsdk/
-          ~/wasm-pack/
         key: build_test-${{ runner.os }}-${{ inputs.toolchain }}-${{ inputs.default_features }}
 
     - name: Setup rust

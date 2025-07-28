@@ -2,7 +2,7 @@
 
 set -e
 
-. "$(dirname "$0")/activate_wasm_sdks.sh"
+. "$(dirname "$0")/activate_wasm_tools.sh"
 
 NODE_OPTIONS='--import=./setup_node_env.js'
 export NODE_OPTIONS
