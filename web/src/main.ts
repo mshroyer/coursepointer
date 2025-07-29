@@ -1,11 +1,8 @@
 import "./style.css";
 // @ts-expect-error: Missing module declaration
 import geographicLib from "./wasm/geographiclib.mjs";
-import init, {
-  demo_course_set,
-  direct_lon,
-  convert_gpx_to_fit_bytes,
-} from "coursepointer-wasm";
+import { initialize } from "./wasm-deps.ts";
+import { convert_gpx_to_fit_bytes } from "coursepointer-wasm";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header>
@@ -85,14 +82,4 @@ Ensure it's a valid GPX file containing exactly one route or track.
 
 setupPicker(document.querySelector<HTMLInputElement>("#picker")!);
 
-/* eslint-disable */
-
-const GEO = await geographicLib();
-(window as any).GEO = GEO;
-await init();
-
-// Functions exported by coursepointer WASM
-(window as any).direct_lon = direct_lon;
-(window as any).demo_course_set = demo_course_set;
-
-/* eslint-enable */
+await initialize();
