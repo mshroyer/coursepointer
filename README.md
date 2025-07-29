@@ -140,14 +140,6 @@ course point types.
 Currently, GPX input files must contain exactly one route or track, and zero
 or more waypoints.  Routes and tracks are treated identically.
 
-I made this originally with Ride with GPS in mind, but their new [Waypoints
-feature](https://support.ridewithgps.com/hc/en-us/articles/36795897776411-Waypoints)
-natively supports exporting POIs as FIT course points.  RWGPS Waypoints will
-probably be more convenient than using this tool for most users, though
-coursepointer does offer more control over things like virtual partner speed
-and behavior when passing by POIs multiple times, such as on out-and-back
-routes.
-
 ## Troubleshooting
 
 ### "Unexpected number of courses" in a Gaia GPS export, but I only have one route

@@ -1,6 +1,4 @@
 import "./style.css";
-// @ts-expect-error: Missing module declaration
-import geographicLib from "./wasm/geographiclib.mjs";
 import { initialize } from "./wasm-deps.ts";
 import { convert_gpx_to_fit_bytes } from "coursepointer-wasm";
 

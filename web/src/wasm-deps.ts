@@ -6,10 +6,8 @@ import init from "coursepointer-wasm";
  * Initialize the WASM modules.
  */
 export async function initialize() {
-  const GEO = await geographicLib();
-
   /* eslint-disable */
-  (window as any).GEO = GEO;
+  (window as any).GEO = await geographicLib();
   /* eslint-enable */
 
   await init();
