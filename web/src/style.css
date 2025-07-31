@@ -58,6 +58,7 @@ html, body, #app {
 }
 
 #app > aside input:not([type="file"]),
+#app > aside select,
 #app > aside button,
 #app > aside input[type="file"]::file-selector-button {
   border: 2px solid #8b8b8b;
@@ -74,6 +75,11 @@ html, body, #app {
 #app > aside button:active,
 #app > aside input[type="file"]::file-selector-button:active {
   background: #f6f6f6;
+}
+#app > aside button:disabled {
+  background: #f6f6f6;
+  color: #8b8b8b;
+  border-color: #e2e2e2;
 }
 
 #app > aside details {

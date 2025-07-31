@@ -1,5 +1,6 @@
 import "./style.css";
 import { WorkerMessage } from "./const.ts";
+import { Options } from "./options.ts";
 import { EnumVariant, JsConversionInfo } from "coursepointer-wasm";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
@@ -33,6 +34,9 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
         <div class="row">
           <label for="speed">Speed (km/h): </label>
           <input id="speed" type="number" min="1" max="100.0" step="1" value="20" />
+        </div>
+        <div class="row">
+          <button id="reset-defaults" type="button" disabled>Reset Defaults</button>
         </div>
       </form>
     </details>
@@ -79,6 +83,12 @@ function populateSports(sports: EnumVariant[]) {
   });
 }
 
+const options = new Options(
+  document.querySelector<HTMLButtonElement>("#reset-defaults")!,
+  document.querySelector<HTMLSelectElement>("#sport")!,
+  document.querySelector<HTMLInputElement>("#speed")!,
+);
+
 class CoursePointerWorker {
   _worker: Worker;
   _ready: Promise<void>;
@@ -103,6 +113,7 @@ class CoursePointerWorker {
       console.log("Main: Got message that worker is ready");
       console.log(e.data);
       populateSports(e.data.sports);
+      options.restoreLocally();
       this._readyResolver.resolve();
     } else if (e.data.type === WorkerMessage.ConvertGpxToFit) {
       const resolver = this._convertGpxToFitResolvers.shift();
