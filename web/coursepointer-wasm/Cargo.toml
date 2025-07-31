@@ -16,6 +16,7 @@ wasm-logger = "0.2.0"
 anyhow = "1.0.98"
 serde = { version = "1.0.219", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
+strum = "0.27.2"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = [

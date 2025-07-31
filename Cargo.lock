@@ -257,6 +257,7 @@ dependencies = [
  "log",
  "serde",
  "serde-wasm-bindgen",
+ "strum",
  "thiserror 2.0.12",
  "wasm-bindgen",
  "wasm-logger",

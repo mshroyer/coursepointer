@@ -332,6 +332,7 @@ impl DefinitionFrame {
 /// 21.171.00.
 #[repr(u8)]
 #[cfg_attr(feature = "cli", derive(strum::Display, clap::ValueEnum))]
+#[cfg_attr(feature = "jsffi", derive(strum::EnumIter, strum::Display))]
 #[derive(Clone, Copy, PartialEq, EnumString, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]

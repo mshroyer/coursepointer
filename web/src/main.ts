@@ -1,7 +1,7 @@
 import "./style.css";
 import { WorkerMessage } from "./const.ts";
 import { initialize } from "./wasm-deps.ts";
-import { JsConversionInfo } from "coursepointer-wasm";
+import { EnumVariant, JsConversionInfo } from "coursepointer-wasm";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header>
@@ -19,7 +19,21 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     </div>
   </main>
   <aside>
-    <input id="picker" type="file" />
+    <form class="picker">
+      <input id="picker" type="file" />
+    </form>
+    <form class="options">
+      <div class="row">
+        <label for="sport">Sport: </label>
+        <select id="sport">
+          <option value="0">Generic</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="speed">Speed (km/h): </label>
+        <input id="speed" type="number" min="1" max="100.0" step="1" value="20" />
+      </div>
+    </form>
     <p>CoursePointer runs in your browser using WebAssembly. It does not upload your course anywhere.</p>
     <p>This is an alpha web version of an existing <a href="https://github.com/mshroyer/coursepointer/">command-line tool</a>.
     This currently lacks some features present in the command line version, including specifying conversion options.</p>
@@ -41,6 +55,26 @@ class Resolver<T> {
     this.resolve = resolve;
     this.reject = reject;
   }
+}
+
+function formatEnumName(name: string): string {
+  const n = name.replaceAll("_", " ");
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+
+function populateSports(sports: EnumVariant[]) {
+  const select = document.querySelector<HTMLSelectElement>("#sport");
+  sports.forEach((sport) => {
+    if (sport.value === 0) {
+      // We populate Generic by default to prevent flash.
+      return;
+    }
+
+    const opt = document.createElement("option");
+    opt.value = sport.value.toString();
+    opt.innerText = formatEnumName(sport.name);
+    select!.appendChild(opt);
+  });
 }
 
 class CoursePointerWorker {
@@ -65,6 +99,8 @@ class CoursePointerWorker {
     console.log(e);
     if (e.data.type === WorkerMessage.Ready) {
       console.log("Main: Got message that worker is ready");
+      console.log(e.data);
+      populateSports(e.data.sports);
       this._readyResolver.resolve();
     } else if (e.data.type === WorkerMessage.ConvertGpxToFit) {
       const resolver = this._convertGpxToFitResolvers.shift();

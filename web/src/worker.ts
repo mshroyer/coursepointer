@@ -1,6 +1,6 @@
 import { WorkerMessage } from "./const.ts";
 import { initialize } from "./wasm-deps.ts";
-import { convert_gpx_to_fit_bytes } from "coursepointer-wasm";
+import { convert_gpx_to_fit_bytes, enumerate_sports } from "coursepointer-wasm";
 
 async function initWorker() {
   console.log("Worker started");
@@ -8,10 +8,6 @@ async function initWorker() {
   await initialize();
 
   console.log("Worker initialized");
-
-  // const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  // await sleep(15000);
-  // console.log("Worker woke up");
 
   onmessage = (e) => {
     console.log("Worker: message received from main script");
@@ -27,7 +23,7 @@ async function initWorker() {
     }
   };
 
-  self.postMessage({ type: WorkerMessage.Ready });
+  self.postMessage({ type: WorkerMessage.Ready, sports: enumerate_sports() });
 }
 
 initWorker();

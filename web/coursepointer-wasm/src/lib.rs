@@ -3,10 +3,11 @@ use std::io::Cursor;
 use coursepointer::course::{Course, CoursePoint, CourseSetBuilder, CourseSetOptions, Record};
 use coursepointer::internal::Kilometer;
 use coursepointer::{
-    CoursePointType, DEG, FitCourseOptions, GeoPoint, convert_gpx_to_fit, read_gpx,
+    CoursePointType, DEG, FitCourseOptions, GeoPoint, Sport, convert_gpx_to_fit, read_gpx,
 };
 use dimensioned::si::M;
 use serde::Serialize;
+use strum::IntoEnumIterator;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
@@ -151,6 +152,26 @@ pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8]) -> Result<JsValue> {
         report,
     };
     Ok(serde_wasm_bindgen::to_value(&info)?)
+}
+
+#[derive(Serialize)]
+#[wasm_bindgen(getter_with_clone)]
+pub struct EnumVariant {
+    pub name: String,
+    pub value: u8,
+}
+
+#[wasm_bindgen]
+pub fn enumerate_sports() -> Result<Vec<JsValue>> {
+    let mut result = Vec::new();
+    for variant in Sport::iter() {
+        let repr = EnumVariant {
+            name: variant.to_string(),
+            value: variant as u8,
+        };
+        result.push(serde_wasm_bindgen::to_value(&repr)?);
+    }
+    Ok(result)
 }
 
 #[wasm_bindgen]
