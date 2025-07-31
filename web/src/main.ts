@@ -29,25 +29,34 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   </footer>
 `;
 
+/**
+ * An object that can either resolve or reject an outstanding Promise.
+ */
+class Resolver<T> {
+  resolve: (result: T) => void;
+  reject: (reason?: any) => void;
+
+  constructor(resolve: (result: T) => void, reject: (reason?: any) => void) {
+    this.resolve = resolve;
+    this.reject = reject;
+  }
+}
+
 class CoursePointerWorker {
   _worker: Worker;
   _ready: Promise<void>;
-  _resolveReady!: () => void;
-  _rejectReady!: (reason?: any) => void;
-  _resolveConvertGpxToFit: ((info: JsConversionInfo) => void)[];
-  _rejectConvertGpxToFit: ((reason?: any) => void)[];
+  _readyResolver!: Resolver<void>;
+  _convertGpxToFitResolvers: Resolver<JsConversionInfo>[];
 
   constructor() {
     this._ready = new Promise((resolve, reject) => {
-      this._resolveReady = resolve;
-      this._rejectReady = reject;
+      this._readyResolver = new Resolver(resolve, reject);
     });
     this._worker = new Worker(new URL("./worker.ts", import.meta.url), {
       type: "module",
     });
     this._worker.onmessage = (e) => this.handleMessage(e);
-    this._resolveConvertGpxToFit = [];
-    this._rejectConvertGpxToFit = [];
+    this._convertGpxToFitResolvers = [];
   }
 
   handleMessage(e: MessageEvent<any>) {
@@ -55,14 +64,13 @@ class CoursePointerWorker {
     console.log(e);
     if (e.data.type === "ready") {
       console.log("Main: Got message that worker is ready");
-      this._resolveReady();
+      this._readyResolver.resolve();
     } else if (e.data.type === "convert_gpx_to_fit") {
-      const resolve = this._resolveConvertGpxToFit.shift();
-      const reject = this._rejectConvertGpxToFit.shift();
+      const resolver = this._convertGpxToFitResolvers.shift();
       if (e.data.error) {
-        reject!(e.data.error);
+        resolver!.reject(e.data.error);
       } else {
-        resolve!(e.data.info);
+        resolver!.resolve(e.data.info);
       }
     }
   }
@@ -71,8 +79,7 @@ class CoursePointerWorker {
     console.log("convertGpxToFit called");
     await this._ready;
     return new Promise((resolve, reject) => {
-      this._resolveConvertGpxToFit.push(resolve);
-      this._rejectConvertGpxToFit.push(reject);
+      this._convertGpxToFitResolvers.push(new Resolver(resolve, reject));
       this._worker.postMessage({ type: "convert_gpx_to_fit", buf: buf });
     });
   }
