@@ -17,8 +17,12 @@ async function initWorker() {
     if (e.data.type === "convert_gpx_to_fit") {
       const buf = e.data["buf"];
       const course = new Uint8Array(buf);
-      const info = convert_gpx_to_fit_bytes(course);
-      self.postMessage({ type: "convert_gpx_to_fit", info: info });
+      try {
+        const info = convert_gpx_to_fit_bytes(course);
+        self.postMessage({ type: "convert_gpx_to_fit", info: info });
+      } catch (e) {
+        self.postMessage({ type: "convert_gpx_to_fit", error: e });
+      }
     }
   };
 

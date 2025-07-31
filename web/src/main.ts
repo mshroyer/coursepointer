@@ -59,8 +59,8 @@ class CoursePointerWorker {
     } else if (e.data.type === "convert_gpx_to_fit") {
       const resolve = this._resolveConvertGpxToFit.shift();
       const reject = this._rejectConvertGpxToFit.shift();
-      if (e.data.reject) {
-        reject!(e.data.reject);
+      if (e.data.error) {
+        reject!(e.data.error);
       } else {
         resolve!(e.data.info);
       }
