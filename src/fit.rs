@@ -7,6 +7,8 @@ use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::{DateTime, TimeDelta, TimeZone, Utc};
 use dimensioned::si::{M, Meter, MeterPerSecond, S, Second};
 use num_traits::cast::NumCast;
+#[cfg(feature = "jsffi")]
+use serde::Serialize;
 use strum::EnumString;
 use thiserror::Error;
 use tracing::debug;
@@ -619,6 +621,7 @@ impl RecordMessage {
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
 #[non_exhaustive]
 #[cfg_attr(feature = "jsffi", wasm_bindgen)]
+#[cfg_attr(feature = "jsffi", derive(Serialize))]
 pub enum CoursePointType {
     Generic = 0u8,
     Summit = 1u8,

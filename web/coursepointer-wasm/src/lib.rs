@@ -6,6 +6,7 @@ use coursepointer::{
     CoursePointType, DEG, FitCourseOptions, GeoPoint, convert_gpx_to_fit, read_gpx,
 };
 use dimensioned::si::M;
+use serde::Serialize;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
@@ -19,6 +20,8 @@ pub enum WasmWrapperError {
     TypeInvariant(#[from] coursepointer::TypeError),
     #[error("Error building course")]
     Course(#[from] coursepointer::course::CourseError),
+    #[error("Serialization")]
+    Serialization(#[from] serde_wasm_bindgen::Error),
     #[error("Miscellaneous error")]
     Anyhow(#[from] anyhow::Error),
 }
@@ -37,7 +40,7 @@ pub fn init() {
     wasm_logger::init(wasm_logger::Config::new(log::Level::Debug));
 }
 
-#[derive(Copy, Clone)]
+#[derive(Serialize, Copy, Clone)]
 #[wasm_bindgen]
 pub struct JsGeoPoint {
     pub lat_deg: f64,
@@ -71,7 +74,7 @@ impl From<Record> for JsRecord {
     }
 }
 
-#[derive(Clone)]
+#[derive(Serialize, Clone)]
 #[wasm_bindgen(getter_with_clone)]
 pub struct JsCoursePoint {
     pub point: JsGeoPoint,
@@ -115,7 +118,7 @@ pub fn read_gpx_bytes(data: &[u8]) -> Result<JsCourse> {
     Ok(set.courses[0].clone().into())
 }
 
-#[derive(Clone)]
+#[derive(Serialize, Clone)]
 #[wasm_bindgen(getter_with_clone)]
 pub struct JsConversionInfo {
     pub course_name: String,
@@ -127,7 +130,7 @@ pub struct JsConversionInfo {
 }
 
 #[wasm_bindgen]
-pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8]) -> Result<JsConversionInfo> {
+pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8]) -> Result<JsValue> {
     let mut fit_output = Vec::new();
     let info = convert_gpx_to_fit(
         Cursor::new(gpx_input),
@@ -139,14 +142,15 @@ pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8]) -> Result<JsConversionInfo> {
     let report =
         coursepointer::internal::report::conversion_report::<Kilometer<f64>>(info.clone())?;
 
-    Ok(JsConversionInfo {
+    let info = JsConversionInfo {
         course_name: info.course_name.unwrap_or_default(),
         total_distance_m: info.total_distance.value_unsafe,
         num_waypoints: info.num_waypoints,
         course_points: info.course_points.into_iter().map(Into::into).collect(),
         fit_bytes: fit_output.into_boxed_slice(),
         report,
-    })
+    };
+    Ok(serde_wasm_bindgen::to_value(&info)?)
 }
 
 #[wasm_bindgen]

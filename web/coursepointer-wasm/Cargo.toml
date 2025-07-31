@@ -14,6 +14,8 @@ wasm-bindgen = "0.2.100"
 log = "0.4.27"
 wasm-logger = "0.2.0"
 anyhow = "1.0.98"
+serde = { version = "1.0.219", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = [

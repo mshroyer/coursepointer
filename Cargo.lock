@@ -255,6 +255,8 @@ dependencies = [
  "coursepointer",
  "dimensioned",
  "log",
+ "serde",
+ "serde-wasm-bindgen",
  "thiserror 2.0.12",
  "wasm-bindgen",
  "wasm-logger",

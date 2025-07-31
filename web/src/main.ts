@@ -1,6 +1,6 @@
 import "./style.css";
 import { initialize } from "./wasm-deps.ts";
-import { convert_gpx_to_fit_bytes } from "coursepointer-wasm";
+import { JsConversionInfo } from "coursepointer-wasm";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header>
@@ -29,6 +29,57 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   </footer>
 `;
 
+class CoursePointerWorker {
+  _worker: Worker;
+  _ready: Promise<void>;
+  _resolveReady!: () => void;
+  _rejectReady!: (reason?: any) => void;
+  _resolveConvertGpxToFit: ((info: JsConversionInfo) => void)[];
+  _rejectConvertGpxToFit: ((reason?: any) => void)[];
+
+  constructor() {
+    this._ready = new Promise((resolve, reject) => {
+      this._resolveReady = resolve;
+      this._rejectReady = reject;
+    });
+    this._worker = new Worker(new URL("./worker.ts", import.meta.url), {
+      type: "module",
+    });
+    this._worker.onmessage = (e) => this.handleMessage(e);
+    this._resolveConvertGpxToFit = [];
+    this._rejectConvertGpxToFit = [];
+  }
+
+  handleMessage(e: MessageEvent<any>) {
+    console.log("Main: got message from worker");
+    console.log(e);
+    if (e.data.type === "ready") {
+      console.log("Main: Got message that worker is ready");
+      this._resolveReady();
+    } else if (e.data.type === "convert_gpx_to_fit") {
+      const resolve = this._resolveConvertGpxToFit.shift();
+      const reject = this._rejectConvertGpxToFit.shift();
+      if (e.data.reject) {
+        reject!(e.data.reject);
+      } else {
+        resolve!(e.data.info);
+      }
+    }
+  }
+
+  async convertGpxToFit(buf: ArrayBuffer): Promise<JsConversionInfo> {
+    console.log("convertGpxToFit called");
+    await this._ready;
+    return new Promise((resolve, reject) => {
+      this._resolveConvertGpxToFit.push(resolve);
+      this._rejectConvertGpxToFit.push(reject);
+      this._worker.postMessage({ type: "convert_gpx_to_fit", buf: buf });
+    });
+  }
+}
+
+const w = new CoursePointerWorker();
+
 function setupPicker(p: HTMLInputElement) {
   p.addEventListener("change", async (e) => {
     const target = e.target as HTMLInputElement;
@@ -42,11 +93,12 @@ function setupPicker(p: HTMLInputElement) {
 
     const buf = await file.arrayBuffer();
     console.time("convert_gpx_to_fit_bytes");
-    const course = new Uint8Array(buf);
     const report = document.querySelector<HTMLInputElement>("#report")!;
     let info;
     try {
-      info = convert_gpx_to_fit_bytes(course);
+      info = await w.convertGpxToFit(buf);
+      console.log("Main: Got convertGpxToFit result");
+      console.log(info);
     } catch (e) {
       report.innerText = `Error converting that file:
 ${e}
