@@ -2,6 +2,7 @@
 name = "coursepointer-wasm"
 version = "0.3.3-dev"
 edition = "2024"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

@@ -1320,10 +1320,6 @@ Used by:
 - [bumpalo 3.19.0]( https://github.com/fitzgen/bumpalo )
 - [cfg-if 1.0.1]( https://github.com/rust-lang/cfg-if )
 - [core-foundation-sys 0.8.7]( https://github.com/servo/core-foundation-rs )
-- [crossbeam-deque 0.8.6]( https://github.com/crossbeam-rs/crossbeam )
-- [crossbeam-epoch 0.9.18]( https://github.com/crossbeam-rs/crossbeam )
-- [crossbeam-utils 0.8.21]( https://github.com/crossbeam-rs/crossbeam )
-- [either 1.15.0]( https://github.com/rayon-rs/either )
 - [equivalent 1.0.2]( https://github.com/indexmap-rs/equivalent )
 - [fastrand 2.3.0]( https://github.com/smol-rs/fastrand )
 - [hashbrown 0.15.4]( https://github.com/rust-lang/hashbrown )
@@ -1333,13 +1329,12 @@ Used by:
 - [log 0.4.27]( https://github.com/rust-lang/log )
 - [num-traits 0.2.19]( https://github.com/rust-num/num-traits )
 - [once_cell 1.21.3]( https://github.com/matklad/once_cell )
-- [rayon-core 1.12.1]( https://github.com/rayon-rs/rayon )
-- [rayon 1.10.0]( https://github.com/rayon-rs/rayon )
 - [wasm-bindgen-backend 0.2.100]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/backend )
 - [wasm-bindgen-macro-support 0.2.100]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/macro-support )
 - [wasm-bindgen-macro 0.2.100]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/macro )
 - [wasm-bindgen-shared 0.2.100]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/shared )
 - [wasm-bindgen 0.2.100]( https://github.com/rustwasm/wasm-bindgen )
+- [web-sys 0.3.77]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/web-sys )
 
 ```
                               Apache License
@@ -1778,6 +1773,7 @@ Used by:
 - [thiserror-impl 2.0.12]( https://github.com/dtolnay/thiserror )
 - [thiserror 2.0.12]( https://github.com/dtolnay/thiserror )
 - [unicode-ident 1.0.18]( https://github.com/dtolnay/unicode-ident )
+- [wasm-logger 0.2.0]( https://gitlab.com/limira-rs/wasm-logger )
 
 ```
 Apache License
@@ -2148,6 +2144,7 @@ DEALINGS IN THE SOFTWARE.
 Used by:
 
 - [coursepointer 0.3.3-dev]( https://github.com/mshroyer/coursepointer/ )
+- [coursepointer-wasm 0.3.3-dev]( https://crates.io/crates/coursepointer-wasm )
 
 ```
 Copyright (c) 2025 Mark Shroyer

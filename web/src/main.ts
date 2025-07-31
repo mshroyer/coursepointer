@@ -53,7 +53,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <p>This is an early web version of an existing <a href="https://github.com/mshroyer/coursepointer/">command-line tool</a>.
   </aside>
   <footer>
-    <p>© 2025 Mark Shroyer <a href="https://github.com/mshroyer/coursepointer/blob/main/docs/third_party_licenses.md">and others</a>.
+    <p>© 2025 Mark Shroyer <a href="https://github.com/mshroyer/coursepointer/blob/main/docs/web_third_party_licenses.md">and others</a>.
      Source code on <a href="https://github.com/mshroyer/coursepointer">GitHub</a>.</p>
   </footer>
 `;
