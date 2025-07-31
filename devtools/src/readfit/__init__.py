@@ -17,6 +17,9 @@ def show_frames(path: str) -> None:
     ) as reader:
         for frame in reader:
             if frame.frame_type == fitdecode.FIT_FRAME_DATA:
+                if frame.name == "course":
+                    sport = frame.get_field("sport").value
+                    print(f"Course message: sport={sport}")
                 if frame.name == "record":
                     lat = get_semicircle_degrees(frame.get_field("position_lat").value)
                     lon = get_semicircle_degrees(frame.get_field("position_long").value)
