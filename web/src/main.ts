@@ -1,4 +1,5 @@
 import "./style.css";
+import { WorkerMessage } from "./const.ts";
 import { initialize } from "./wasm-deps.ts";
 import { JsConversionInfo } from "coursepointer-wasm";
 
@@ -62,10 +63,10 @@ class CoursePointerWorker {
   handleMessage(e: MessageEvent<any>) {
     console.log("Main: got message from worker");
     console.log(e);
-    if (e.data.type === "ready") {
+    if (e.data.type === WorkerMessage.Ready) {
       console.log("Main: Got message that worker is ready");
       this._readyResolver.resolve();
-    } else if (e.data.type === "convert_gpx_to_fit") {
+    } else if (e.data.type === WorkerMessage.ConvertGpxToFit) {
       const resolver = this._convertGpxToFitResolvers.shift();
       if (e.data.error) {
         resolver!.reject(e.data.error);
@@ -80,7 +81,10 @@ class CoursePointerWorker {
     await this._ready;
     return new Promise((resolve, reject) => {
       this._convertGpxToFitResolvers.push(new Resolver(resolve, reject));
-      this._worker.postMessage({ type: "convert_gpx_to_fit", buf: buf });
+      this._worker.postMessage({
+        type: WorkerMessage.ConvertGpxToFit,
+        buf: buf,
+      });
     });
   }
 }
@@ -117,7 +121,8 @@ Ensure it's a valid GPX file containing exactly one route or track.
       console.timeEnd("convert_gpx_to_fit_bytes");
     }
     report.innerText = info.report;
-    const blob = new Blob([info.fit_bytes], {
+    console.log(info.fit_bytes);
+    const blob = new Blob([new Uint8Array(info.fit_bytes)], {
       type: "application/octet-stream",
     });
 
