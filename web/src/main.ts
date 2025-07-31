@@ -134,6 +134,7 @@ class CoursePointerWorker {
     }
   }
 
+  // TODO: Limit to a single outstanding request
   async convertGpxToFit(
     buf: ArrayBuffer,
     options: OptionValues,
@@ -153,9 +154,14 @@ class CoursePointerWorker {
 const w = new CoursePointerWorker();
 
 function setupPicker(p: HTMLInputElement) {
-  p.addEventListener("change", async (e) => {
-    const target = e.target as HTMLInputElement;
-    const file: File | undefined = target.files?.[0];
+  options.addChangedCallback(() => {
+    if (p.files?.[0] !== undefined) {
+      p.dispatchEvent(new Event("change"));
+    }
+  });
+
+  p.addEventListener("change", async () => {
+    const file: File | undefined = p.files?.[0];
     if (!file) return;
 
     document.querySelector<HTMLElement>("main")!.innerHTML = `

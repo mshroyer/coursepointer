@@ -11,7 +11,7 @@ use num_traits::cast::NumCast;
 use serde::Serialize;
 use strum::EnumString;
 use thiserror::Error;
-use tracing::debug;
+use tracing::{debug, info};
 #[cfg(feature = "jsffi")]
 use wasm_bindgen::prelude::*;
 
@@ -332,7 +332,10 @@ impl DefinitionFrame {
 /// 21.171.00.
 #[repr(u8)]
 #[cfg_attr(feature = "cli", derive(strum::Display, clap::ValueEnum))]
-#[cfg_attr(feature = "jsffi", derive(strum::EnumIter, strum::Display, num_enum::TryFromPrimitive))]
+#[cfg_attr(
+    feature = "jsffi",
+    derive(strum::EnumIter, strum::Display, num_enum::TryFromPrimitive)
+)]
 #[derive(Clone, Copy, PartialEq, EnumString, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
@@ -390,6 +393,7 @@ struct CourseMessage {
 
 impl CourseMessage {
     fn new(name: String, sport: Sport) -> Self {
+        info!("sport: {sport:?}");
         Self { name, sport }
     }
 
@@ -794,7 +798,7 @@ impl FitCourseOptions {
 
     /// Set the course's sport
     ///
-    /// Defaults to `cycling` if unset.
+    /// Defaults to `generic` if unset.
     pub fn with_sport(mut self, sport: Sport) -> Self {
         self.sport = sport;
         self

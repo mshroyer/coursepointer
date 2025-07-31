@@ -1,3 +1,5 @@
+use std::io::Cursor;
+
 use coursepointer::course::{Course, CoursePoint, CourseSetBuilder, CourseSetOptions, Record};
 use coursepointer::internal::Kilometer;
 use coursepointer::{
@@ -7,7 +9,6 @@ use dimensioned::f64prefixes::KILO;
 use dimensioned::si::{HR, M};
 use num_enum::TryFromPrimitive;
 use serde::{Deserialize, Serialize};
-use std::io::Cursor;
 use strum::IntoEnumIterator;
 use thiserror::Error;
 use wasm_bindgen::JsValue;

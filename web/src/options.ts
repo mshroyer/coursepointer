@@ -55,6 +55,7 @@ export class Options {
   sportElement: HTMLSelectElement;
   speedElement: HTMLInputElement;
   defaultValues: OptionValues;
+  private changedCallbacks: (() => void)[];
 
   constructor(
     resetDefaultsButton: HTMLButtonElement,
@@ -65,7 +66,12 @@ export class Options {
     this.sportElement = sportElement;
     this.speedElement = speedElement;
     this.defaultValues = this.getCurrentValues();
+    this.changedCallbacks = [];
     this.addEventListeners();
+  }
+
+  addChangedCallback(callback: () => void) {
+    this.changedCallbacks.push(callback);
   }
 
   getCurrentValues(): OptionValues {
@@ -99,6 +105,9 @@ export class Options {
 
   handleChanged() {
     this.resetDefaultsButton.disabled = false;
+    this.changedCallbacks.forEach((callback) => {
+      callback();
+    });
     this.saveLocally();
   }
 
