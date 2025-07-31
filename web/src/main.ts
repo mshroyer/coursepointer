@@ -31,14 +31,18 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       <summary>Options</summary>
       <form class="options">
         <div class="row">
-          <label for="sport">Sport: </label>
+          <label for="sport" title="The FIT course's sport designation">Sport: </label>
           <select id="sport">
             <option value="0">Generic</option>
           </select>
         </div>
         <div class="row">
-          <label for="speed">Speed (km/h): </label>
-          <input id="speed" type="number" min="1" max="100.0" step="1" value="20" />
+          <label for="speed" title="The speed for the Garmin Virtual Partner">Speed (km/h): </label>
+          <input id="speed" type="number" min="1" max="1000.0" step="1" value="20" />
+        </div>
+        <div class="row">
+          <label for="threshold" title="The minimum distance within which a waypoint must intercept the course to be considered a course point">Threshold distance (m): </label>
+          <input id="threshold" type="number" min="5" max="10000.0" step="5" value="35" />
         </div>
         <div class="row">
           <button id="reset-defaults" type="button" disabled>Reset Defaults</button>
@@ -46,8 +50,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       </form>
     </details>
     <p>CoursePointer runs in your browser using WebAssembly. It does not upload your course anywhere.</p>
-    <p>This is an alpha web version of an existing <a href="https://github.com/mshroyer/coursepointer/">command-line tool</a>.
-    This currently lacks some features present in the command line version, including specifying conversion options.</p>
+    <p>This is an early web version of an existing <a href="https://github.com/mshroyer/coursepointer/">command-line tool</a>.
   </aside>
   <footer>
     <p>© 2025 Mark Shroyer <a href="https://github.com/mshroyer/coursepointer/blob/main/docs/third_party_licenses.md">and others</a>.
@@ -92,6 +95,7 @@ const options = new Options(
   document.querySelector<HTMLButtonElement>("#reset-defaults")!,
   document.querySelector<HTMLSelectElement>("#sport")!,
   document.querySelector<HTMLInputElement>("#speed")!,
+  document.querySelector<HTMLInputElement>("#threshold")!,
 );
 
 class CoursePointerWorker {

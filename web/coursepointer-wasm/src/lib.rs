@@ -136,6 +136,7 @@ pub struct JsConversionInfo {
 pub struct JsOptions {
     pub sport: u8,
     pub speed: f64,
+    pub threshold: f64,
 }
 
 impl From<&JsOptions> for FitCourseOptions {
@@ -146,19 +147,27 @@ impl From<&JsOptions> for FitCourseOptions {
     }
 }
 
+impl From<&JsOptions> for CourseSetOptions {
+    fn from(js: &JsOptions) -> Self {
+        CourseSetOptions::default().with_threshold(js.threshold * M)
+    }
+}
+
 #[wasm_bindgen]
 pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8], options: JsValue) -> Result<JsValue> {
-    let mut course_options = FitCourseOptions::default();
+    let mut set_options = CourseSetOptions::default();
+    let mut fit_options = FitCourseOptions::default();
     if let Some(options) = serde_wasm_bindgen::from_value(options).ok() {
-        course_options = FitCourseOptions::from(&options);
+        set_options = CourseSetOptions::from(&options);
+        fit_options = FitCourseOptions::from(&options);
     }
 
     let mut fit_output = Vec::new();
     let info = convert_gpx_to_fit(
         Cursor::new(gpx_input),
         &mut fit_output,
-        CourseSetOptions::default(),
-        course_options,
+        set_options,
+        fit_options,
     )?;
 
     let report =

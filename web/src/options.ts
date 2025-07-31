@@ -1,25 +1,32 @@
 export class OptionValues {
   sport: number;
   speed: number;
+  threshold: number;
 
-  constructor(sport: number, speed: number) {
+  constructor(sport: number, speed: number, threshold: number) {
     this.sport = sport;
     this.speed = speed;
+    this.threshold = threshold;
   }
 
   toJSON(): object {
     return {
       sport: this.sport,
       speed: this.speed,
+      threshold: this.threshold,
     };
   }
 
   clone(): OptionValues {
-    return new OptionValues(this.sport, this.speed);
+    return new OptionValues(this.sport, this.speed, this.threshold);
   }
 
   equals(other: OptionValues): boolean {
-    return this.sport === other.sport && this.speed === other.speed;
+    return (
+      this.sport === other.sport &&
+      this.speed === other.speed &&
+      this.threshold == other.threshold
+    );
   }
 
   static fromJSON(json: string, defaults: OptionValues): OptionValues {
@@ -35,6 +42,9 @@ export class OptionValues {
     }
     if (typeof parsed.speed === "number") {
       result.speed = parsed.speed;
+    }
+    if (typeof parsed.threshold === "number") {
+      result.threshold = parsed.threshold;
     }
     return result;
   }
@@ -54,6 +64,7 @@ export class Options {
   resetDefaultsButton: HTMLButtonElement;
   sportElement: HTMLSelectElement;
   speedElement: HTMLInputElement;
+  thresholdElement: HTMLInputElement;
   defaultValues: OptionValues;
   private changedCallbacks: (() => void)[];
 
@@ -61,10 +72,12 @@ export class Options {
     resetDefaultsButton: HTMLButtonElement,
     sportElement: HTMLSelectElement,
     speedElement: HTMLInputElement,
+    thresholdElement: HTMLInputElement,
   ) {
     this.resetDefaultsButton = resetDefaultsButton;
     this.sportElement = sportElement;
     this.speedElement = speedElement;
+    this.thresholdElement = thresholdElement;
     this.defaultValues = this.getCurrentValues();
     this.changedCallbacks = [];
     this.addEventListeners();
@@ -77,7 +90,8 @@ export class Options {
   getCurrentValues(): OptionValues {
     const sport = Number(this.sportElement.value);
     const speed = Number(this.speedElement.value);
-    return new OptionValues(sport, speed);
+    const threshold = Number(this.thresholdElement.value);
+    return new OptionValues(sport, speed, threshold);
   }
 
   setValues(values: OptionValues) {
@@ -93,6 +107,9 @@ export class Options {
       this.handleChanged();
     });
     this.speedElement.addEventListener("change", () => {
+      this.handleChanged();
+    });
+    this.thresholdElement.addEventListener("change", () => {
       this.handleChanged();
     });
   }
