@@ -57,26 +57,26 @@ html, body, #app {
   font-size: var(--main-font-size);
 }
 
-#app > aside input:not([type="file"]),
-#app > aside select,
-#app > aside button,
-#app > aside input[type="file"]::file-selector-button {
+#app input:not([type="file"]),
+#app select,
+#app button,
+#app input[type="file"]::file-selector-button {
   border: 2px solid #8b8b8b;
 }
 
-#app > aside button,
-#app > aside input[type="file"]::file-selector-button {
+#app button,
+#app input[type="file"]::file-selector-button {
   background: #f6f6f6;
 }
-#app > aside button:hover,
-#app > aside input[type="file"]::file-selector-button:hover {
+#app button:hover,
+#app input[type="file"]::file-selector-button:hover {
   background: #e2e2e2;
 }
-#app > aside button:active,
-#app > aside input[type="file"]::file-selector-button:active {
+#app button:active,
+#app input[type="file"]::file-selector-button:active {
   background: #f6f6f6;
 }
-#app > aside button:disabled {
+#app button:disabled {
   background: #f6f6f6;
   color: #8b8b8b;
   border-color: #e2e2e2;
