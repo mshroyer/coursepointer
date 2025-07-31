@@ -1,6 +1,11 @@
-import { WorkerMessage } from "./const.ts";
 import { initialize } from "./wasm-deps.ts";
 import { convert_gpx_to_fit_bytes, enumerate_sports } from "coursepointer-wasm";
+import {
+  ConvertGpxToFitRequest,
+  ConvertGpxToFitResponse,
+  ReadyResponse,
+  WorkerRequest,
+} from "./messages.ts";
 
 async function initWorker() {
   console.log("Worker started");
@@ -11,19 +16,29 @@ async function initWorker() {
 
   onmessage = (e) => {
     console.log("Worker: message received from main script");
-    if (e.data.type === WorkerMessage.ConvertGpxToFit) {
-      const buf = e.data["buf"];
-      const course = new Uint8Array(buf);
+    WorkerRequest.setPrototype(e.data);
+    if (e.data instanceof ConvertGpxToFitRequest) {
+      const course = e.data.course;
+      const options = e.data.options;
       try {
-        const info = convert_gpx_to_fit_bytes(course);
-        self.postMessage({ type: WorkerMessage.ConvertGpxToFit, info: info });
+        const info = convert_gpx_to_fit_bytes(course, options);
+        postMessage(new ConvertGpxToFitResponse(info, undefined));
       } catch (e) {
-        self.postMessage({ type: WorkerMessage.ConvertGpxToFit, error: e });
+        let ex;
+        if (e instanceof Error) {
+          ex = e;
+        } else {
+          ex = new Error("Non-error value caught", { cause: e });
+        }
+        postMessage(new ConvertGpxToFitResponse(undefined, ex));
       }
+    } else {
+      console.warn("Worker: got unknown WorkerRequest:");
+      console.log(e.data);
     }
   };
 
-  self.postMessage({ type: WorkerMessage.Ready, sports: enumerate_sports() });
+  postMessage(new ReadyResponse(enumerate_sports()));
 }
 
 initWorker();

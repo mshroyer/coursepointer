@@ -1,4 +1,4 @@
-class OptionValues {
+export class OptionValues {
   sport: number;
   speed: number;
 

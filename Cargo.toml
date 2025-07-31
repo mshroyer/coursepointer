@@ -59,6 +59,7 @@ tracing-appender = { version = "0.2.3", optional = true }
 wasm-bindgen = { version = "0.2.100", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde-wasm-bindgen = { version = "0.6.5", optional = true }
+num_enum = { version = "0.7.4", optional = true }
 
 [dev-dependencies]
 anyhow = "1.0.98"
@@ -81,7 +82,7 @@ cli = [
 ]
 full-geolib = []
 rayon = ["dep:rayon"]
-jsffi = ["dep:anyhow", "dep:serde", "dep:serde-wasm-bindgen", "dep:wasm-bindgen"]
+jsffi = ["dep:anyhow", "dep:serde", "dep:serde-wasm-bindgen", "dep:wasm-bindgen", "dep:num_enum"]
 
 [build-dependencies]
 rustc_version = "0.4.1"

@@ -1,5 +1,9 @@
 # CoursePointer Changelog
 
+## v0.3.3
+
+- Changed default FIT sport to Generic.
+
 ## v0.3.2
 
 - `pub use TypeError` so external users can deal with type invariant errors

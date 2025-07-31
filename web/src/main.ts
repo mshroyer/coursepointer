@@ -1,7 +1,12 @@
 import "./style.css";
-import { WorkerMessage } from "./const.ts";
-import { Options } from "./options.ts";
+import { Options, OptionValues } from "./options.ts";
 import { EnumVariant, JsConversionInfo } from "coursepointer-wasm";
+import {
+  ConvertGpxToFitRequest,
+  ConvertGpxToFitResponse,
+  ReadyResponse,
+  WorkerResponse,
+} from "./messages.ts";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header>
@@ -106,34 +111,41 @@ class CoursePointerWorker {
     this._convertGpxToFitResolvers = [];
   }
 
-  handleMessage(e: MessageEvent<any>) {
+  handleMessage(e: MessageEvent<WorkerResponse>) {
     console.log("Main: got message from worker");
+    WorkerResponse.setPrototype(e.data);
     console.log(e);
-    if (e.data.type === WorkerMessage.Ready) {
-      console.log("Main: Got message that worker is ready");
+    if (e.data instanceof ReadyResponse) {
+      console.log("Main: worker is ready");
       console.log(e.data);
       populateSports(e.data.sports);
       options.restoreLocally();
       this._readyResolver.resolve();
-    } else if (e.data.type === WorkerMessage.ConvertGpxToFit) {
+    } else if (e.data instanceof ConvertGpxToFitResponse) {
       const resolver = this._convertGpxToFitResolvers.shift();
-      if (e.data.error) {
-        resolver!.reject(e.data.error);
+      if (e.data.err) {
+        resolver!.reject(e.data.err);
       } else {
-        resolver!.resolve(e.data.info);
+        resolver!.resolve(e.data.info!);
       }
+    } else {
+      console.warn("Main: got unknown WorkerResponse:");
+      console.log(e.data);
     }
   }
 
-  async convertGpxToFit(buf: ArrayBuffer): Promise<JsConversionInfo> {
+  async convertGpxToFit(
+    buf: ArrayBuffer,
+    options: OptionValues,
+  ): Promise<JsConversionInfo> {
     console.log("convertGpxToFit called");
     await this._ready;
+
     return new Promise((resolve, reject) => {
       this._convertGpxToFitResolvers.push(new Resolver(resolve, reject));
-      this._worker.postMessage({
-        type: WorkerMessage.ConvertGpxToFit,
-        buf: buf,
-      });
+      this._worker.postMessage(
+        new ConvertGpxToFitRequest(new Uint8Array(buf), options),
+      );
     });
   }
 }
@@ -156,7 +168,7 @@ function setupPicker(p: HTMLInputElement) {
     const report = document.querySelector<HTMLInputElement>("#report")!;
     let info;
     try {
-      info = await w.convertGpxToFit(buf);
+      info = await w.convertGpxToFit(buf, options.getCurrentValues());
       console.log("Main: Got convertGpxToFit result");
       console.log(info);
     } catch (e) {

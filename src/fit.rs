@@ -332,7 +332,7 @@ impl DefinitionFrame {
 /// 21.171.00.
 #[repr(u8)]
 #[cfg_attr(feature = "cli", derive(strum::Display, clap::ValueEnum))]
-#[cfg_attr(feature = "jsffi", derive(strum::EnumIter, strum::Display))]
+#[cfg_attr(feature = "jsffi", derive(strum::EnumIter, strum::Display, num_enum::TryFromPrimitive))]
 #[derive(Clone, Copy, PartialEq, EnumString, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
@@ -375,6 +375,12 @@ pub enum Sport {
     SkyDiving = 34u8,
     Snowshoeing = 35u8,
     Snowmobiling = 36u8,
+}
+
+impl Default for Sport {
+    fn default() -> Self {
+        Sport::Generic
+    }
 }
 
 struct CourseMessage {

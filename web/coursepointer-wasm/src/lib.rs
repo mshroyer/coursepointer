@@ -1,12 +1,13 @@
-use std::io::Cursor;
-
 use coursepointer::course::{Course, CoursePoint, CourseSetBuilder, CourseSetOptions, Record};
 use coursepointer::internal::Kilometer;
 use coursepointer::{
     CoursePointType, DEG, FitCourseOptions, GeoPoint, Sport, convert_gpx_to_fit, read_gpx,
 };
-use dimensioned::si::M;
-use serde::Serialize;
+use dimensioned::f64prefixes::KILO;
+use dimensioned::si::{HR, M};
+use num_enum::TryFromPrimitive;
+use serde::{Deserialize, Serialize};
+use std::io::Cursor;
 use strum::IntoEnumIterator;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
@@ -130,14 +131,33 @@ pub struct JsConversionInfo {
     pub report: String,
 }
 
+#[derive(Deserialize)]
+pub struct JsOptions {
+    pub sport: u8,
+    pub speed: f64,
+}
+
+impl From<&JsOptions> for FitCourseOptions {
+    fn from(js: &JsOptions) -> Self {
+        FitCourseOptions::default()
+            .with_sport(Sport::try_from_primitive(js.sport).unwrap_or_default())
+            .with_speed(js.speed * KILO * M / HR)
+    }
+}
+
 #[wasm_bindgen]
-pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8]) -> Result<JsValue> {
+pub fn convert_gpx_to_fit_bytes(gpx_input: &[u8], options: JsValue) -> Result<JsValue> {
+    let mut course_options = FitCourseOptions::default();
+    if let Some(options) = serde_wasm_bindgen::from_value(options).ok() {
+        course_options = FitCourseOptions::from(&options);
+    }
+
     let mut fit_output = Vec::new();
     let info = convert_gpx_to_fit(
         Cursor::new(gpx_input),
         &mut fit_output,
         CourseSetOptions::default(),
-        FitCourseOptions::default(),
+        course_options,
     )?;
 
     let report =
