@@ -76,10 +76,20 @@ html, body, #app {
   background: #f6f6f6;
 }
 
+#app > aside details {
+  border: 1px solid black;
+  padding: 0.5em 1em 0;
+}
+#app > aside summary {
+  margin-bottom: 0.5em;
+}
+
+
 #app > aside .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 1em;
   margin-bottom: 1em;
 }
 

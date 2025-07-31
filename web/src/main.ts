@@ -1,6 +1,5 @@
 import "./style.css";
 import { WorkerMessage } from "./const.ts";
-import { initialize } from "./wasm-deps.ts";
 import { EnumVariant, JsConversionInfo } from "coursepointer-wasm";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
@@ -22,18 +21,21 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <form class="picker">
       <input id="picker" type="file" />
     </form>
-    <form class="options">
-      <div class="row">
-        <label for="sport">Sport: </label>
-        <select id="sport">
-          <option value="0">Generic</option>
-        </select>
-      </div>
-      <div class="row">
-        <label for="speed">Speed (km/h): </label>
-        <input id="speed" type="number" min="1" max="100.0" step="1" value="20" />
-      </div>
-    </form>
+    <details id="options-details">
+      <summary>Options</summary>
+      <form class="options">
+        <div class="row">
+          <label for="sport">Sport: </label>
+          <select id="sport">
+            <option value="0">Generic</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="speed">Speed (km/h): </label>
+          <input id="speed" type="number" min="1" max="100.0" step="1" value="20" />
+        </div>
+      </form>
+    </details>
     <p>CoursePointer runs in your browser using WebAssembly. It does not upload your course anywhere.</p>
     <p>This is an alpha web version of an existing <a href="https://github.com/mshroyer/coursepointer/">command-line tool</a>.
     This currently lacks some features present in the command line version, including specifying conversion options.</p>
@@ -178,6 +180,11 @@ Ensure it's a valid GPX file containing exactly one route or track.
   });
 }
 
-setupPicker(document.querySelector<HTMLInputElement>("#picker")!);
+function setupDetails(d: HTMLDetailsElement) {
+  if (window.innerWidth > 768) {
+    d.open = true;
+  }
+}
 
-await initialize();
+setupDetails(document.querySelector<HTMLDetailsElement>("#options-details")!);
+setupPicker(document.querySelector<HTMLInputElement>("#picker")!);
