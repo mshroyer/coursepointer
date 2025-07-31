@@ -174,7 +174,7 @@ struct ConvertArgs {
     speed: f64,
 
     /// Sport to be designated for the course.
-    #[clap(long, short = 'p', default_value = "cycling")]
+    #[clap(long, short = 'p', default_value = "generic")]
     sport: Sport,
 
     /// Strategy for handling duplicate intercepts (within threshold) of the

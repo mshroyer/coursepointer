@@ -155,7 +155,7 @@ class TestFIT:
         mesgs = caching_mesgs(out_file)
 
         assert len(mesgs["course_mesgs"]) == 1
-        assert field(mesgs, "course", 0, "sport") == "cycling"
+        assert field(mesgs, "course", 0, "sport") == "generic"
 
     def test_file_id_type(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")
