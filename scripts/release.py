@@ -105,6 +105,7 @@ def read_head() -> str:
 
 
 def query_ci_runs(sha: str) -> dict:
+    # TODO: Avoid hardcoding repo name
     output = subprocess.check_output(
         [
             "gh",
