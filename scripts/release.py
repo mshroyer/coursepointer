@@ -27,8 +27,8 @@ def pyproject_version() -> str:
     return project["project"]["version"]
 
 
-def last_changelog_version() -> str:
-    pattern = re.compile(r"^## v(\d+\.\d+\.\d+)")
+def last_changelog_version() -> Optional[str]:
+    pattern = re.compile(r"^## v(\d+\.\d+\.\d+)$")
     with open("CHANGELOG.md") as f:
         for line in f:
             m = pattern.match(line)
