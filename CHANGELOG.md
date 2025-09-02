@@ -3,6 +3,10 @@
 ## v0.3.3
 
 - Changed default FIT sport to Generic.
+- Some enhancements to the proof-of-concept WASM application.
+- Updates tracing-subscriber to address a security vulnerability flagged by
+  Dependabot, which probably had no impact on coursepointer but just to be
+  safe: https://github.com/mshroyer/coursepointer/security/dependabot/1
 
 ## v0.3.2
 
