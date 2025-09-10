@@ -80,3 +80,29 @@ helpful for identifying hot spots.  Set the environment variable
 Setting log level `-L debug` enables tracing summaries that can also be useful
 for understanding performance, but this seems to have a non-negligible
 measurement effect, especially on dev builds.
+
+## Updating GeographicLib
+
+To update to a new release of GeographicLib, update the submodule and then
+generate a new `./include/GeographicLib/Config.h` by running:
+
+```
+cd geographiclib
+mkdir BUILD
+cd BUILD
+cmake .. -DBUILD_SHARED_LIBS=OFF
+cp include/GeographicLib/Config.h ../../include/GeographicLib/
+```
+
+## Web application
+
+Build and serve the web version by running:
+
+```
+cd web
+pnpm build
+pnpm dev
+```
+
+See the [web action](../.github/actions/web/action.yml) for how to test and
+lint it.
