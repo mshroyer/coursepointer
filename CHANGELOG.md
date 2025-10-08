@@ -1,5 +1,13 @@
 # CoursePointer Changelog
 
+## v0.3.4
+
+- Use the current time, instead of an arbitrary fixed timestamp, as
+  `time_created` in the CLI, and as the default value in the library.  Thanks to
+  @nicolacimmino for pointing out that a fixed timestamp can cause devices to
+  treat different routes as though they have the same unique identifier.
+- Updated to GeographicLib 2.5.2.
+
 ## v0.3.3
 
 - Changed default FIT sport to Generic.

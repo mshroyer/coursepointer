@@ -840,6 +840,11 @@ impl Default for FitCourseOptions {
             // time_created field, as a key to uniquely identify courses, so it
             // isn't safe to default to a fixed timestamp.  Using the current
             // time mimics the behavior of Garmin Connect.
+            //
+            // See ANT+'s "FIT File Types Description" document, revision 2.2,
+            // which states: "If the combination of type, manufacturer, product
+            // and serial_number is insufficient, [...] the time_created or
+            // number fields must be populated to differentiate the files."
             start_time: Utc::now(),
             sport: Sport::Cycling,
             product_name: "".to_owned(),
