@@ -5,10 +5,11 @@ import shutil
 import subprocess
 from datetime import datetime, timezone
 from itertools import pairwise
+from time import sleep
 
 from pytest import approx, raises
 
-from integration import field, garmin_read_file_header
+from integration import field, garmin_read_file_header, garmin_read_messages
 
 
 class TestUI:
@@ -183,6 +184,22 @@ class TestFIT:
             abs((datetime.now(timezone.utc) - time_created.replace()).total_seconds())
             < 15.0
         )
+
+    def test_file_id_is_unique(self, data, coursepointer_cli, tmp_path):
+        out_file1 = tmp_path / "out1.fit"
+        out_file2 = tmp_path / "out2.fit"
+
+        coursepointer_cli("convert", data / "cptr004.gpx", "-o", out_file1)
+        sleep(2)
+        coursepointer_cli("convert", data / "cptr004.gpx", "-o", out_file2)
+
+        mesgs1 = garmin_read_messages(out_file1)
+        mesgs2 = garmin_read_messages(out_file2)
+
+        # Devices may use the file_id message as a unique identifier for
+        # courses.  Here we ensure that two courses converted at different
+        # times have unique file_ids.
+        assert mesgs1["file_id_mesgs"][0] != mesgs2["file_id_mesgs"][0]
 
     def test_file_id_product_name(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")
