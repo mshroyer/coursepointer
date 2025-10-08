@@ -4,7 +4,7 @@ use std::ops::Add;
 use std::sync::LazyLock;
 
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use chrono::{DateTime, TimeDelta, TimeZone, Utc};
+use chrono::{DateTime, TimeDelta, Utc};
 use dimensioned::si::{M, Meter, MeterPerSecond, S, Second};
 use num_traits::cast::NumCast;
 #[cfg(feature = "jsffi")]
@@ -836,10 +836,11 @@ impl Default for FitCourseOptions {
     fn default() -> Self {
         Self {
             speed: 8.0 * M / S,
-            // Defaulting to Utc::now() would mean FIT writes aren't
-            // reproducible, so let's arbitrarily go with my niece's birthday as
-            // a consistent default.
-            start_time: Utc.with_ymd_and_hms(2019, 11, 23, 00, 00, 00).unwrap(),
+            // Some devices may use the file_id message, including its
+            // time_created field, as a key to uniquely identify courses, so it
+            // isn't safe to default to a fixed timestamp.  Using the current
+            // time mimics the behavior of Garmin Connect.
+            start_time: Utc::now(),
             sport: Sport::Cycling,
             product_name: "".to_owned(),
             software_version: 0u16,
