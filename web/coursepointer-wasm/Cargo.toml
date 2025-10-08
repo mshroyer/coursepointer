@@ -1,6 +1,6 @@
 [package]
 name = "coursepointer-wasm"
-version = "0.3.4"
+version = "0.3.5-dev"
 edition = "2024"
 license = "MIT"
 
@@ -8,7 +8,7 @@ license = "MIT"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-coursepointer = { version = "0.3.3-dev", path = "../..", default-features = false, features = ["jsffi"] }
+coursepointer = { version = "0.3.5-dev", path = "../..", default-features = false, features = ["jsffi"] }
 dimensioned = "0.8.0"
 thiserror = "2.0.12"
 wasm-bindgen = "0.2.100"

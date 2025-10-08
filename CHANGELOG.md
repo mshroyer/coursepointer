@@ -1,5 +1,9 @@
 # CoursePointer Changelog
 
+## Unreleased
+
+- Updated to GeographicLib 2.6.
+
 ## v0.3.4
 
 - Use the current time, instead of an arbitrary fixed timestamp, as

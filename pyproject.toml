@@ -1,6 +1,6 @@
 [project]
 name = "coursepointer"
-version = "0.3.4"
+version = "0.3.5-dev"
 description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
