@@ -1318,13 +1318,13 @@ limitations under the License.
 Used by:
 
 - [bumpalo 3.19.0]( https://github.com/fitzgen/bumpalo )
-- [cfg-if 1.0.1]( https://github.com/rust-lang/cfg-if )
+- [cfg-if 1.0.3]( https://github.com/rust-lang/cfg-if )
 - [core-foundation-sys 0.8.7]( https://github.com/servo/core-foundation-rs )
 - [equivalent 1.0.2]( https://github.com/indexmap-rs/equivalent )
 - [fastrand 2.3.0]( https://github.com/smol-rs/fastrand )
-- [hashbrown 0.15.4]( https://github.com/rust-lang/hashbrown )
+- [hashbrown 0.15.5]( https://github.com/rust-lang/hashbrown )
 - [heck 0.5.0]( https://github.com/withoutboats/heck )
-- [indexmap 2.10.0]( https://github.com/indexmap-rs/indexmap )
+- [indexmap 2.11.0]( https://github.com/indexmap-rs/indexmap )
 - [js-sys 0.3.77]( https://github.com/rustwasm/wasm-bindgen/tree/master/crates/js-sys )
 - [log 0.4.27]( https://github.com/rust-lang/log )
 - [num-traits 0.2.19]( https://github.com/rust-num/num-traits )
@@ -1757,21 +1757,21 @@ limitations under the License.
 Used by:
 
 - [android_system_properties 0.1.5]( https://github.com/nical/android_system_properties )
-- [anyhow 1.0.98]( https://github.com/dtolnay/anyhow )
+- [anyhow 1.0.99]( https://github.com/dtolnay/anyhow )
 - [dimensioned 0.8.0]( https://github.com/paholg/dimensioned )
-- [libc 0.2.174]( https://github.com/rust-lang/libc )
+- [libc 0.2.175]( https://github.com/rust-lang/libc )
 - [num_enum 0.7.4]( https://github.com/illicitonion/num_enum )
 - [num_enum_derive 0.7.4]( https://github.com/illicitonion/num_enum )
 - [pin-project-lite 0.2.16]( https://github.com/taiki-e/pin-project-lite )
-- [proc-macro2 1.0.95]( https://github.com/dtolnay/proc-macro2 )
+- [proc-macro2 1.0.101]( https://github.com/dtolnay/proc-macro2 )
 - [quote 1.0.40]( https://github.com/dtolnay/quote )
-- [rustversion 1.0.21]( https://github.com/dtolnay/rustversion )
+- [rustversion 1.0.22]( https://github.com/dtolnay/rustversion )
 - [serde 1.0.219]( https://github.com/serde-rs/serde )
 - [serde_derive 1.0.219]( https://github.com/serde-rs/serde )
 - [siphasher 1.0.1]( https://github.com/jedisct1/rust-siphash )
-- [syn 2.0.104]( https://github.com/dtolnay/syn )
-- [thiserror-impl 2.0.12]( https://github.com/dtolnay/thiserror )
-- [thiserror 2.0.12]( https://github.com/dtolnay/thiserror )
+- [syn 2.0.106]( https://github.com/dtolnay/syn )
+- [thiserror-impl 2.0.16]( https://github.com/dtolnay/thiserror )
+- [thiserror 2.0.16]( https://github.com/dtolnay/thiserror )
 - [unicode-ident 1.0.18]( https://github.com/dtolnay/unicode-ident )
 - [wasm-logger 0.2.0]( https://gitlab.com/limira-rs/wasm-logger )
 
@@ -2143,8 +2143,8 @@ DEALINGS IN THE SOFTWARE.
 
 Used by:
 
-- [coursepointer 0.3.3-dev]( https://github.com/mshroyer/coursepointer/ )
-- [coursepointer-wasm 0.3.3-dev]( https://crates.io/crates/coursepointer-wasm )
+- [coursepointer 0.3.4]( https://github.com/mshroyer/coursepointer/ )
+- [coursepointer-wasm 0.3.4]( https://crates.io/crates/coursepointer-wasm )
 
 ```
 Copyright (c) 2025 Mark Shroyer
@@ -2236,7 +2236,7 @@ SOFTWARE.
 
 Used by:
 
-- [winnow 0.7.12]( https://github.com/winnow-rs/winnow )
+- [winnow 0.7.13]( https://github.com/winnow-rs/winnow )
 
 ```
 Permission is hereby granted, free of charge, to any person obtaining
@@ -2264,10 +2264,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Used by:
 
-- [phf 0.12.1]( https://github.com/rust-phf/rust-phf )
-- [phf_generator 0.12.1]( https://github.com/rust-phf/rust-phf )
-- [phf_macros 0.12.1]( https://github.com/rust-phf/rust-phf )
-- [phf_shared 0.12.1]( https://github.com/rust-phf/rust-phf )
+- [phf 0.13.1]( https://github.com/rust-phf/rust-phf )
+- [phf_generator 0.13.1]( https://github.com/rust-phf/rust-phf )
+- [phf_macros 0.13.1]( https://github.com/rust-phf/rust-phf )
+- [phf_shared 0.13.1]( https://github.com/rust-phf/rust-phf )
 
 ```
 The MIT License (MIT)
@@ -2359,7 +2359,7 @@ SOFTWARE.
 
 Used by:
 
-- [quick-xml 0.38.0]( https://github.com/tafia/quick-xml )
+- [quick-xml 0.38.3]( https://github.com/tafia/quick-xml )
 
 ```
 The MIT License (MIT)
