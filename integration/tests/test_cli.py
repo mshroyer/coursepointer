@@ -179,7 +179,10 @@ class TestFIT:
         # Since the CLI uses the current time as the time_created field of the
         # file_id message, check that it's set to approximately the current
         # time.
-        assert abs((datetime.now(timezone.utc) - time_created.replace()).total_seconds()) < 15.0
+        assert (
+            abs((datetime.now(timezone.utc) - time_created.replace()).total_seconds())
+            < 15.0
+        )
 
     def test_file_id_product_name(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr004.gpx")
