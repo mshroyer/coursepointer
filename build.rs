@@ -84,8 +84,8 @@ fn main() {
         // all the source files here rather than go through CMake.
         cc::Build::new()
             .cpp(true)
-            .flag_if_supported("-std=c++11")
-            .flag_if_supported("/std:c++11")
+            .flag_if_supported("-std=c++17")
+            .flag_if_supported("/std:c++17")
             .file("src/shim.cpp")
             .files(sources::geographiclib_cpp().unwrap())
             .flag("-I./include")

@@ -4,10 +4,10 @@
 // cd BUILD
 // cmake .. -DBUILD_SHARED_LIBS=OFF
 
-#define GEOGRAPHICLIB_VERSION_STRING "2.5.2"
+#define GEOGRAPHICLIB_VERSION_STRING "2.6"
 #define GEOGRAPHICLIB_VERSION_MAJOR 2
-#define GEOGRAPHICLIB_VERSION_MINOR 5
-#define GEOGRAPHICLIB_VERSION_PATCH 2
+#define GEOGRAPHICLIB_VERSION_MINOR 6
+#define GEOGRAPHICLIB_VERSION_PATCH 0
 #define GEOGRAPHICLIB_DATA "/usr/local/share/GeographicLib"
 
 // These are macros which affect the building of the library
