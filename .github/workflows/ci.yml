@@ -12,6 +12,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 # We can keep overall resource usage low by just testing on ubuntu with nightly.  That way we can
 jobs:
   build_test_lint:
