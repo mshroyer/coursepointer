@@ -9,6 +9,8 @@ on:
 
 permissions:
   actions: read
+  # There seems to be no finer-grained permission for writing releases vs. git
+  # repo contents
   contents: write
 
 jobs:

@@ -2,6 +2,9 @@ name: Extra Checks
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   build_test:
     strategy:

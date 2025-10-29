@@ -30,6 +30,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   build_and_test:
     runs-on: ${{ inputs.os }}
