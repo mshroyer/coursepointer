@@ -2,7 +2,7 @@ name: Periodic
 on:
   workflow_dispatch:
   schedule:
-    - cron: "23 1 * * 2,5"
+    - cron: "23 1 * * 2"
 
 permissions:
   contents: read
