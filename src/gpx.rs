@@ -824,7 +824,13 @@ mod tests {
         let items = reader.collect::<Result<Vec<_>>>()?;
         let wp = items
             .iter()
-            .find_map(|e| if let GpxItem::Waypoint(w) = e { Some(w) } else { None })
+            .find_map(|e| {
+                if let GpxItem::Waypoint(w) = e {
+                    Some(w)
+                } else {
+                    None
+                }
+            })
             .expect("waypoint not found");
 
         assert_eq!(wp.name, "WP");
