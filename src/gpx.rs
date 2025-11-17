@@ -128,7 +128,7 @@ impl TryFrom<NextPtFields> for GpxWaypoint {
             cmt: value.cmt,
             sym: value.sym,
             type_: value.type_,
-            point: GeoPoint::new(lat, lon, None)?,
+            point: GeoPoint::new(lat, lon, value.ele)?,
         })
     }
 }
@@ -806,6 +806,32 @@ mod tests {
 
         assert_eq!(result, vec!["MyGPSApp".to_string()]);
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_waypoint_with_elevation_propagated() -> Result<()> {
+        let xml = r#"
+<gpx>
+  <wpt lat="37.0" lon="-122.0">
+    <name>WP</name>
+    <ele>45.5</ele>
+  </wpt>
+</gpx>
+"#;
+
+        let reader = GpxReader::from_text(xml);
+        let items = reader.collect::<Result<Vec<_>>>()?;
+        let wp = items
+            .iter()
+            .find_map(|e| if let GpxItem::Waypoint(w) = e { Some(w) } else { None })
+            .expect("waypoint not found");
+
+        assert_eq!(wp.name, "WP");
+        assert_eq!(
+            wp.point,
+            GeoPoint::new(37.0 * DEG, -122.0 * DEG, Some(45.5 * dimensioned::si::M))?
+        );
         Ok(())
     }
 }
