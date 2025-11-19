@@ -22,7 +22,7 @@ def workspace_dir() -> Optional[Path]:
         return None
 
     workspace = exe_parents[2]
-    if not (workspace / ".git").is_dir():
+    if not ((workspace / ".git").is_dir() or (workspace / ".sl").is_dir()):
         return None
 
     return workspace
