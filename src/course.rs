@@ -73,7 +73,7 @@ use dimensioned::si::{M, Meter};
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 use thiserror::Error;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 use crate::algorithm::{
     AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
