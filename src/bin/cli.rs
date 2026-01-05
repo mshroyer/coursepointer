@@ -103,7 +103,7 @@ impl DistUnit {
     fn auto_detect() -> DistUnit {
         let locale = get_locale().unwrap_or_else(|| String::from("en-US"));
         match locale.as_str() {
-            "en-US" | "en-UK" => Self::Mi,
+            "en-US" | "en-GB" => Self::Mi,
             _ => Self::Km,
         }
     }
