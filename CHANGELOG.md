@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Updated to GeographicLib 2.6.
+- Updated to GeographicLib 2.7.
 
 ## v0.3.4
 
