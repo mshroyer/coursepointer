@@ -6,7 +6,6 @@
 set -e
 
 EMSDK_VERSION=4.0.11
-WPACK_VERSION=0.13.1
 
 PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 WASM_TOOLS="$PROJECT/.wasm_tools"
