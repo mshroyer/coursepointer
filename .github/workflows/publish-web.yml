@@ -1,0 +1,28 @@
+name: Publish Website
+on:
+  workflow_call:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Configure AWS OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::466456532355:role/github-coursepointer.app-s3-upload
+          aws-region: us-east-1
+          role-session-name: github-${{ github.run_id }}
+
+      - name: Upload to S3
+        run: |
+          scripts/publish_web.sh
