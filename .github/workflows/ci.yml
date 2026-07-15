@@ -21,5 +21,7 @@ jobs:
     uses: ./.github/workflows/build-test.yml
     with:
       os: ubuntu-latest
-      toolchain: nightly
+      # TODO: Switch back to nightly, so that lints run, once `cargo +nightly
+      # test` no longer crashes rustc
+      toolchain: stable
       web: true
