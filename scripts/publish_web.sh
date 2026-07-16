@@ -12,7 +12,7 @@ DISTRIBUTION="E15WM16D97A4F9"
 
 cd "$(dirname "$0")/../web"
 
-pnpm build
+# pnpm build
 
 aws s3 sync ./dist/ $BUCKET \
   --exclude "assets/*" \
