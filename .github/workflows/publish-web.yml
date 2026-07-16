@@ -17,6 +17,13 @@ jobs:
       - name: Build website
         uses: ./.github/actions/web
 
+      - name: Configure AWS OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::466456532355:role/github-coursepointer.app-s3-upload
+          aws-region: us-east-1
+          role-session-name: github-${{ github.run_id }}
+
       - name: Publish to S3
         run: |
           scripts/publish_web.sh
