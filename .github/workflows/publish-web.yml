@@ -12,9 +12,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup WASM SDKs
+        run: |
+          scripts/install_wasm_tools.sh
+          . scripts/activate_wasm_tools.sh
+
+          # Use the node version pinned by emsdk, and save an separate node 
+          # installation step.
+          echo "$(dirname "$EMSDK_NODE")" >>$GITHUB_PATH
+        shell: bash
+
       - uses: pnpm/action-setup@v4
         with:
           version: 10
+
+      - name: Install PNPM dependencies
+        run: |
+          cd web
+          pnpm install
+        shell: bash
 
       - name: Configure AWS OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -23,6 +39,6 @@ jobs:
           aws-region: us-east-1
           role-session-name: github-${{ github.run_id }}
 
-      - name: Upload to S3
+      - name: Publish to S3
         run: |
           scripts/publish_web.sh
