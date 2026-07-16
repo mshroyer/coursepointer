@@ -1,6 +1,6 @@
-name: Publish Website
+name: publish-website
 on:
-  workflow_call:
+  workflow_dispatch:
 
 permissions:
   id-token: write
