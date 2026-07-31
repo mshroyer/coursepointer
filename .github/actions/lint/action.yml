@@ -12,3 +12,4 @@ runs:
 
     - name: Run lint
       run: scripts/lint.sh
+      shell: bash
