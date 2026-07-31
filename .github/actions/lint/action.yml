@@ -10,18 +10,5 @@ runs:
       run: rustup component add rustfmt
       shell: bash
 
-    - name: rustfmt
-      run: cargo fmt --check
-      shell: bash
-
-    - name: Cargo check
-      run: cargo check
-      shell: bash
-
-    - uses: astral-sh/ruff-action@v3
-      with:
-        args: "check"
-
-    - uses: astral-sh/ruff-action@v3
-      with:
-        args: "format --check --diff"
+    - name: Run lint
+      run: scripts/lint.sh
