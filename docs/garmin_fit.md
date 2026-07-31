@@ -59,7 +59,7 @@ The definition message for the File ID message is missing some of the fields def
 
 The subsequent File ID message's record header is zeroed out.
 
-In the definition message preceeding the "course" message, the third byte of the field definition for "sport" is zero, which corresponds to the value for "enum" in the `fit_base_type` area of the Types tab.  The definition for "name" has type string, with a specified length of 0x0c.  This happens to be *just* long enough to store the name I'd set in my code, plus its null terminator.  I don't have any course points set in this file, so I can't see how this gets encoded in the case of multiple messages of the same type, with strings of varying lengths.
+In the definition message preceding the "course" message, the third byte of the field definition for "sport" is zero, which corresponds to the value for "enum" in the `fit_base_type` area of the Types tab.  The definition for "name" has type string, with a specified length of 0x0c.  This happens to be *just* long enough to store the name I'd set in my code, plus its null terminator.  I don't have any course points set in this file, so I can't see how this gets encoded in the case of multiple messages of the same type, with strings of varying lengths.
 
 Notably, this definition message also reuses local message type zero rather than define a new one.  Which I guess is fine, because we're not writing any additional File ID messages.
 
