@@ -104,5 +104,5 @@ pnpm build
 pnpm dev
 ```
 
-See the [web action](../.github/actions/web/action.yml) for how to test and
-lint it.
+See the [web action](../.github/actions/web/action.yml) for commands to test
+and lint it.
