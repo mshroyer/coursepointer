@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Iterator, List, Optional, Tuple
-from xml.etree import ElementTree
 
 from pytest import approx, fail
+from defusedxml import ElementTree
 import garmin_fit_sdk
 import fitdecode
 
@@ -161,6 +161,46 @@ def fitdecode_get_definition_frames(
         for frame in reader:
             if frame.frame_type == fitdecode.FIT_FRAME_DEFINITION:
                 yield frame
+
+
+def fitdecode_record_field_names(path: Path) -> List[str]:
+    """Get the names of the fields defined for a FIT file's record messages
+
+    Fails if the file doesn't contain exactly one record definition message.
+
+    """
+
+    definitions = [
+        frame
+        for frame in fitdecode_get_definition_frames(path)
+        if frame.name == "record"
+    ]
+    assert len(definitions) == 1
+    return [field_def.name for field_def in definitions[0].field_defs]
+
+
+def fitdecode_record_altitudes(path: Path) -> List[Optional[float]]:
+    """Get the altitude of each of a FIT file's record messages
+
+    Returns None for a record whose altitude is absent, or is set to the
+    profile's invalid value.
+
+    We read these with fitdecode rather than the Garmin SDK because the SDK's
+    treatment of the invalid value varies by version: 21.178.0 decodes it as an
+    altitude of 12607.0 meters instead of reporting the field as unset.
+
+    """
+
+    altitudes = []
+    with fitdecode.FitReader(path) as reader:
+        for frame in reader:
+            if frame.frame_type != fitdecode.FIT_FRAME_DATA or frame.name != "record":
+                continue
+            altitudes.append(
+                frame.get_value("altitude") if frame.has_field("altitude") else None
+            )
+
+    return altitudes
 
 
 def assert_coords_approx_equal(

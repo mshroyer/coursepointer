@@ -11,6 +11,7 @@ from pytest import approx, raises
 
 from integration import (
     field,
+    fitdecode_record_field_names,
     garmin_read_file_header,
     garmin_read_messages,
     gpx_route_elevations,
@@ -313,13 +314,12 @@ class TestConvert:
 
     def test_record_altitudes_absent(self, data, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr008.gpx")
-        mesgs = caching_mesgs(out_file)
 
         # A GPX without elevation shouldn't produce records claiming to have
-        # one.
-        assert len(mesgs["record_mesgs"]) == 4
-        for record in mesgs["record_mesgs"]:
-            assert "altitude" not in record
+        # one, so the field shouldn't be defined for them at all.
+        assert "altitude" not in fitdecode_record_field_names(out_file)
+
+        assert len(caching_mesgs(out_file)["record_mesgs"]) == 4
 
     def test_record_timestamps(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")

@@ -232,6 +232,7 @@ name = "integration"
 version = "0.1.0"
 source = { editable = "integration" }
 dependencies = [
+    { name = "defusedxml" },
     { name = "fitdecode" },
     { name = "garmin-fit-sdk" },
     { name = "pint" },
@@ -245,6 +246,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "defusedxml", specifier = ">=0.7.1" },
     { name = "fitdecode", specifier = ">=0.10.0" },
     { name = "garmin-fit-sdk", specifier = ">=21.158.0" },
     { name = "pint", specifier = ">=0.24.4" },
