@@ -6,7 +6,9 @@ requires-python = ">=3.13"
 dependencies = [
     "defusedxml>=0.7.1",
     "fitdecode>=0.10.0",
-    "garmin-fit-sdk>=21.158.0",
+    # 21.178.0 and earlier decode a field set to the profile's invalid value as
+    # though it held real data, which these tests rely on not happening.
+    "garmin-fit-sdk>=21.208.0",
     "pint>=0.24.4",
 ]
 

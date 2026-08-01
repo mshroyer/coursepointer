@@ -12,4 +12,4 @@ Test data files are in the [data](src/integration/data/) directory:
 - cptr003_connect.fit: cptr003.gpx imported into Garmin Connect and re-exported as FIT.
 - cptr004.gpx: Export of [a Gaia GPS folder](https://www.gaiagps.com/map/?loc=13.6/-122.1094/37.2305&pubLink=b4sitlz7aVCkPFVDFaLm1bSi&folderId=16650ba9-3ecb-45cb-9c21-430e53c7d4c0) folder containing a hiking route and five waypoints, four of them located approximately on the route.
 - cptr007.gpx: A GPX export from Gaia GPS containing two routes
-- cptr008.gpx: A short, handwritten GPX track whose trackpoints have no elevation, along with one waypoint near the track.
+- cptr008.gpx: A short, AI generated GPX track whose trackpoints have no elevation, along with one waypoint near the track.

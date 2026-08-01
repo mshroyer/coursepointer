@@ -15,13 +15,11 @@ conversion, so we implement our own in Python.
 """
 
 from datetime import datetime, timezone
-from pathlib import Path
 
 from pytest import approx
 
 from integration import (
     CourseSpec,
-    fitdecode_record_altitudes,
     fitdecode_record_field_names,
     garmin_read_messages,
     garmin_sdk_record_coords,
@@ -45,17 +43,6 @@ from integration import (
 # profile, so encoding rounds by up to 10cm.  Allow a little more than that so
 # that values right on the boundary don't fail on floating point error.
 ALTITUDE_ABS_TOLERANCE = 0.11
-
-
-def write_fit_records(tmpdir, integration_stub, records):
-    """Encode the given records with the stub, returning the output's path"""
-
-    spec = CourseSpec(records=records)
-    spec.write_file(tmpdir / "spec.json")
-    integration_stub(
-        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
-    )
-    return Path(tmpdir / "out.fit")
 
 
 def test_start_time(tmpdir, integration_stub):
@@ -134,8 +121,12 @@ def test_record_altitudes(tmpdir, integration_stub):
         (-1.0, 0.5, 8848.9),
     ]
 
-    out_file = write_fit_records(tmpdir, integration_stub, records)
-    messages = garmin_read_messages(out_file)
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+    messages = garmin_read_messages(tmpdir / "out.fit")
 
     altitudes = [record["altitude"] for record in messages["record_mesgs"]]
     assert altitudes == approx(
@@ -148,21 +139,31 @@ def test_record_altitudes_absent(tmpdir, integration_stub):
     # than one holding a made-up or invalid value.
     records = [(0.0, 0.0), (0.5, -0.5), (1.0, 0.0)]
 
-    out_file = write_fit_records(tmpdir, integration_stub, records)
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
 
-    assert "altitude" not in fitdecode_record_field_names(out_file)
+    assert "altitude" not in fitdecode_record_field_names(tmpdir / "out.fit")
 
 
 def test_record_altitudes_partial(tmpdir, integration_stub):
     # When only some records have an elevation, the field is still defined, and
-    # the rest are encoded as the profile's invalid value.
+    # the rest are encoded as the profile's invalid value, which the SDK reports
+    # by leaving the field out of its output.
     records = [(0.0, 0.0, 12.5), (0.5, -0.5), (1.0, 0.0, 30.0)]
 
-    out_file = write_fit_records(tmpdir, integration_stub, records)
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+    messages = garmin_read_messages(tmpdir / "out.fit")
 
-    assert "altitude" in fitdecode_record_field_names(out_file)
+    assert "altitude" in fitdecode_record_field_names(tmpdir / "out.fit")
 
-    altitudes = fitdecode_record_altitudes(out_file)
+    altitudes = [record.get("altitude") for record in messages["record_mesgs"]]
     assert altitudes[0] == approx(12.5, abs=ALTITUDE_ABS_TOLERANCE)
     assert altitudes[1] is None
     assert altitudes[2] == approx(30.0, abs=ALTITUDE_ABS_TOLERANCE)
@@ -173,9 +174,14 @@ def test_record_altitudes_out_of_range(tmpdir, integration_stub):
     # unknown, rather than wrapping around into a plausible-looking value.
     records = [(0.0, 0.0, -500.0), (0.5, -0.5, -600.0), (1.0, 0.0, 20000.0)]
 
-    out_file = write_fit_records(tmpdir, integration_stub, records)
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+    messages = garmin_read_messages(tmpdir / "out.fit")
 
-    altitudes = fitdecode_record_altitudes(out_file)
+    altitudes = [record.get("altitude") for record in messages["record_mesgs"]]
     assert altitudes[0] == approx(-500.0, abs=ALTITUDE_ABS_TOLERANCE)
     assert altitudes[1] is None
     assert altitudes[2] is None
