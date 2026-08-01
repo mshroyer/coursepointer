@@ -42,6 +42,10 @@ struct JsonPoint {
 
     /// Longitude in decimal degrees.
     lon: f64,
+
+    /// Elevation in meters, if known.
+    #[serde(default)]
+    ele: Option<f64>,
 }
 
 #[derive(Deserialize)]
@@ -76,7 +80,11 @@ fn write_fit(spec: PathBuf, out: PathBuf) -> Result<()> {
         builder
             .get_route_mut(builder.num_routes().saturating_sub(1))
             .ok_or(anyhow!("Missing route builder"))?
-            .with_route_point(GeoPoint::new(point.lat * DEG, point.lon * DEG, None)?);
+            .with_route_point(GeoPoint::new(
+                point.lat * DEG,
+                point.lon * DEG,
+                point.ele.map(|ele| ele * M),
+            )?);
     }
     let course_set = builder.build()?;
     let course = course_set.courses.first().unwrap();

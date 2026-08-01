@@ -150,6 +150,53 @@ impl TryFrom<FitSurfacePoint> for GeoPoint {
     }
 }
 
+/// The `uint16` value the FIT profile reserves to mean "unknown".
+const UINT16_INVALID: u16 = 0xFFFF;
+
+/// The FIT profile's scale for the record message's `altitude` field.
+const ALTITUDE_SCALE: f64 = 5.0;
+
+/// The FIT profile's offset, in meters, for the record message's `altitude`
+/// field.
+const ALTITUDE_OFFSET: f64 = 500.0;
+
+/// An altitude as represented in a FIT file.
+///
+/// The profile stores the record message's `altitude` as a `uint16` with a
+/// scale of 5 and an offset of 500 meters, so it covers altitudes from -500 m
+/// up to about 12,606 m at a resolution of 20 cm.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct FitAltitude {
+    /// The scaled and offset altitude, or [`UINT16_INVALID`] if unknown.
+    value_unsafe: u16,
+}
+
+impl FitAltitude {
+    /// The value written for records whose altitude isn't known.
+    const INVALID: Self = Self {
+        value_unsafe: UINT16_INVALID,
+    };
+}
+
+impl From<Meter<f64>> for FitAltitude {
+    /// Converts an elevation into its FIT representation.
+    ///
+    /// Elevations outside the range the profile can represent are encoded as
+    /// unknown, on the assumption that they're bad input data: it's better to
+    /// omit one implausible altitude than to write a wrong one, or to fail the
+    /// whole conversion.
+    fn from(value: Meter<f64>) -> Self {
+        let scaled = (value.value_unsafe + ALTITUDE_OFFSET) * ALTITUDE_SCALE;
+        match <u16 as NumCast>::from(scaled.round()) {
+            Some(v) if v != UINT16_INVALID => Self { value_unsafe: v },
+            _ => {
+                debug!("Elevation {value} is out of FIT altitude range, encoding as unknown");
+                Self::INVALID
+            }
+        }
+    }
+}
+
 /// Implements the Garmin FIT CRC algorithm.
 ///
 /// A direct transcription of Garmin's reference implementation at
@@ -583,6 +630,14 @@ struct RecordMessage {
 
     /// The absolute time of the record.
     timestamp: FitDateTime,
+
+    /// The record's altitude.
+    ///
+    /// `None` if the course being encoded doesn't carry elevation data at all,
+    /// in which case the field is left out of the message definition.  Records
+    /// individually missing an elevation within a course that has some are
+    /// encoded as [`FitAltitude::INVALID`] instead.
+    altitude: Option<FitAltitude>,
 }
 
 impl RecordMessage {
@@ -590,22 +645,28 @@ impl RecordMessage {
         position: FitSurfacePoint,
         cumulative_distance: Centimeter<u32>,
         timestamp: FitDateTime,
+        altitude: Option<FitAltitude>,
     ) -> Self {
         Self {
             position,
             cumulative_distance,
             timestamp,
+            altitude,
         }
     }
 
     // TODO: Proc macro for deriving field definitions + maybe encoding too?
-    fn field_definitions() -> Vec<FieldDefinition> {
-        vec![
+    fn field_definitions(with_altitude: bool) -> Vec<FieldDefinition> {
+        let mut defs = vec![
             FieldDefinition::new(0, 4, 133),   // lat
             FieldDefinition::new(1, 4, 133),   // lon
             FieldDefinition::new(5, 4, 134),   // distance
             FieldDefinition::new(253, 4, 134), // timestamp
-        ]
+        ];
+        if with_altitude {
+            defs.push(FieldDefinition::new(2, 2, 132)); // altitude
+        }
+        defs
     }
 
     fn encode<W: Write>(&self, local_message_id: u8, w: &mut W) -> Result<()> {
@@ -614,6 +675,9 @@ impl RecordMessage {
         w.write_i32::<BigEndian>(self.position.lon.value_unsafe)?;
         w.write_u32::<BigEndian>(self.cumulative_distance.value_unsafe)?;
         w.write_u32::<BigEndian>(self.timestamp.value_unsafe)?;
+        if let Some(altitude) = self.altitude {
+            w.write_u16::<BigEndian>(altitude.value_unsafe)?;
+        }
         Ok(())
     }
 }
@@ -946,10 +1010,11 @@ impl<'a> CourseFile<'a> {
         )
         .encode(3u8, &mut dw)?;
 
+        let with_altitude = self.has_altitude();
         DefinitionFrame::new(
             GlobalMessage::Record,
             4u8,
-            RecordMessage::field_definitions(),
+            RecordMessage::field_definitions(with_altitude),
         )
         .encode(&mut dw)?;
         for record in &self.course.records {
@@ -959,10 +1024,18 @@ impl<'a> CourseFile<'a> {
                 .options
                 .start_time
                 .add(timedelta_from_seconds(timedelta)?);
+            let altitude = with_altitude.then(|| {
+                record
+                    .point
+                    .ele()
+                    .map(FitAltitude::from)
+                    .unwrap_or(FitAltitude::INVALID)
+            });
             let record_message = RecordMessage::new(
                 record.point.try_into()?,
                 Centimeter::<u32>::num_cast_from(distance).ok_or(FitEncodeError::NumCast)?,
                 timestamp.try_into()?,
+                altitude,
             );
             record_message.encode(4u8, &mut dw)?;
         }
@@ -1025,6 +1098,15 @@ impl<'a> CourseFile<'a> {
         Ok(())
     }
 
+    /// Whether the course's records should carry an altitude field
+    ///
+    /// True if at least one record has a known elevation.  Records that don't
+    /// are then encoded as [`FitAltitude::INVALID`], which preserves whatever
+    /// elevation data the input did provide.
+    fn has_altitude(&self) -> bool {
+        self.course.records.iter().any(|r| r.point.ele().is_some())
+    }
+
     fn total_distance(&self) -> Meter<f64> {
         self.course
             .records
@@ -1062,9 +1144,12 @@ impl<'a> CourseFile<'a> {
         sz += CourseFile::get_definition_message_size(EventMessage::field_definitions().len());
         sz += 2 * CourseFile::get_data_message_size(EventMessage::field_definitions());
 
-        sz += CourseFile::get_definition_message_size(RecordMessage::field_definitions().len());
+        let with_altitude = self.has_altitude();
+        sz += CourseFile::get_definition_message_size(
+            RecordMessage::field_definitions(with_altitude).len(),
+        );
         sz += self.course.records.len()
-            * CourseFile::get_data_message_size(RecordMessage::field_definitions());
+            * CourseFile::get_data_message_size(RecordMessage::field_definitions(with_altitude));
 
         sz +=
             CourseFile::get_definition_message_size(CoursePointMessage::field_definitions().len());
@@ -1098,7 +1183,9 @@ impl<'a> CourseFile<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{CheckSummingWrite, Crc, FileHeader, Result};
+    use dimensioned::si::M;
+
+    use super::{CheckSummingWrite, Crc, FileHeader, FitAltitude, RecordMessage, Result};
 
     #[test]
     fn test_header_crc() {
@@ -1128,5 +1215,49 @@ mod tests {
         );
 
         Ok(())
+    }
+
+    #[test]
+    fn test_altitude_scale_and_offset() {
+        // Sea level sits at the profile's offset, and each meter is five
+        // increments of the encoded value.
+        assert_eq!(FitAltitude::from(0.0 * M).value_unsafe, 2500);
+        assert_eq!(FitAltitude::from(93.0 * M).value_unsafe, 2965);
+        assert_eq!(FitAltitude::from(-100.0 * M).value_unsafe, 2000);
+    }
+
+    #[test]
+    fn test_altitude_rounds_to_nearest() {
+        // The profile's resolution is 20cm, so intermediate elevations round to
+        // the nearest representable value.
+        assert_eq!(FitAltitude::from(1.1 * M).value_unsafe, 2506);
+        assert_eq!(FitAltitude::from(1.09 * M).value_unsafe, 2505);
+    }
+
+    #[test]
+    fn test_altitude_limits() {
+        // The extremes of what the field can represent...
+        assert_eq!(FitAltitude::from(-500.0 * M).value_unsafe, 0);
+        assert_eq!(FitAltitude::from(12606.8 * M).value_unsafe, 65534);
+
+        // ...beyond which values are encoded as unknown rather than wrapping
+        // around or aliasing the profile's invalid value.
+        assert_eq!(FitAltitude::from(-500.2 * M), FitAltitude::INVALID);
+        assert_eq!(FitAltitude::from(12607.0 * M), FitAltitude::INVALID);
+        assert_eq!(FitAltitude::from(f64::NAN * M), FitAltitude::INVALID);
+    }
+
+    #[test]
+    fn test_record_altitude_field_definition() {
+        // The altitude field is only defined for courses that have elevation
+        // data, so that files without it are unchanged.
+        assert_eq!(RecordMessage::field_definitions(false).len(), 4);
+
+        let with_altitude = RecordMessage::field_definitions(true);
+        assert_eq!(with_altitude.len(), 5);
+        let altitude = with_altitude.last().unwrap();
+        assert_eq!(altitude.field_number, 2);
+        assert_eq!(altitude.size, 2);
+        assert_eq!(altitude.base_type, 132);
     }
 }

@@ -9,7 +9,12 @@ from time import sleep
 
 from pytest import approx, raises
 
-from integration import field, garmin_read_file_header, garmin_read_messages
+from integration import (
+    field,
+    garmin_read_file_header,
+    garmin_read_messages,
+    gpx_route_elevations,
+)
 
 
 class TestUI:
@@ -292,6 +297,29 @@ class TestConvert:
         assert field(mesgs, "record", -1, "distance") == field(
             mesgs, "lap", 0, "total_distance"
         )
+
+    def test_record_altitudes(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        # Every trackpoint's elevation from the GPX should come back out of the
+        # course file, in the same order, within the 20cm resolution of the FIT
+        # profile's altitude field.
+        expected = gpx_route_elevations(data / "cptr003.gpx")
+        altitudes = [record["altitude"] for record in mesgs["record_mesgs"]]
+
+        assert len(altitudes) == len(expected)
+        assert altitudes == approx(expected, abs=0.11)
+
+    def test_record_altitudes_absent(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr008.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        # A GPX without elevation shouldn't produce records claiming to have
+        # one.
+        assert len(mesgs["record_mesgs"]) == 4
+        for record in mesgs["record_mesgs"]:
+            assert "altitude" not in record
 
     def test_record_timestamps(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
