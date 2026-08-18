@@ -321,6 +321,23 @@ class TestConvert:
 
         assert len(caching_mesgs(out_file)["record_mesgs"]) == 4
 
+    def test_record_altitudes_partial(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr009.gpx")
+
+        # Elevation for only some of the trackpoints isn't enough: devices read
+        # the profile's invalid value as a real, and very wrong, altitude, so
+        # the field is left undefined unless every record has an elevation.
+        assert "altitude" not in fitdecode_record_field_names(out_file)
+
+        assert len(caching_mesgs(out_file)["record_mesgs"]) == 4
+
+    def test_record_altitudes_no_elevation_flag(self, data, caching_convert):
+        out_file = caching_convert(data / "cptr003.gpx", "--no-elevation")
+
+        # --no-elevation skips the altitude field even though the input has an
+        # elevation for every trackpoint.
+        assert "altitude" not in fitdecode_record_field_names(out_file)
+
     def test_record_timestamps(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")
         mesgs = caching_mesgs(out_file)
