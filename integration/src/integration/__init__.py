@@ -5,6 +5,7 @@ from subprocess import CalledProcessError
 from typing import Any, Iterator, List, Optional, Tuple
 
 from pytest import approx, fail
+from defusedxml import ElementTree
 import garmin_fit_sdk
 import fitdecode
 
@@ -20,18 +21,22 @@ def rfc9557_utc(ts: datetime) -> str:
 
 
 class SurfacePoint:
-    def __init__(self, lat: float, lon: float):
+    def __init__(self, lat: float, lon: float, ele: Optional[float] = None):
         self.lat = lat
         self.lon = lon
+        self.ele = ele
 
     def to_dict(self) -> dict:
-        return {"lat": self.lat, "lon": self.lon}
+        return {"lat": self.lat, "lon": self.lon, "ele": self.ele}
 
 
 class CourseSpec:
     """Specification of a course for integration-stub
 
     Serializes to a JSON file, which integration-stub uses as input.
+
+    Records are given as (lat, lon) or (lat, lon, ele) tuples, the latter
+    specifying an elevation in meters.
 
     """
 
@@ -43,7 +48,7 @@ class CourseSpec:
         self,
         name: str = "",
         start_time: datetime = datetime.now(timezone.utc),
-        records: Optional[List[Tuple[float, float]]] = None,
+        records: Optional[List[Tuple[float, ...]]] = None,
     ) -> None:
         self.name = name
         self.start_time = start_time
@@ -114,6 +119,41 @@ def garmin_sdk_record_coords(record: dict[str, Any]) -> Tuple[float, float]:
     return semicircles_to_degrees((record["position_lat"], record["position_long"]))
 
 
+def gpx_route_points(path: Path) -> List[Tuple[float, float, Optional[float]]]:
+    """Read a GPX file's track or route points
+
+    Returns the file's trkpt and rtept elements in document order, as (lat, lon,
+    ele) tuples, where the elevation is None if the point doesn't specify one.
+
+    Consecutively repeated points are collapsed, the same way the crate skips
+    the zero-length segments they would otherwise produce, so that the result
+    lines up with the records of a converted course.
+
+    """
+
+    points = []
+    for element in ElementTree.parse(path).getroot().iter():
+        _, _, tag = element.tag.rpartition("}")
+        if tag not in ("trkpt", "rtept"):
+            continue
+
+        ele = element.find("{*}ele")
+        point = (
+            float(element.get("lat")),
+            float(element.get("lon")),
+            None if ele is None else float(ele.text),
+        )
+        if not points or points[-1] != point:
+            points.append(point)
+
+    return points
+
+
+def gpx_route_elevations(path: Path) -> List[Optional[float]]:
+    """Read the elevations of a GPX file's track or route points"""
+    return [point[2] for point in gpx_route_points(path)]
+
+
 def fitdecode_get_definition_frames(
     path: Path,
 ) -> Iterator[fitdecode.records.FitDefinitionMessage]:
@@ -121,6 +161,22 @@ def fitdecode_get_definition_frames(
         for frame in reader:
             if frame.frame_type == fitdecode.FIT_FRAME_DEFINITION:
                 yield frame
+
+
+def fitdecode_record_field_names(path: Path) -> List[str]:
+    """Get the names of the fields defined for a FIT file's record messages
+
+    Fails if the file doesn't contain exactly one record definition message.
+
+    """
+
+    definitions = [
+        frame
+        for frame in fitdecode_get_definition_frames(Path(path))
+        if frame.name == "record"
+    ]
+    assert len(definitions) == 1
+    return [field_def.name for field_def in definitions[0].field_defs]
 
 
 def assert_coords_approx_equal(

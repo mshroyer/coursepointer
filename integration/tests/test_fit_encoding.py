@@ -16,8 +16,11 @@ conversion, so we implement our own in Python.
 
 from datetime import datetime, timezone
 
+from pytest import approx
+
 from integration import (
     CourseSpec,
+    fitdecode_record_field_names,
     garmin_read_messages,
     garmin_sdk_record_coords,
     semicircles_to_degrees,
@@ -31,10 +34,15 @@ from integration import (
 # - course
 #   - Sub-sport
 # - record
-#   - altitude
 #   - speed?
 # - event
 #   - event_group (Garmin Connect sets this to zero)
+
+
+# The altitude field's resolution is 20cm, per its scale of 5 in the FIT
+# profile, so encoding rounds by up to 10cm.  Allow a little more than that so
+# that values right on the boundary don't fail on floating point error.
+ALTITUDE_ABS_TOLERANCE = 0.11
 
 
 def test_start_time(tmpdir, integration_stub):
@@ -100,6 +108,89 @@ def test_record_coords(tmpdir, integration_stub):
     assert_all_coords_approx_equal(
         list(map(garmin_sdk_record_coords, messages["record_mesgs"])), coords
     )
+
+
+def test_record_altitudes(tmpdir, integration_stub):
+    # The FIT profile stores altitude as a uint16 scaled by 5 with an offset of
+    # 500m, so include elevations on either side of sea level, which the offset
+    # puts in the middle of the field's range.
+    records = [
+        (0.0, 0.0, 0.0),
+        (0.5, -0.5, 93.4),
+        (1.0, 0.0, -211.7),
+        (-1.0, 0.5, 8848.9),
+    ]
+
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+    messages = garmin_read_messages(tmpdir / "out.fit")
+
+    altitudes = [record["altitude"] for record in messages["record_mesgs"]]
+    assert altitudes == approx(
+        [record[2] for record in records], abs=ALTITUDE_ABS_TOLERANCE
+    )
+
+
+def test_record_altitudes_absent(tmpdir, integration_stub):
+    # Records without elevation shouldn't get an altitude field at all, rather
+    # than one holding a made-up or invalid value.
+    records = [(0.0, 0.0), (0.5, -0.5), (1.0, 0.0)]
+
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+
+    assert "altitude" not in fitdecode_record_field_names(tmpdir / "out.fit")
+
+
+def test_record_altitudes_partial(tmpdir, integration_stub):
+    # When only some records have an elevation, no altitudes are written at
+    # all: Edge and fenix devices show a record whose altitude is the profile's
+    # invalid value as an absurdly high elevation instead of a missing one.
+    records = [(0.0, 0.0, 12.5), (0.5, -0.5), (1.0, 0.0, 30.0)]
+
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+
+    assert "altitude" not in fitdecode_record_field_names(tmpdir / "out.fit")
+
+
+def test_record_altitudes_out_of_range(tmpdir, integration_stub):
+    # An elevation the profile's altitude field can't represent counts as
+    # missing too, so one bad value takes the whole course's altitudes with it
+    # rather than being written as a wrapped-around or invalid value.
+    records = [(0.0, 0.0, 100.0), (0.5, -0.5, 20000.0), (1.0, 0.0, 200.0)]
+
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+
+    assert "altitude" not in fitdecode_record_field_names(tmpdir / "out.fit")
+
+
+def test_record_altitudes_at_range_limits(tmpdir, integration_stub):
+    # The extremes of what the altitude field can represent are still written.
+    records = [(0.0, 0.0, -500.0), (0.5, -0.5, 12606.8)]
+
+    spec = CourseSpec(records=records)
+    spec.write_file(tmpdir / "spec.json")
+    integration_stub(
+        "write-fit", "--spec", tmpdir / "spec.json", "--out", tmpdir / "out.fit"
+    )
+    messages = garmin_read_messages(tmpdir / "out.fit")
+
+    altitudes = [record["altitude"] for record in messages["record_mesgs"]]
+    assert altitudes == approx([-500.0, 12606.8], abs=ALTITUDE_ABS_TOLERANCE)
 
 
 def test_lap_coords(tmpdir, integration_stub):

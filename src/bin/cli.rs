@@ -177,6 +177,14 @@ struct ConvertArgs {
     #[clap(long, short = 'p', default_value = "generic")]
     sport: Sport,
 
+    /// Don't write the input's elevation data to the course
+    ///
+    /// By default, elevations are passed through to the FIT course's records,
+    /// giving devices an elevation profile.  This is skipped anyway if any of
+    /// the input's track or route points is missing an elevation.
+    #[clap(long, action)]
+    no_elevation: bool,
+
     /// Strategy for handling duplicate intercepts (within threshold) of the
     /// course from a waypoint.
     #[clap(long, short = 'r', default_value_t = InterceptStrategy::Nearest)]
@@ -278,6 +286,7 @@ fn convert_cmd(args: &Cli, sub_args: &ConvertArgs) -> Result<String> {
     let fit_options = FitCourseOptions::default()
         .with_speed(sub_args.speed * KILO * M / HR)
         .with_sport(sub_args.sport)
+        .with_elevation(!sub_args.no_elevation)
         .with_product_name("CoursePointer".to_owned())
         .with_software_version(encode_version_number().unwrap_or_else(|e| {
             warn!("Unable to encode version number to FIT: {e}");

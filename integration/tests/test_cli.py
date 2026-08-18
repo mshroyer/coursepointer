@@ -9,7 +9,13 @@ from time import sleep
 
 from pytest import approx, raises
 
-from integration import field, garmin_read_file_header, garmin_read_messages
+from integration import (
+    field,
+    fitdecode_record_field_names,
+    garmin_read_file_header,
+    garmin_read_messages,
+    gpx_route_elevations,
+)
 
 
 class TestUI:
@@ -292,6 +298,45 @@ class TestConvert:
         assert field(mesgs, "record", -1, "distance") == field(
             mesgs, "lap", 0, "total_distance"
         )
+
+    def test_record_altitudes(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr003.gpx")
+        mesgs = caching_mesgs(out_file)
+
+        # Every trackpoint's elevation from the GPX should come back out of the
+        # course file, in the same order, within the 20cm resolution of the FIT
+        # profile's altitude field.
+        expected = gpx_route_elevations(data / "cptr003.gpx")
+        altitudes = [record["altitude"] for record in mesgs["record_mesgs"]]
+
+        assert len(altitudes) == len(expected)
+        assert altitudes == approx(expected, abs=0.11)
+
+    def test_record_altitudes_absent(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr008.gpx")
+
+        # A GPX without elevation shouldn't produce records claiming to have
+        # one, so the field shouldn't be defined for them at all.
+        assert "altitude" not in fitdecode_record_field_names(out_file)
+
+        assert len(caching_mesgs(out_file)["record_mesgs"]) == 4
+
+    def test_record_altitudes_partial(self, data, caching_convert, caching_mesgs):
+        out_file = caching_convert(data / "cptr009.gpx")
+
+        # Elevation for only some of the trackpoints isn't enough: devices read
+        # the profile's invalid value as a real, and very wrong, altitude, so
+        # the field is left undefined unless every record has an elevation.
+        assert "altitude" not in fitdecode_record_field_names(out_file)
+
+        assert len(caching_mesgs(out_file)["record_mesgs"]) == 4
+
+    def test_record_altitudes_no_elevation_flag(self, data, caching_convert):
+        out_file = caching_convert(data / "cptr003.gpx", "--no-elevation")
+
+        # --no-elevation skips the altitude field even though the input has an
+        # elevation for every trackpoint.
+        assert "altitude" not in fitdecode_record_field_names(out_file)
 
     def test_record_timestamps(self, data, ureg, caching_convert, caching_mesgs):
         out_file = caching_convert(data / "cptr003.gpx")

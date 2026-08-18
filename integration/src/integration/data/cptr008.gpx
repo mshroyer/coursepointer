@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="ai generated" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>cptr008</name>
+  </metadata>
+  <wpt lat="37.434916" lon="-122.083603">
+    <name>Halfway</name>
+    <sym>Dot</sym>
+    <type>generic</type>
+  </wpt>
+  <trk>
+    <name>cptr008</name>
+    <trkseg>
+      <trkpt lat="37.435476" lon="-122.095238" />
+      <trkpt lat="37.435332" lon="-122.091742" />
+      <trkpt lat="37.434916" lon="-122.083595" />
+      <trkpt lat="37.433084" lon="-122.086912" />
+    </trkseg>
+  </trk>
+</gpx>

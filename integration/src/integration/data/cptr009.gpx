@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="ai generated" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>cptr009</name>
+  </metadata>
+  <trk>
+    <name>cptr009</name>
+    <trkseg>
+      <trkpt lat="37.435476" lon="-122.095238">
+        <ele>9.4</ele>
+      </trkpt>
+      <trkpt lat="37.435332" lon="-122.091742">
+        <ele>11.2</ele>
+      </trkpt>
+      <trkpt lat="37.434916" lon="-122.083595" />
+      <trkpt lat="37.433084" lon="-122.086912" />
+    </trkseg>
+  </trk>
+</gpx>
