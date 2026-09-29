@@ -92,8 +92,9 @@ So given a GPX route and a set of waypoints, coursepointer:
 This amounts to solving the [interception
 problem](https://sourceforge.net/p/geographiclib/discussion/1026621/thread/21aaff9f/#8a93)
 between waypoints and the geodesic segments comprising the route.  See
-[docs/Course Point Distances.pdf](docs/Course%20Point%20Distances.pdf) for
-more information about the method used here.
+[docs/Course Point
+Distances.pdf](https://markshroyer.com/files/Course%20Point%20Distances.pdf)
+for more information about the method used here.
 
 ## Wait, can't I just import my GPX into Garmin Connect?
 
