@@ -80,8 +80,8 @@ fn main() {
     let target = std::env::var("TARGET").expect("TARGET not set");
 
     if target != "wasm32-unknown-unknown" {
-        // Thankfully GeographicLib has a pretty simple build, so we can just compile
-        // all the source files here rather than go through CMake.
+        // Thankfully GeographicLib has a pretty simple build, so we can just
+        // compile all the source files here rather than go through CMake.
         cc::Build::new()
             .cpp(true)
             .flag_if_supported("-std=c++17")

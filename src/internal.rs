@@ -58,9 +58,9 @@ pub mod report {
     where
         T: From<Meter<f64>> + Display,
     {
-        // Build a report to print after the tracing span surrounding this function
-        // has exited. If debug logging is enabled, this ensures the report to
-        // STDOUT will be printed after all the tracing stuff.
+        // Build a report to print after the tracing span surrounding this
+        // function has exited. If debug logging is enabled, this ensures the
+        // report to STDOUT will be printed after all the tracing stuff.
         let mut r = String::new();
         match info.course_name {
             Some(name) => writeln!(

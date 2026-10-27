@@ -205,7 +205,8 @@ static CRC_TABLE: &[u16] = &[
 
 impl Crc {
     fn new() -> Self {
-        // Garmin's docs don't say so explicitly, but the starting value is zero.
+        // Garmin's docs don't say so explicitly, but the starting value is
+        // zero.
         Self { sum: 0 }
     }
 
@@ -1207,12 +1208,13 @@ mod tests {
     #[test]
     fn test_header_crc() {
         let mut crc = Crc::new();
-        // A header from a FIT file I exported from Garmin Connect, minus its CRC bytes.
+        // A header from a FIT file I exported from Garmin Connect, minus its
+        // CRC bytes.
         crc.add_bytes(&[
             0x0e, 0x10, 0xb2, 0x52, 0x88, 0x42, 0x00, 0x00, 0x2e, 0x46, 0x49, 0x54,
         ]);
-        // The CRC value from the last two bytes of the header, interpreted as little
-        // endian.
+        // The CRC value from the last two bytes of the header, interpreted as
+        // little endian.
         assert_eq!(crc.sum, 0xf94b);
     }
 
