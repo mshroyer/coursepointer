@@ -7,12 +7,13 @@
 use dimensioned::si::Meter;
 
 use crate::GeoPoint;
-use crate::algorithm::{FromGeoPoints, intercept_distance_floor, karney_interception};
+pub use crate::algorithm::{FromGeoPoints, intercept_distance_floor, karney_interception};
 pub use crate::fit::PROFILE_VERSION;
-use crate::geographic::geodesic_inverse;
-pub use crate::geographic::{compiler_version_str, geodesic_direct, geographiclib_version_str};
+pub use crate::geographic::{
+    compiler_version_str, geodesic_direct, geodesic_inverse, geographiclib_version_str,
+};
 pub use crate::measure::{Kilometer, Mile};
-use crate::types::{GeoAndXyzPoint, GeoSegment};
+pub use crate::types::{GeoAndXyzPoint, GeoSegment};
 
 /// Print debugging info about an intercept scenario
 pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> crate::Result<()> {
