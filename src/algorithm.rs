@@ -724,7 +724,7 @@ mod qc {
 
     macro_rules! qc_local_intercept_floor {
         ($name:tt, $radius:expr) => {
-            paste::paste! {
+            pastey::paste! {
                 #[derive(Clone, Debug)]
                 struct [<Radius $name>] {}
 
