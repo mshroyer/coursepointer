@@ -582,7 +582,12 @@ impl RouteBuilder {
             .map(|i| (i, i + 1))
             .collect::<Vec<_>>();
         let segments = iter_work!(index_pairs)
-            .map(|(i, j)| GeoSegment::from_geo_points(self.xyz_points[*i].clone(), self.xyz_points[*j].clone()))
+            .map(|(i, j)| {
+                GeoSegment::from_geo_points(
+                    self.xyz_points[*i].clone(),
+                    self.xyz_points[*j].clone(),
+                )
+            })
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
         let segments_and_distances: Vec<(GeoSegment<GeoAndXyzPoint>, Meter<f64>)> = segments

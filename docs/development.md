@@ -96,6 +96,12 @@ cp include/GeographicLib/Config.h ../../include/GeographicLib/
 
 ## Web application
 
+First install the necessary wasm tools with:
+
+```
+scripts/install_wasm_tools.sh
+```
+
 Build and serve the web version by running:
 
 ```

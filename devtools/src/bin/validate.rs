@@ -1,11 +1,11 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
 use coursepointer::internal::{
     FromGeoPoints, GeoAndXyzPoint, GeoSegment, geodesic_direct, geodesic_inverse,
     intercept_distance_floor, karney_interception,
 };
-use coursepointer::{Degree, GeoPoint, DEG};
-use dimensioned::si::{Meter, M};
+use coursepointer::{DEG, Degree, GeoPoint};
+use dimensioned::si::{M, Meter};
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
 use sobol::Sobol;
@@ -54,16 +54,9 @@ impl GeoTestCase {
         let geo_p = geodesic_direct(&sm, p_off_azi, p_off_len)?.point2;
         let p = GeoAndXyzPoint::try_from(geo_p)?;
         let s0 = GeoAndXyzPoint::try_from(
-            geodesic_direct(
-                &sm,
-                reverse_azimuth(s_azi),
-                s_len / 2.0,
-            )?
-                .point2,
+            geodesic_direct(&sm, reverse_azimuth(s_azi), s_len / 2.0)?.point2,
         )?;
-        let s1 = GeoAndXyzPoint::try_from(
-            geodesic_direct(&sm, s_azi, s_len / 2.0)?.point2,
-        )?;
+        let s1 = GeoAndXyzPoint::try_from(geodesic_direct(&sm, s_azi, s_len / 2.0)?.point2)?;
         let s = GeoSegment::from_geo_points(s0, s1)?;
         Ok(Self {
             segment: s,
@@ -83,13 +76,15 @@ fn cmd_generate() -> Result<()> {
     let tc = seq
         .take(2)
         .skip(1)
-        .map(|sample|
+        .map(|sample| {
             GeoTestCase::try_from_sample(
                 17_000_000.0 * M,
                 sample
                     .try_into()
                     .expect("Expected a five-element f64 array"),
-            ).unwrap())
+            )
+            .unwrap()
+        })
         .collect::<Vec<_>>()
         .remove(0);
 
@@ -111,13 +106,18 @@ fn cmd_original_floor(n: usize) -> Result<()> {
                 sample
                     .try_into()
                     .expect("Expected a five-element f64 array"),
-            ).unwrap();
+            )
+            .unwrap();
 
             let intercept_point = karney_interception(&tc.segment, &tc.point)?;
             let intercept_dist = geodesic_inverse(&intercept_point, &tc.point.geo)?.geo_distance;
 
             if intercept_distance_floor(&tc.segment, &tc.point)? > intercept_dist {
-                bail!("Incorrect intercept distance floor for {:?} and {:?}", &tc.segment, &tc.point);
+                bail!(
+                    "Incorrect intercept distance floor for {:?} and {:?}",
+                    &tc.segment,
+                    &tc.point
+                );
             }
             Ok(())
         })
@@ -140,13 +140,18 @@ fn cmd_new_floor(n: usize) -> Result<()> {
                 sample
                     .try_into()
                     .expect("Expected a five-element f64 array"),
-            ).unwrap();
+            )
+            .unwrap();
 
             let intercept_point = karney_interception(&tc.segment, &tc.point)?;
             let intercept_dist = geodesic_inverse(&intercept_point, &tc.point.geo)?.geo_distance;
 
             if new_floor::intercept_distance_floor(&tc.segment, &tc.point)? > intercept_dist {
-                bail!("Incorrect intercept distance floor for {:?} and {:?}", &tc.segment, &tc.point);
+                bail!(
+                    "Incorrect intercept distance floor for {:?} and {:?}",
+                    &tc.segment,
+                    &tc.point
+                );
             }
             Ok(())
         })
@@ -156,16 +161,20 @@ fn cmd_new_floor(n: usize) -> Result<()> {
 }
 
 mod new_floor {
-    use anyhow::Result;
     use std::ops::{Mul, Sub};
-    use dimensioned::si::{Meter, M};
+
+    use anyhow::Result;
     use coursepointer::internal::{GeoAndXyzPoint, GeoSegment};
+    use dimensioned::si::{M, Meter};
 
     const A: f64 = 6378137.0;
     const F: f64 = 1.0 / 298.257223563;
     const B: f64 = A * (1.0 - F);
 
-    pub fn intercept_distance_floor(segment: &GeoSegment<GeoAndXyzPoint>, point: &GeoAndXyzPoint) -> Result<Meter<f64>> {
+    pub fn intercept_distance_floor(
+        segment: &GeoSegment<GeoAndXyzPoint>,
+        point: &GeoAndXyzPoint,
+    ) -> Result<Meter<f64>> {
         let dist = cartesian_intercept_distance(segment, point)?;
 
         let l = segment.geo_length.value_unsafe;
@@ -181,8 +190,8 @@ mod new_floor {
         let b = subtract_xyzpoints(&segment.end, &segment.start);
         let a = subtract_xyzpoints(point, &segment.start);
 
-        // The same calculation used to find segment intercepts in each iteration of
-        // [`karney_intercept`], just in 3D space!
+        // The same calculation used to find segment intercepts in each
+        // iteration of [`karney_intercept`], just in 3D space!
         let intercept = if dot3(a, b) <= 0.0 {
             Vec3 {
                 x: 0.0,
@@ -200,8 +209,8 @@ mod new_floor {
         Ok(norm3(a - intercept) * M)
     }
 
-    // Copy-and-paste a bunch of stuff from algorithm.rs so we don't have to make all its internals
-    // public just to test the new algorithm here...
+    // Copy-and-paste a bunch of stuff from algorithm.rs so we don't have to
+    // make all its internals public just to test the new algorithm here...
 
     fn subtract_xyzpoints(a: &GeoAndXyzPoint, b: &GeoAndXyzPoint) -> Vec3 {
         Vec3 {

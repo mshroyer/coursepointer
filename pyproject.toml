@@ -11,4 +11,4 @@ dependencies = [
 members = ["integration", "devtools"]
 
 [tool.ruff]
-exclude = ["geographiclib/**", ".venv/**"]
+exclude = ["geographiclib/**", ".venv/**", ".wasm_tools/**"]
