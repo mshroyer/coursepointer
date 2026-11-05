@@ -30,7 +30,7 @@ pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> crate::Res
 
     let s1_xyz: GeoAndXyzPoint = (*s1).try_into()?;
     let s2_xyz: GeoAndXyzPoint = (*s2).try_into()?;
-    let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(&s1_xyz, &s2_xyz)?;
+    let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(s1_xyz, s2_xyz)?;
     let p_xyz = GeoAndXyzPoint::try_from(*p)?;
 
     let intercept_point = karney_interception(&seg, &p_xyz)?;

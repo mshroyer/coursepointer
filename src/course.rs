@@ -582,7 +582,7 @@ impl RouteBuilder {
             .map(|i| (i, i + 1))
             .collect::<Vec<_>>();
         let segments = iter_work!(index_pairs)
-            .map(|(i, j)| GeoSegment::from_geo_points(&self.xyz_points[*i], &self.xyz_points[*j]))
+            .map(|(i, j)| GeoSegment::from_geo_points(self.xyz_points[*i].clone(), self.xyz_points[*j].clone()))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
         let segments_and_distances: Vec<(GeoSegment<GeoAndXyzPoint>, Meter<f64>)> = segments
@@ -615,7 +615,7 @@ impl RouteBuilder {
 /// waypoints into course points.
 struct SegmentedCourseBuilder<'a> {
     xyz_points: &'a Vec<GeoAndXyzPoint>,
-    segments_and_distances: Vec<(GeoSegment<'a, GeoAndXyzPoint>, Meter<f64>)>,
+    segments_and_distances: Vec<(GeoSegment<GeoAndXyzPoint>, Meter<f64>)>,
     name: Option<String>,
     course_points: Vec<CoursePoint>,
     num_repeated_points_skipped: usize,

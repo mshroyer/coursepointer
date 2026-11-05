@@ -94,7 +94,7 @@ fn cmd_generate() -> anyhow::Result<()> {
     let s1 = GeoAndXyzPoint::try_from(
         geodesic_direct(&sm, tc.s_azi * DEG, (tc.s_len / 2.0) * M)?.point2,
     )?;
-    let s = GeoSegment::from_geo_points(&s0, &s1)?;
+    let s = GeoSegment::from_geo_points(s0, s1)?;
 
     println!("sample: {:?}", tc);
     println!("point: {:?}", p);
@@ -132,7 +132,7 @@ fn cmd_original_intercept(n: usize) -> anyhow::Result<()> {
             let s1 = GeoAndXyzPoint::try_from(
                 geodesic_direct(&sm, tc.s_azi * DEG, (tc.s_len / 2.0) * M)?.point2,
             )?;
-            let s = GeoSegment::from_geo_points(&s0, &s1)?;
+            let s = GeoSegment::from_geo_points(s0, s1)?;
 
             let intercept_point = karney_interception(&s, &p)?;
             let intercept_dist = geodesic_inverse(&intercept_point, &p.geo)?.geo_distance;

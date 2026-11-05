@@ -145,15 +145,15 @@ pub struct GeoAndXyzPoint {
 
 /// A geodesic segment of a course.
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct GeoSegment<'a, P>
+pub struct GeoSegment<P>
 where
     P: HasGeoPoint,
 {
     /// The segment's start point.
-    pub start: &'a P,
+    pub start: P,
 
     /// The segment's end point.
-    pub end: &'a P,
+    pub end: P,
 
     /// The geodesic length of the segment.
     pub geo_length: Meter<f64>,

@@ -254,19 +254,19 @@ where
     result
 }
 
-pub trait FromGeoPoints<'a, P>
+pub trait FromGeoPoints<P>
 where
     Self: Sized,
     P: HasGeoPoint + TryFrom<GeoPoint>,
 {
-    fn from_geo_points(start: &'a P, end: &'a P) -> std::result::Result<Self, GeographicError>;
+    fn from_geo_points(start: P, end: P) -> std::result::Result<Self, GeographicError>;
 }
 
-impl<'a, P> FromGeoPoints<'a, P> for GeoSegment<'a, P>
+impl<P> FromGeoPoints<P> for GeoSegment<P>
 where
     P: HasGeoPoint + TryFrom<GeoPoint>,
 {
-    fn from_geo_points(point1: &'a P, point2: &'a P) -> std::result::Result<Self, GeographicError> {
+    fn from_geo_points(point1: P, point2: P) -> std::result::Result<Self, GeographicError> {
         let inverse = geodesic_inverse(point1.geo(), point2.geo())?;
         Ok(GeoSegment {
             start: point1,
@@ -405,7 +405,7 @@ mod tests {
             let intercept =
                 GeoPoint::new(datum.intercept_lat * DEG, datum.intercept_lon * DEG, None)?;
 
-            let seg = GeoSegment::from_geo_points(&geo_start, &geo_end)?;
+            let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
             let result = karney_interception(&seg, &p)?;
 
             assert_relative_eq!(result, intercept, epsilon = 0.000_001);
@@ -417,7 +417,7 @@ mod tests {
     #[test]
     fn test_karney_interception_zero_length_segment() -> Result<()> {
         let seg_point = GeoPoint::new(3.0 * DEG, 4.0 * DEG, None)?;
-        let seg = GeoSegment::from_geo_points(&seg_point, &seg_point)?;
+        let seg = GeoSegment::from_geo_points(seg_point, seg_point)?;
         let p = GeoPoint::new(3.5 * DEG, 4.5 * DEG, None)?;
         let intercept = karney_interception(&seg, &p)?;
 
@@ -431,7 +431,7 @@ mod tests {
     fn test_karney_interception_point_on_segment() -> Result<()> {
         let point1 = GeoPoint::new(3.0 * DEG, 4.0 * DEG, None)?;
         let point2 = GeoPoint::new(3.5 * DEG, 4.5 * DEG, None)?;
-        let seg = GeoSegment::from_geo_points(&point1, &point2)?;
+        let seg = GeoSegment::from_geo_points(point1, point2)?;
         let intercept = karney_interception(&seg, &point1)?;
 
         assert_relative_eq!(intercept, point1);
@@ -523,7 +523,7 @@ mod tests {
 
             let p_geo = GeoPoint::new(datum.p_lat * DEG, datum.p_lon * DEG, None)?;
             let p_xyz = geocentric_forward(&p_geo)?;
-            let seg = GeoSegment::from_geo_points(&geo_start, &geo_end)?;
+            let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
             let result = cartesian_intercept_distance(&seg, &p_xyz)?;
 
             // For nearby points and geodesics, the linear estimate and the
@@ -564,7 +564,7 @@ mod tests {
             let geo_point = GeoPoint::new(datum.p_lat * DEG, datum.p_lon * DEG, None)?;
             let intercept_distance = geodesic_inverse(&geo_point, &intercept)?.geo_distance;
 
-            let seg = GeoSegment::from_geo_points(&geo_start, &geo_end)?;
+            let seg = GeoSegment::from_geo_points(geo_start, geo_end)?;
             let floor = intercept_distance_floor(&seg, &XyzPoint::try_from(p)?)?;
 
             assert!(
@@ -635,7 +635,7 @@ mod qc {
     {
         let s1_xyz: GeoAndXyzPoint = h.prob().s1.try_into()?;
         let s2_xyz: GeoAndXyzPoint = h.prob().s2.try_into()?;
-        let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(&s1_xyz, &s2_xyz)?;
+        let seg = GeoSegment::<GeoAndXyzPoint>::from_geo_points(s1_xyz, s2_xyz)?;
         let p = GeoAndXyzPoint::try_from(h.prob().p)?;
 
         let intercept_point = karney_interception(&seg, &p)?;
