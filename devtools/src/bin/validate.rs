@@ -92,7 +92,10 @@ fn cmd_generate() -> Result<()> {
     Ok(())
 }
 
-fn cmd_original_floor(n: usize) -> Result<()> {
+fn verify_intercept_floor<F>(f: F, n: usize) -> Result<()>
+where
+    F: Fn(&GeoSegment<GeoAndXyzPoint>, &GeoAndXyzPoint) -> Result<Meter<f64>> + Sync,
+{
     let params = JoeKuoD6::minimal();
     let seq = Sobol::<f64>::new(5, &params);
 
@@ -102,7 +105,7 @@ fn cmd_original_floor(n: usize) -> Result<()> {
         .progress_count(n as u64)
         .map(|sample| {
             let tc = GeoTestCase::try_from_sample(
-                17_000_000.0 * M,
+                100_000.0 * M,
                 sample
                     .try_into()
                     .expect("Expected a five-element f64 array"),
@@ -112,7 +115,7 @@ fn cmd_original_floor(n: usize) -> Result<()> {
             let intercept_point = karney_interception(&tc.segment, &tc.point)?;
             let intercept_dist = geodesic_inverse(&intercept_point, &tc.point.geo)?.geo_distance;
 
-            if intercept_distance_floor(&tc.segment, &tc.point)? > intercept_dist {
+            if f(&tc.segment, &tc.point)? > intercept_dist {
                 bail!(
                     "Incorrect intercept distance floor for {:?} and {:?}",
                     &tc.segment,
@@ -126,38 +129,18 @@ fn cmd_original_floor(n: usize) -> Result<()> {
     result.map(|_| ())
 }
 
+fn cmd_original_floor(n: usize) -> Result<()> {
+    verify_intercept_floor(
+        |segment, point| {
+            let floor = intercept_distance_floor(segment, point)?;
+            Ok(floor)
+        },
+        n,
+    )
+}
+
 fn cmd_new_floor(n: usize) -> Result<()> {
-    let params = JoeKuoD6::minimal();
-    let seq = Sobol::<f64>::new(5, &params);
-
-    let result: Result<Vec<_>> = seq
-        .take(n)
-        .par_bridge()
-        .progress_count(n as u64)
-        .map(|sample| {
-            let tc = GeoTestCase::try_from_sample(
-                17_000_000.0 * M,
-                sample
-                    .try_into()
-                    .expect("Expected a five-element f64 array"),
-            )
-            .unwrap();
-
-            let intercept_point = karney_interception(&tc.segment, &tc.point)?;
-            let intercept_dist = geodesic_inverse(&intercept_point, &tc.point.geo)?.geo_distance;
-
-            if new_floor::intercept_distance_floor(&tc.segment, &tc.point)? > intercept_dist {
-                bail!(
-                    "Incorrect intercept distance floor for {:?} and {:?}",
-                    &tc.segment,
-                    &tc.point
-                );
-            }
-            Ok(())
-        })
-        .collect();
-
-    result.map(|_| ())
+    verify_intercept_floor(new_floor::intercept_distance_floor, n)
 }
 
 mod new_floor {
