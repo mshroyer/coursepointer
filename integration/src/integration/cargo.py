@@ -1,14 +1,14 @@
-from enum import Enum, auto
-from pathlib import Path
 import platform
 import subprocess
 import sys
+from enum import Enum, auto
+from pathlib import Path
 from typing import Optional
 
 import integration
 
 
-def workspace_dir() -> Optional[Path]:
+def workspace_dir() -> Path | None:
     """Get the project's root source directory
 
     Attempts to resolve the project's root directory, that is to say the local
@@ -32,7 +32,7 @@ def is_windows() -> bool:
     return platform.system() == "Windows"
 
 
-def which(program: str) -> Optional[Path]:
+def which(program: str) -> Path | None:
     where = "where" if is_windows() else "which"
     try:
         loc = subprocess.check_output([where, program], universal_newlines=True).strip()
@@ -85,7 +85,6 @@ class RustBinFunc:
             check=True,
             capture_output=True,
             text=True,
-            universal_newlines=True,
         )
         return result
 
@@ -110,7 +109,7 @@ class Cargo:
 
     def build_bin(
         self,
-        package: Optional[Path],
+        package: Path | None,
         binary: str,
         profile: Profile,
         extra_features: str,
@@ -146,7 +145,6 @@ class Cargo:
                 check=True,
                 capture_output=True,
                 text=True,
-                universal_newlines=True,
                 cwd=self.workspace,
             )
         except subprocess.CalledProcessError as e:
@@ -161,7 +159,7 @@ class Cargo:
 
     def make_bin_func(
         self,
-        package: Optional[str],
+        package: str | None,
         binary: str,
         profile: Profile,
         extra_features="",

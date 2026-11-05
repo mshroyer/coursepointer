@@ -1,9 +1,9 @@
-from collections import namedtuple
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from collections import namedtuple
+from pathlib import Path
 
 import pint
 import pytest

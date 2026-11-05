@@ -8,11 +8,10 @@ interpret them.
 
 """
 
-from collections import namedtuple
-from pathlib import Path
-from typing import Iterator, List
-
 import argparse
+from collections import namedtuple
+from collections.abc import Iterator
+from pathlib import Path
 
 from defusedxml import ElementTree
 
@@ -34,7 +33,7 @@ def get_point_types(input_path: Path) -> Iterator[PointType]:
         )
 
 
-def print_row(items: List[str], lens: List[int], buffer=" "):
+def print_row(items: list[str], lens: list[int], buffer=" "):
     assert len(items) == len(lens)
     for i in range(len(items)):
         print("|", end="")
@@ -45,8 +44,8 @@ def print_row(items: List[str], lens: List[int], buffer=" "):
     print("|")
 
 
-def print_separator(lens: List[int]):
-    items = list(map(lambda len: "-" * len, lens))
+def print_separator(lens: list[int]):
+    items = ["-" * len for len in lens]
     print_row(items, lens, buffer="-")
 
 

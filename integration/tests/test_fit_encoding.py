@@ -14,20 +14,19 @@ conversion, so we implement our own in Python.
 
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pytest import approx
 
 from integration import (
     CourseSpec,
+    assert_all_coords_approx_equal,
+    assert_coords_approx_equal,
     fitdecode_record_field_names,
     garmin_read_messages,
     garmin_sdk_record_coords,
     semicircles_to_degrees,
-    assert_all_coords_approx_equal,
-    assert_coords_approx_equal,
 )
-
 
 # TODO: Add and test for remaining FIT course fields
 #   - Serial number
@@ -46,7 +45,7 @@ ALTITUDE_ABS_TOLERANCE = 0.11
 
 
 def test_start_time(tmpdir, integration_stub):
-    start_time = datetime(2025, 5, 18, 1, 26, 10, tzinfo=timezone.utc)
+    start_time = datetime(2025, 5, 18, 1, 26, 10, tzinfo=UTC)
 
     spec = CourseSpec(start_time=start_time)
     spec.write_file(tmpdir / "spec.json")

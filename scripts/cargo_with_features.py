@@ -10,10 +10,9 @@ GitHub workflow.
 import os
 import subprocess
 import sys
-from typing import List
 
 
-def run_cargo_with_features(args: List[str]):
+def run_cargo_with_features(args: list[str]):
     subcommand = args[0]
     default_features = os.getenv("CARGO_DEFAULT_FEATURES", "true") == "true"
     extra_features = os.getenv("CARGO_EXTRA_FEATURES", "")

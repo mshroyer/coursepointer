@@ -3,7 +3,7 @@
 import re
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from itertools import pairwise
 from time import sleep
 
@@ -186,10 +186,7 @@ class TestFIT:
         # Since the CLI uses the current time as the time_created field of the
         # file_id message, check that it's set to approximately the current
         # time.
-        assert (
-            abs((datetime.now(timezone.utc) - time_created.replace()).total_seconds())
-            < 15.0
-        )
+        assert abs((datetime.now(UTC) - time_created.replace()).total_seconds()) < 15.0
 
     def test_file_id_is_unique(self, data, coursepointer_cli, tmp_path):
         out_file1 = tmp_path / "out1.fit"
@@ -405,7 +402,7 @@ class TestIntercept:
             assert distance > 0 * ureg.meter
             assert distance <= course_length
 
-        names = list(map(lambda mesg: mesg["name"], mesgs["course_point_mesgs"]))
+        names = [mesg["name"] for mesg in mesgs["course_point_mesgs"]]
         assert names[0] == "Castle Rock Fal"
         assert names[1] == "Russell Point"
         assert names[2] == "Emily Smith Poi"

@@ -51,7 +51,7 @@ def test_record_distances(data, caching_mesgs):
 
 def test_speed_scale(data, ureg, caching_mesgs):
     mesgs = caching_mesgs(data / "cptr003_connect.fit")
-    record_speeds = list(map(lambda msg: msg["speed"], mesgs["record_mesgs"]))
+    record_speeds = [msg["speed"] for msg in mesgs["record_mesgs"]]
     avg_speed = ((sum(record_speeds) / len(record_speeds)) * ureg("m/s")).to("km/h")
 
     # The record messages' speed fields should be returned by the SDK as

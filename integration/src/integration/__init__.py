@@ -1,13 +1,14 @@
-from datetime import datetime, timezone
 import json
+from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Any, Iterator, List, Optional, Tuple
+from typing import Any
 
-from pytest import approx, fail
-from defusedxml import ElementTree
-import garmin_fit_sdk
 import fitdecode
+import garmin_fit_sdk
+from defusedxml import ElementTree
+from pytest import approx, fail
 
 
 def rfc9557_utc(ts: datetime) -> str:
@@ -17,11 +18,11 @@ def rfc9557_utc(ts: datetime) -> str:
     an unspecified local time offset.
 
     """
-    return ts.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return ts.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class SurfacePoint:
-    def __init__(self, lat: float, lon: float, ele: Optional[float] = None):
+    def __init__(self, lat: float, lon: float, ele: float | None = None):
         self.lat = lat
         self.lon = lon
         self.ele = ele
@@ -42,16 +43,16 @@ class CourseSpec:
 
     name: str
     start_time: datetime
-    records: List[SurfacePoint]
+    records: list[SurfacePoint]
 
     def __init__(
         self,
         name: str = "",
-        start_time: datetime = datetime.now(timezone.utc),
-        records: Optional[List[Tuple[float, ...]]] = None,
+        start_time: datetime | None = None,
+        records: list[tuple[float, ...]] | None = None,
     ) -> None:
         self.name = name
-        self.start_time = start_time
+        self.start_time = start_time or datetime.now(UTC)
 
         self.records = []
         if records:
@@ -62,7 +63,7 @@ class CourseSpec:
         return {
             "name": self.name,
             "start_time": rfc9557_utc(self.start_time),
-            "records": list(map(lambda r: r.to_dict(), self.records)),
+            "records": [r.to_dict() for r in self.records],
         }
 
     def write_file(self, path: Path) -> None:
@@ -103,13 +104,13 @@ def field(mesgs: dict[str, Any], mesg_name: str, index: int, field_name: str) ->
     return mesgs[mesg_name + "_mesgs"][index][field_name]
 
 
-def semicircles_to_degrees(coords: Tuple[float, float]) -> Tuple[float, float]:
+def semicircles_to_degrees(coords: tuple[float, float]) -> tuple[float, float]:
     lat = 180 * coords[0] / 2**31
     lon = 180 * coords[1] / 2**31
     return lat, lon
 
 
-def garmin_sdk_record_coords(record: dict[str, Any]) -> Tuple[float, float]:
+def garmin_sdk_record_coords(record: dict[str, Any]) -> tuple[float, float]:
     """Get coordinate tuple for a record message
 
     Returns a (lat, lon) tuple in decimal degrees for the given FIT record
@@ -119,7 +120,7 @@ def garmin_sdk_record_coords(record: dict[str, Any]) -> Tuple[float, float]:
     return semicircles_to_degrees((record["position_lat"], record["position_long"]))
 
 
-def gpx_route_points(path: Path) -> List[Tuple[float, float, Optional[float]]]:
+def gpx_route_points(path: Path) -> list[tuple[float, float, float | None]]:
     """Read a GPX file's track or route points
 
     Returns the file's trkpt and rtept elements in document order, as (lat, lon,
@@ -149,7 +150,7 @@ def gpx_route_points(path: Path) -> List[Tuple[float, float, Optional[float]]]:
     return points
 
 
-def gpx_route_elevations(path: Path) -> List[Optional[float]]:
+def gpx_route_elevations(path: Path) -> list[float | None]:
     """Read the elevations of a GPX file's track or route points"""
     return [point[2] for point in gpx_route_points(path)]
 
@@ -163,7 +164,7 @@ def fitdecode_get_definition_frames(
                 yield frame
 
 
-def fitdecode_record_field_names(path: Path) -> List[str]:
+def fitdecode_record_field_names(path: Path) -> list[str]:
     """Get the names of the fields defined for a FIT file's record messages
 
     Fails if the file doesn't contain exactly one record definition message.
@@ -180,7 +181,7 @@ def fitdecode_record_field_names(path: Path) -> List[str]:
 
 
 def assert_coords_approx_equal(
-    left: Tuple[float, float], right: Tuple[float, float]
+    left: tuple[float, float], right: tuple[float, float]
 ) -> None:
     # Test for approximate equality with an absolute tolerance of two
     # Garmin semicircles.
@@ -188,7 +189,7 @@ def assert_coords_approx_equal(
 
 
 def assert_all_coords_approx_equal(
-    left: List[Tuple[float, float]], right: List[Tuple[float, float]]
+    left: list[tuple[float, float]], right: list[tuple[float, float]]
 ) -> None:
     assert len(left) == len(right)
     for i in range(len(left)):
