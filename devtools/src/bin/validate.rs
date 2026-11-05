@@ -112,7 +112,11 @@ fn cmd_original_intercept(n: usize) -> anyhow::Result<()> {
         .par_bridge()
         .progress_count(n as u64)
         .map(|sample| {
-            let tc = TestCase::sample(sample.try_into().expect("Expected a five-element f64 array"));
+            let tc = TestCase::sample(
+                sample
+                    .try_into()
+                    .expect("Expected a five-element f64 array"),
+            );
 
             let sm = GeoPoint::new(tc.s_lat * DEG, 0.0 * DEG, None)?;
             let geo_p = geodesic_direct(&sm, tc.p_off_azi * DEG, tc.p_off_len * M)?.point2;
