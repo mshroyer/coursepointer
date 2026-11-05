@@ -24,7 +24,13 @@ enum Commands {
     Generate {},
 
     /// Validate the original intercept floor calculation
-    OriginalIntercept {
+    OriginalFloor {
+        /// The number of test cases to check
+        n: usize,
+    },
+
+    /// Validate the new intercept floor calculation
+    NewFloor {
         /// The number of test cases to check
         n: usize,
     },
@@ -91,7 +97,7 @@ fn cmd_generate() -> Result<()> {
     Ok(())
 }
 
-fn cmd_original_intercept(n: usize) -> Result<()> {
+fn cmd_original_floor(n: usize) -> Result<()> {
     let params = JoeKuoD6::minimal();
     let seq = Sobol::<f64>::new(5, &params);
 
@@ -120,11 +126,137 @@ fn cmd_original_intercept(n: usize) -> Result<()> {
     result.map(|_| ())
 }
 
+fn cmd_new_floor(n: usize) -> Result<()> {
+    let params = JoeKuoD6::minimal();
+    let seq = Sobol::<f64>::new(5, &params);
+
+    let result: Result<Vec<_>> = seq
+        .take(n)
+        .par_bridge()
+        .progress_count(n as u64)
+        .map(|sample| {
+            let tc = GeoTestCase::try_from_sample(
+                17_000_000.0 * M,
+                sample
+                    .try_into()
+                    .expect("Expected a five-element f64 array"),
+            ).unwrap();
+
+            let intercept_point = karney_interception(&tc.segment, &tc.point)?;
+            let intercept_dist = geodesic_inverse(&intercept_point, &tc.point.geo)?.geo_distance;
+
+            if new_floor::intercept_distance_floor(&tc.segment, &tc.point)? > intercept_dist {
+                bail!("Incorrect intercept distance floor for {:?} and {:?}", &tc.segment, &tc.point);
+            }
+            Ok(())
+        })
+        .collect();
+
+    result.map(|_| ())
+}
+
+mod new_floor {
+    use anyhow::Result;
+    use std::ops::{Mul, Sub};
+    use dimensioned::si::{Meter, M};
+    use coursepointer::internal::{GeoAndXyzPoint, GeoSegment};
+
+    const A: f64 = 6378137.0;
+    const F: f64 = 1.0 / 298.257223563;
+    const B: f64 = A * (1.0 - F);
+
+    pub fn intercept_distance_floor(segment: &GeoSegment<GeoAndXyzPoint>, point: &GeoAndXyzPoint) -> Result<Meter<f64>> {
+        let dist = cartesian_intercept_distance(segment, point)?;
+
+        let l = segment.geo_length.value_unsafe;
+        let de_max = (B * B / A) * (1.0 - ((A / (2.0 * B * B)) * l).cos()) * M;
+        // Ok(dist - (de_max + 0.000_001 * M))
+        Ok(dist - de_max)
+    }
+
+    fn cartesian_intercept_distance(
+        segment: &GeoSegment<GeoAndXyzPoint>,
+        point: &GeoAndXyzPoint,
+    ) -> Result<Meter<f64>> {
+        let b = subtract_xyzpoints(&segment.end, &segment.start);
+        let a = subtract_xyzpoints(point, &segment.start);
+
+        // The same calculation used to find segment intercepts in each iteration of
+        // [`karney_intercept`], just in 3D space!
+        let intercept = if dot3(a, b) <= 0.0 {
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }
+        } else {
+            let a_proj = b * (dot3(a, b) / dot3(b, b));
+            if dot3(a_proj, a_proj) >= dot3(b, b) {
+                b
+            } else {
+                a_proj
+            }
+        };
+        Ok(norm3(a - intercept) * M)
+    }
+
+    // Copy-and-paste a bunch of stuff from algorithm.rs so we don't have to make all its internals
+    // public just to test the new algorithm here...
+
+    fn subtract_xyzpoints(a: &GeoAndXyzPoint, b: &GeoAndXyzPoint) -> Vec3 {
+        Vec3 {
+            x: a.xyz.x.value_unsafe - b.xyz.x.value_unsafe,
+            y: a.xyz.y.value_unsafe - b.xyz.y.value_unsafe,
+            z: a.xyz.z.value_unsafe - b.xyz.z.value_unsafe,
+        }
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    struct Vec3 {
+        x: f64,
+        y: f64,
+        z: f64,
+    }
+
+    impl Mul<f64> for Vec3 {
+        type Output = Self;
+
+        fn mul(self, rhs: f64) -> Self::Output {
+            Self {
+                x: self.x * rhs,
+                y: self.y * rhs,
+                z: self.z * rhs,
+            }
+        }
+    }
+
+    impl Sub<Vec3> for Vec3 {
+        type Output = Vec3;
+
+        fn sub(self, rhs: Vec3) -> Self::Output {
+            Vec3 {
+                x: self.x - rhs.x,
+                y: self.y - rhs.y,
+                z: self.z - rhs.z,
+            }
+        }
+    }
+
+    fn dot3(a: Vec3, b: Vec3) -> f64 {
+        a.x * b.x + a.y * b.y + a.z * b.z
+    }
+
+    fn norm3(vec: Vec3) -> f64 {
+        dot3(vec, vec).sqrt()
+    }
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.cmd {
         Commands::Generate {} => cmd_generate(),
-        Commands::OriginalIntercept { n } => cmd_original_intercept(n),
+        Commands::OriginalFloor { n } => cmd_original_floor(n),
+        Commands::NewFloor { n } => cmd_new_floor(n),
     }
 }
