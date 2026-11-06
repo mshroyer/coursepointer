@@ -1,3 +1,7 @@
+use std::fs::File;
+use std::io;
+use std::path::PathBuf;
+
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
 use coursepointer::internal::{
@@ -10,31 +14,6 @@ use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
 use sobol::Sobol;
 use sobol::params::JoeKuoD6;
-
-/// Validates algorithm correctness using random sampling.
-#[derive(Parser)]
-struct Args {
-    #[command(subcommand)]
-    cmd: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Generate and print an example test case
-    Generate {},
-
-    /// Validate the original intercept floor calculation
-    OriginalFloor {
-        /// The number of test cases to check
-        n: usize,
-    },
-
-    /// Validate the new intercept floor calculation
-    NewFloor {
-        /// The number of test cases to check
-        n: usize,
-    },
-}
 
 #[derive(Debug)]
 struct GeoTestCase {
@@ -69,80 +48,8 @@ fn reverse_azimuth(azi: Degree<f64>) -> Degree<f64> {
     ((azi.value_unsafe + 180.0) % 360.0) * DEG
 }
 
-fn cmd_generate() -> Result<()> {
-    let params = JoeKuoD6::standard();
-    let seq = Sobol::<f64>::new(5, &params);
-
-    let tc = seq
-        .take(2)
-        .skip(1)
-        .map(|sample| {
-            GeoTestCase::try_from_sample(
-                17_000_000.0 * M,
-                sample
-                    .try_into()
-                    .expect("Expected a five-element f64 array"),
-            )
-            .unwrap()
-        })
-        .collect::<Vec<_>>()
-        .remove(0);
-
-    println!("sample: {:?}", tc);
-    Ok(())
-}
-
-fn verify_intercept_floor<F>(f: F, n: usize) -> Result<()>
-where
-    F: Fn(&GeoSegment<GeoAndXyzPoint>, &GeoAndXyzPoint) -> Result<Meter<f64>> + Sync,
-{
-    let params = JoeKuoD6::minimal();
-    let seq = Sobol::<f64>::new(5, &params);
-
-    let result: Result<Vec<_>> = seq
-        .take(n)
-        .par_bridge()
-        .progress_count(n as u64)
-        .map(|sample| {
-            let tc = GeoTestCase::try_from_sample(
-                100_000.0 * M,
-                sample
-                    .try_into()
-                    .expect("Expected a five-element f64 array"),
-            )
-            .unwrap();
-
-            let intercept_point = karney_interception(&tc.segment, &tc.point)?;
-            let intercept_dist = geodesic_inverse(&intercept_point, &tc.point.geo)?.geo_distance;
-
-            if f(&tc.segment, &tc.point)? > intercept_dist {
-                bail!(
-                    "Incorrect intercept distance floor for {:?} and {:?}",
-                    &tc.segment,
-                    &tc.point
-                );
-            }
-            Ok(())
-        })
-        .collect();
-
-    result.map(|_| ())
-}
-
-fn cmd_original_floor(n: usize) -> Result<()> {
-    verify_intercept_floor(
-        |segment, point| {
-            let floor = intercept_distance_floor(segment, point)?;
-            Ok(floor)
-        },
-        n,
-    )
-}
-
-fn cmd_new_floor(n: usize) -> Result<()> {
-    verify_intercept_floor(new_floor::intercept_distance_floor, n)
-}
-
+/// Prototypes the new intercept floor function on top of some code copied out
+/// of algorithm.rs.
 mod new_floor {
     use std::ops::{Mul, Sub};
 
@@ -158,7 +65,7 @@ mod new_floor {
         segment: &GeoSegment<GeoAndXyzPoint>,
         point: &GeoAndXyzPoint,
     ) -> Result<Meter<f64>> {
-        let dist = cartesian_intercept_distance(segment, point)?;
+        let dist = euclidean_intercept_distance(segment, point)?;
 
         let l = segment.geo_length.value_unsafe;
         let de_max = (B * B / A) * (1.0 - ((A / (2.0 * B * B)) * l).cos()) * M;
@@ -166,7 +73,7 @@ mod new_floor {
         Ok(dist - de_max)
     }
 
-    fn cartesian_intercept_distance(
+    fn euclidean_intercept_distance(
         segment: &GeoSegment<GeoAndXyzPoint>,
         point: &GeoAndXyzPoint,
     ) -> Result<Meter<f64>> {
@@ -243,6 +150,151 @@ mod new_floor {
     }
 }
 
+/// Validates algorithm correctness using random sampling.
+#[derive(Parser)]
+struct Args {
+    #[command(subcommand)]
+    cmd: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Generate and print an example test case
+    Generate {},
+
+    /// Validate the original intercept floor calculation
+    OriginalFloor {
+        /// The number of test cases to check
+        n: usize,
+    },
+
+    /// Validate the new intercept floor calculation
+    NewFloor {
+        /// The number of test cases to check
+        n: usize,
+    },
+
+    /// Output raw samples of the Sobol sequence for examination
+    RawSample {
+        /// The number of samples to take
+        n: usize,
+
+        /// Where to write output; stdout is used if unset
+        #[arg(short, long)]
+        out: Option<PathBuf>,
+    },
+}
+
+fn verify_intercept_floor<F>(f: F, n: usize) -> Result<()>
+where
+    F: Fn(&GeoSegment<GeoAndXyzPoint>, &GeoAndXyzPoint) -> Result<Meter<f64>> + Sync,
+{
+    let params = JoeKuoD6::minimal();
+    let seq = Sobol::<f64>::new(5, &params);
+
+    seq.take(n)
+        .par_bridge()
+        .progress_count(n as u64)
+        .try_for_each(|sample| {
+            let tc = GeoTestCase::try_from_sample(
+                100_000.0 * M,
+                sample
+                    .try_into()
+                    .expect("Expected a five-element f64 array"),
+            )
+            .unwrap();
+
+            let intercept_point = karney_interception(&tc.segment, &tc.point)?;
+            let intercept_dist = geodesic_inverse(&intercept_point, &tc.point.geo)?.geo_distance;
+
+            if f(&tc.segment, &tc.point)? > intercept_dist {
+                bail!(
+                    "Incorrect intercept distance floor for {:?} and {:?}",
+                    &tc.segment,
+                    &tc.point
+                );
+            }
+            Ok(())
+        })
+}
+
+fn cmd_generate() -> Result<()> {
+    let params = JoeKuoD6::minimal();
+    let seq = Sobol::<f64>::new(5, &params);
+
+    let tc = seq
+        .take(2)
+        .skip(1)
+        .map(|sample| {
+            GeoTestCase::try_from_sample(
+                17_000_000.0 * M,
+                sample
+                    .try_into()
+                    .expect("Expected a five-element f64 array"),
+            )
+            .unwrap()
+        })
+        .collect::<Vec<_>>()
+        .remove(0);
+
+    println!("sample: {:?}", tc);
+    Ok(())
+}
+
+fn cmd_original_floor(n: usize) -> Result<()> {
+    verify_intercept_floor(
+        |segment, point| {
+            let floor = intercept_distance_floor(segment, point)?;
+            Ok(floor)
+        },
+        n,
+    )
+}
+
+fn cmd_new_floor(n: usize) -> Result<()> {
+    verify_intercept_floor(new_floor::intercept_distance_floor, n)
+}
+
+fn cmd_raw_samples(n: usize, out: Option<PathBuf>) -> Result<()> {
+    let writer: Box<dyn io::Write> = match out {
+        Some(path) => Box::new(File::create(path)?),
+        None => Box::new(io::stdout()),
+    };
+    let mut writer = csv::Writer::from_writer(writer);
+
+    let params = JoeKuoD6::minimal();
+    let seq = Sobol::<f64>::new(5, &params);
+
+    seq.take(n).try_for_each(|sample| {
+        let s = RawSample::from_array(sample.try_into().unwrap());
+        writer.serialize(&s)?;
+        Ok(())
+    })
+}
+
+/// Unscaled [0, 1) values for the test case parameters straight from the Sobol
+/// sequence.
+#[derive(serde::Serialize)]
+struct RawSample {
+    raw_s_lat: f64,
+    raw_s_azi: f64,
+    raw_s_len: f64,
+    raw_p_off_azi: f64,
+    raw_p_off_len: f64,
+}
+
+impl RawSample {
+    fn from_array(a: [f64; 5]) -> Self {
+        Self {
+            raw_s_lat: a[0],
+            raw_s_azi: a[1],
+            raw_s_len: a[2],
+            raw_p_off_azi: a[3],
+            raw_p_off_len: a[4],
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -250,5 +302,6 @@ fn main() -> Result<()> {
         Commands::Generate {} => cmd_generate(),
         Commands::OriginalFloor { n } => cmd_original_floor(n),
         Commands::NewFloor { n } => cmd_new_floor(n),
+        Commands::RawSample { n, out } => cmd_raw_samples(n, out),
     }
 }

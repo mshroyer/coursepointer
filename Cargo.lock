@@ -361,6 +361,7 @@ dependencies = [
  "chrono",
  "clap",
  "coursepointer",
+ "csv",
  "dimensioned",
  "indicatif",
  "rayon",
