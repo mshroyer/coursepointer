@@ -57,7 +57,7 @@ jobs:
           toolchain: ${{ inputs.toolchain }}
 
       - name: Update to minimal dependency versions
-        run: cargo update -Z minimal-versions
+        run: cargo update -Z direct-minimal-versions
         if: ${{ inputs.use_minimal_versions }}
 
       - run: cargo build --package devtools
@@ -73,7 +73,7 @@ jobs:
         # run the integration tests here if we're explicitly testing alternative
         # feature combinations without cli.
       - run: uv run --package integration pytest
-        if: ${{ inputs.default_features || contains(inputs.extra_features, 'cli') }}
+        if: ${{ inputs.devtools && ( inputs.default_features || contains(inputs.extra_features, 'cli') ) }}
 
       - uses: ./.github/actions/lint
         if: ${{ inputs.toolchain == 'nightly' }}
