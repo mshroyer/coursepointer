@@ -10,10 +10,11 @@ use crate::GeoPoint;
 pub use crate::algorithm::{FromGeoPoints, intercept_distance_floor, karney_interception};
 pub use crate::fit::PROFILE_VERSION;
 pub use crate::geographic::{
-    compiler_version_str, geodesic_direct, geodesic_inverse, geographiclib_version_str,
+    compiler_version_str, geocentric_forward, geodesic_direct, geodesic_inverse,
+    geographiclib_version_str, gnomonic_forward, gnomonic_reverse,
 };
 pub use crate::measure::{Kilometer, Mile};
-pub use crate::types::{GeoAndXyzPoint, GeoSegment};
+pub use crate::types::{GeoAndXyzPoint, GeoSegment, XyPoint, XyzPoint};
 
 /// Print debugging info about an intercept scenario
 pub fn debug_intercept(s1: &GeoPoint, s2: &GeoPoint, p: &GeoPoint) -> crate::Result<()> {

@@ -150,6 +150,112 @@ mod new_floor {
     }
 }
 
+mod adaptive {
+    use std::ops::Mul;
+
+    use anyhow::Result;
+    use coursepointer::GeoPoint;
+    use coursepointer::internal::{
+        GeoAndXyzPoint, GeoSegment, XyPoint, XyzPoint, geocentric_forward, geodesic_direct,
+        gnomonic_forward, gnomonic_reverse,
+    };
+    use dimensioned::si::{M, Meter};
+
+    /// Compute gnomonic interception with adaptive precision
+    ///
+    /// A modified version of `karney_interception` from algorithm.rs that
+    /// iterates until the point of interception converges to within some
+    /// specified Euclidean precision.  The number of iterations performed is
+    /// returned alongside the resulting [`GeoPoint`].
+    pub fn karney_interception(
+        precision: Meter<f64>,
+        segment: &GeoSegment<GeoAndXyzPoint>,
+        point: &GeoAndXyzPoint,
+    ) -> Result<(GeoPoint, usize)> {
+        // Start with an initial guess of an intercept at the geodesic's
+        // midpoint:
+        let mut intercept = geodesic_direct(
+            &segment.start.geo,
+            segment.start_azimuth,
+            segment.geo_length / 2.0,
+        )?
+        .point2;
+
+        let mut prev_xyzpoint: Option<XyzPoint> = None;
+
+        for iteration in 1..11usize {
+            let start = gnomonic_forward(&intercept, &segment.start.geo)?;
+            let end = gnomonic_forward(&intercept, &segment.end.geo)?;
+            let p = gnomonic_forward(&intercept, &point.geo)?;
+            let b = subtract_xypoints(&end, &start);
+            let a = subtract_xypoints(&p, &start);
+
+            let v = if dot2(a, b) <= 0.0 {
+                Vec2 { x: 0.0, y: 0.0 }
+            } else {
+                let a_proj = b * (dot2(a, b) / dot2(b, b));
+                if dot2(a_proj, a_proj) >= dot2(b, b) {
+                    b
+                } else {
+                    a_proj
+                }
+            };
+
+            intercept = gnomonic_reverse(
+                &intercept,
+                &XyPoint {
+                    x: (start.x.value_unsafe + v.x) * M,
+                    y: (start.y.value_unsafe + v.y) * M,
+                },
+            )?;
+
+            let cur = geocentric_forward(&intercept)?;
+            if let Some(prev) = prev_xyzpoint {
+                let d = ((cur.x.value_unsafe - prev.x.value_unsafe).powi(2)
+                    + (cur.y.value_unsafe - prev.y.value_unsafe).powi(2)
+                    + (cur.z.value_unsafe - prev.z.value_unsafe).powi(2))
+                .sqrt()
+                    * M;
+
+                if d <= precision {
+                    return Ok((intercept, iteration));
+                }
+            }
+            prev_xyzpoint = Some(cur);
+        }
+
+        Ok((intercept, 11usize))
+    }
+
+    #[derive(Clone, Copy)]
+    pub struct Vec2 {
+        pub x: f64,
+        pub y: f64,
+    }
+
+    impl Mul<f64> for Vec2 {
+        type Output = Self;
+
+        fn mul(self, rhs: f64) -> Self {
+            Self {
+                x: self.x * rhs,
+                y: self.y * rhs,
+            }
+        }
+    }
+
+    fn subtract_xypoints(a: &XyPoint, b: &XyPoint) -> Vec2 {
+        Vec2 {
+            x: a.x.value_unsafe - b.x.value_unsafe,
+            y: a.y.value_unsafe - b.y.value_unsafe,
+        }
+    }
+
+    fn dot2(a: Vec2, b: Vec2) -> f64 {
+        a.x * b.x + a.y * b.y
+    }
+}
+
 /// Validates algorithm correctness using random sampling.
 #[derive(Parser)]
 struct Args {
@@ -178,6 +284,20 @@ enum Commands {
     RawSample {
         /// The number of samples to take
         n: usize,
+
+        /// Where to write output; stdout is used if unset
+        #[arg(short, long)]
+        out: Option<PathBuf>,
+    },
+
+    /// Experiment with adaptive-precision Karney interceptions, testing how
+    /// many iterations are required to reach any given level of precision.
+    AdaptiveInterception {
+        /// The number of samples to take
+        n: usize,
+
+        /// The desired result precision, in meters.
+        precision_m: f64,
 
         /// Where to write output; stdout is used if unset
         #[arg(short, long)]
@@ -295,6 +415,47 @@ impl RawSample {
     }
 }
 
+fn cmd_adaptive_interception(n: usize, precision: Meter<f64>, out: Option<PathBuf>) -> Result<()> {
+    let writer: Box<dyn io::Write> = match out {
+        Some(path) => Box::new(File::create(path)?),
+        None => Box::new(io::stdout()),
+    };
+    let mut writer = csv::Writer::from_writer(writer);
+
+    let params = JoeKuoD6::minimal();
+    let seq = Sobol::<f64>::new(5, &params);
+
+    seq.take(n)
+        .par_bridge()
+        .progress_count(n as u64)
+        .map(|sample| {
+            let tc = GeoTestCase::try_from_sample(
+                100_000.0 * M,
+                sample
+                    .try_into()
+                    .expect("Expected a five-element f64 array"),
+            )
+            .unwrap();
+
+            let (_, iterations) = adaptive::karney_interception(precision, &tc.segment, &tc.point)?;
+            Ok(iterations)
+        })
+        .collect::<Result<Vec<usize>>>()?
+        .iter()
+        .try_for_each(|iterations| {
+            let result = AdaptiveIterationResult {
+                iterations: *iterations,
+            };
+            writer.serialize(&result)?;
+            Ok(())
+        })
+}
+
+#[derive(serde::Serialize)]
+struct AdaptiveIterationResult {
+    iterations: usize,
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -303,5 +464,10 @@ fn main() -> Result<()> {
         Commands::OriginalFloor { n } => cmd_original_floor(n),
         Commands::NewFloor { n } => cmd_new_floor(n),
         Commands::RawSample { n, out } => cmd_raw_samples(n, out),
+        Commands::AdaptiveInterception {
+            n,
+            precision_m,
+            out,
+        } => cmd_adaptive_interception(n, precision_m * M, out),
     }
 }
