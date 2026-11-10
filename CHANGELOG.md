@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Bumped MSRV to 1.88.0.
 - Elevations from the input GPX are now written to the FIT course's records as
   the `altitude` field, so devices can show a course's elevation profile. This
   only happens if every track or route point in the input has an elevation, and
