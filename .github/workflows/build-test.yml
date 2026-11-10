@@ -48,7 +48,7 @@ jobs:
       CARGO_EXTRA_FEATURES: "${{ inputs.extra_features }}"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
