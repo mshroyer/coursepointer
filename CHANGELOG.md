@@ -2,8 +2,9 @@
 
 ## Unreleased
 
+- Bumped MSRV to 1.88.0.
 - Elevations from the input GPX are now written to the FIT course's records as
-  the `altitude` field, so devices can show a course's elevation profile.  This
+  the `altitude` field, so devices can show a course's elevation profile. This
   only happens if every track or route point in the input has an elevation, and
   can be turned off with `convert --no-elevation`.
 - Updated to GeographicLib 2.7.
@@ -11,7 +12,7 @@
 ## v0.3.4
 
 - Use the current time, instead of an arbitrary fixed timestamp, as
-  `time_created` in the CLI, and as the default value in the library.  Thanks to
+  `time_created` in the CLI, and as the default value in the library. Thanks to
   @nicolacimmino for pointing out that a fixed timestamp can cause devices to
   treat different routes as though they have the same unique identifier.
 - Updated to GeographicLib 2.5.2.
@@ -38,14 +39,14 @@
 - Made the `course` module a public library that can be used to build courses
   in other applications.
 - Added rayon-based parallelism, and another optimization that reduced
-  allocations.  This doesn't change performance much for smaller, typical-size
+  allocations. This doesn't change performance much for smaller, typical-size
   courses like sample `cptr004.gpx`, which currently processes in about 9ms on
-  my 13th gen Intel laptop.  But the stress test `cptr006.gpx` with `-t 1000`
+  my 13th gen Intel laptop. But the stress test `cptr006.gpx` with `-t 1000`
   improves from around 240ms to 65ms with these changes.
 - Added a CLI option to specify FIT sport.
-- Breaking change: Removed the `floor` feature for simplicity.  That
+- Breaking change: Removed the `floor` feature for simplicity. That
   optimization is now always in use.
 
 ## v0.2.0
 
-Initial release.  Seems to work ok.
+Initial release. Seems to work ok.
