@@ -43,11 +43,10 @@ type Result<T> = std::result::Result<T, AlgorithmError>;
 /// At a high level, this function:
 ///
 /// 1. Takes an initial guess at the point of interception on the geodesic.
-/// 2. Uses a gnomonic projection centered on the guess to put the geodesic
-///    segment and the other point on a 2D plane.
+/// 2. Uses a gnomonic projection centered on the guess to put the geodesic segment and the other
+///    point on a 2D plane.
 /// 3. Uses 2D geometry to get a better guess at the interception point.
-/// 4. Repeats a few times, each time re-centering the projection on the updated
-///    guess.
+/// 4. Repeats a few times, each time re-centering the projection on the updated guess.
 ///
 /// # References
 ///

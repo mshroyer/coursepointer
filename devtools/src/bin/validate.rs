@@ -48,8 +48,7 @@ fn reverse_azimuth(azi: Degree<f64>) -> Degree<f64> {
     ((azi.value_unsafe + 180.0) % 360.0) * DEG
 }
 
-/// Prototypes the new intercept floor function on top of some code copied out
-/// of algorithm.rs.
+/// Prototypes the new intercept floor function on top of some code copied out of algorithm.rs.
 mod new_floor {
     use std::ops::{Mul, Sub};
 
@@ -163,10 +162,9 @@ mod adaptive {
 
     /// Compute gnomonic interception with adaptive precision
     ///
-    /// A modified version of `karney_interception` from algorithm.rs that
-    /// iterates until the point of interception converges to within some
-    /// specified Euclidean precision.  The number of iterations performed is
-    /// returned alongside the resulting [`GeoPoint`].
+    /// A modified version of `karney_interception` from algorithm.rs that iterates until the point
+    /// of interception converges to within some specified Euclidean precision.  The number of
+    /// iterations performed is returned alongside the resulting [`GeoPoint`].
     pub fn karney_interception(
         precision: Meter<f64>,
         segment: &GeoSegment<GeoAndXyzPoint>,
@@ -290,8 +288,8 @@ enum Commands {
         out: Option<PathBuf>,
     },
 
-    /// Experiment with adaptive-precision Karney interceptions, testing how
-    /// many iterations are required to reach any given level of precision.
+    /// Experiment with adaptive-precision Karney interceptions, testing how many iterations are
+    /// required to reach any given level of precision.
     AdaptiveInterception {
         /// The number of samples to take
         n: usize,
@@ -392,8 +390,7 @@ fn cmd_raw_samples(n: usize, out: Option<PathBuf>) -> Result<()> {
     })
 }
 
-/// Unscaled [0, 1) values for the test case parameters straight from the Sobol
-/// sequence.
+/// Unscaled [0, 1) values for the test case parameters straight from the Sobol sequence.
 #[derive(serde::Serialize)]
 struct RawSample {
     raw_s_lat: f64,

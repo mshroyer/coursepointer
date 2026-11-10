@@ -32,21 +32,20 @@
 //!
 //! # Feature flags
 //!
-//! - `cli` enables the additional dependencies needed by the CLI.  This needs
-//!   to be explicitly enabled if installing the CLI with `cargo install`.
+//! - `cli` enables the additional dependencies needed by the CLI.  This needs to be explicitly
+//!   enabled if installing the CLI with `cargo install`.
 //!
 //! - `rayon` enables computing course points in parallel using [rayon](https://docs.rs/rayon/latest/rayon/).
-//!   This improves the binary's runtime significantly in stress tests, and at
-//!   least doesn't hurt in more typical cases, on my machine.  Enabled by
-//!   default.
+//!   This improves the binary's runtime significantly in stress tests, and at least doesn't hurt in
+//!   more typical cases, on my machine.  Enabled by default.
 //!
-//! - `full-geolib` causes cxx_build to build all GeographicLib sources instead
-//!   of a hand-picked subset.  This is mainly useful when experimenting with
-//!   new FFI additions, otherwise it simply slows the build down.
+//! - `full-geolib` causes cxx_build to build all GeographicLib sources instead of a hand-picked
+//!   subset.  This is mainly useful when experimenting with new FFI additions, otherwise it simply
+//!   slows the build down.
 //!
-//! - `jsffi` replaces the normal C API used to interface with GeographicLib
-//!   with wasm-bindgen bindings.  This is for use in wasm32-unknown-unknown
-//!   builds in which GeographcLib is running as a separate WASM module.
+//! - `jsffi` replaces the normal C API used to interface with GeographicLib with wasm-bindgen
+//!   bindings.  This is for use in wasm32-unknown-unknown builds in which GeographcLib is running
+//!   as a separate WASM module.
 
 mod algorithm;
 pub mod course;
