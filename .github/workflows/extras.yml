@@ -16,6 +16,7 @@ jobs:
             toolchain: beta
           - os: ubuntu-latest
             toolchain: 1.88.0  # Our rust-version
+            devtools: false
           - os: windows-2025
             toolchain: stable
           - os: macos-latest

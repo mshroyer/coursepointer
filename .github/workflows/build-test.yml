@@ -24,6 +24,11 @@ on:
         required: false
         type: boolean
         default: false
+      devtools:
+        description: "Whether to build devtools, too"
+        required: false
+        type: boolean
+        default: true
       web:
         description: "Whether to build and test web and WASM artifacts"
         required: false
@@ -56,6 +61,8 @@ jobs:
         if: ${{ inputs.use_minimal_versions }}
 
       - run: cargo build --package devtools
+        if: ${{ inputs.devtools }}
+
       - run: cargo build -F cli
       - run: cargo test -F cli
 
