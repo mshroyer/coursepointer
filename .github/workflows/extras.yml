@@ -46,6 +46,7 @@ jobs:
     with:
       os: ubuntu-latest
       toolchain: nightly
+      devtools: false
       use_minimal_versions: true
 
   do_features:
