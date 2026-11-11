@@ -76,7 +76,7 @@ use thiserror::Error;
 use tracing::{debug, info};
 
 use crate::algorithm::{
-    AlgorithmError, FromGeoPoints, NearbySegment, find_nearby_segments, intercept_distance_floor,
+    AlgorithmError, FromGeoPoints, SurveyedSegment, find_nearby_segments, intercept_distance_floor,
     karney_interception,
 };
 use crate::geographic::{GeographicError, geodesic_inverse};
@@ -516,7 +516,7 @@ impl PartialOrd for InterceptSolution {
     }
 }
 
-impl NearbySegment<Meter<f64>> for &InterceptSolution {
+impl SurveyedSegment<Meter<f64>> for &InterceptSolution {
     fn waypoint_distance(self) -> Meter<f64> {
         match self {
             InterceptSolution::Near(near) => near.intercept_distance,
@@ -559,10 +559,11 @@ impl RouteBuilder {
     /// order of traversal.
     pub fn with_route_point(&mut self, point: GeoPoint) -> &mut Self {
         if let Some(prev) = self.route_points.last()
-            && *prev == point {
-                self.num_repeated_points_skipped += 1;
-                return self;
-            }
+            && *prev == point
+        {
+            self.num_repeated_points_skipped += 1;
+            return self;
+        }
         self.route_points.push(point);
         self
     }
@@ -581,12 +582,7 @@ impl RouteBuilder {
             .map(|i| (i, i + 1))
             .collect::<Vec<_>>();
         let segments = iter_work!(index_pairs)
-            .map(|(i, j)| {
-                GeoSegment::from_geo_points(
-                    self.xyz_points[*i],
-                    self.xyz_points[*j],
-                )
-            })
+            .map(|(i, j)| GeoSegment::from_geo_points(self.xyz_points[*i], self.xyz_points[*j]))
             .collect::<std::result::Result<Vec<_>, _>>()?;
 
         let segments_and_distances: Vec<(GeoSegment<GeoAndXyzPoint>, Meter<f64>)> = segments

@@ -423,7 +423,6 @@ pub enum Sport {
     Snowmobiling = 36u8,
 }
 
-
 struct CourseMessage {
     name: String,
     sport: Sport,
