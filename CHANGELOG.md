@@ -2,12 +2,14 @@
 
 ## Unreleased
 
-- Bumped MSRV to 1.88.0.
+- Switched to a new Euclidean filter function for route segments that is both
+  tighter and has a more rigorous justification of its correctness.
 - Elevations from the input GPX are now written to the FIT course's records as
   the `altitude` field, so devices can show a course's elevation profile. This
   only happens if every track or route point in the input has an elevation, and
   can be turned off with `convert --no-elevation`.
 - Updated to GeographicLib 2.7.
+- Bumped MSRV to 1.88.0.
 
 ## v0.3.4
 
