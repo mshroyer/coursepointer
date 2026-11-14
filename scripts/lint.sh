@@ -9,6 +9,7 @@ cd "$PROJECT"
 
 cargo +nightly fmt --check
 cargo +nightly check
+cargo clippy
 
 # Invoke ruff with uv to ensure we use the version pinned in our lockfile,
 # otherwise stuff can break unexpectedly as new versions of ruff are released.

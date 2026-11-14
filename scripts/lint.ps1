@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 cargo +nightly fmt --check
 cargo +nightly check
+cargo clippy
 
 uv run ruff check
 uv run ruff format --check --diff

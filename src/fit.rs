@@ -381,7 +381,9 @@ impl DefinitionFrame {
 #[strum(serialize_all = "snake_case")]
 #[cfg_attr(feature = "cli", clap(rename_all = "snake_case"))]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum Sport {
+    #[default]
     Generic = 0u8,
     Running = 1u8,
     Cycling = 2u8,
@@ -421,11 +423,6 @@ pub enum Sport {
     Snowmobiling = 36u8,
 }
 
-impl Default for Sport {
-    fn default() -> Self {
-        Sport::Generic
-    }
-}
 
 struct CourseMessage {
     name: String,

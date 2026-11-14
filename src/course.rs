@@ -558,12 +558,11 @@ impl RouteBuilder {
     /// Adds GPX route points (or equivalently, track points) to the course in
     /// order of traversal.
     pub fn with_route_point(&mut self, point: GeoPoint) -> &mut Self {
-        if let Some(prev) = self.route_points.last() {
-            if *prev == point {
+        if let Some(prev) = self.route_points.last()
+            && *prev == point {
                 self.num_repeated_points_skipped += 1;
                 return self;
             }
-        }
         self.route_points.push(point);
         self
     }
@@ -584,8 +583,8 @@ impl RouteBuilder {
         let segments = iter_work!(index_pairs)
             .map(|(i, j)| {
                 GeoSegment::from_geo_points(
-                    self.xyz_points[*i].clone(),
-                    self.xyz_points[*j].clone(),
+                    self.xyz_points[*i],
+                    self.xyz_points[*j],
                 )
             })
             .collect::<std::result::Result<Vec<_>, _>>()?;
