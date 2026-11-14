@@ -48,107 +48,6 @@ fn reverse_azimuth(azi: Degree<f64>) -> Degree<f64> {
     ((azi.value_unsafe + 180.0) % 360.0) * DEG
 }
 
-/// Prototypes the new intercept floor function on top of some code copied out of algorithm.rs.
-mod new_floor {
-    use std::ops::{Mul, Sub};
-
-    use anyhow::Result;
-    use coursepointer::internal::{GeoAndXyzPoint, GeoSegment};
-    use dimensioned::si::{M, Meter};
-
-    const A: f64 = 6378137.0;
-    const F: f64 = 1.0 / 298.257223563;
-    const B: f64 = A * (1.0 - F);
-
-    pub fn intercept_distance_floor(
-        segment: &GeoSegment<GeoAndXyzPoint>,
-        point: &GeoAndXyzPoint,
-    ) -> Result<Meter<f64>> {
-        let dist = euclidean_intercept_distance(segment, point)?;
-
-        let l = segment.geo_length.value_unsafe;
-        let de_max = (B * B / A) * (1.0 - ((A / (2.0 * B * B)) * l).cos()) * M;
-        // Ok(dist - (de_max + 0.000_001 * M))
-        Ok(dist - de_max)
-    }
-
-    fn euclidean_intercept_distance(
-        segment: &GeoSegment<GeoAndXyzPoint>,
-        point: &GeoAndXyzPoint,
-    ) -> Result<Meter<f64>> {
-        let b = subtract_xyzpoints(&segment.end, &segment.start);
-        let a = subtract_xyzpoints(point, &segment.start);
-
-        // The same calculation used to find segment intercepts in each
-        // iteration of [`karney_intercept`], just in 3D space!
-        let intercept = if dot3(a, b) <= 0.0 {
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
-        } else {
-            let a_proj = b * (dot3(a, b) / dot3(b, b));
-            if dot3(a_proj, a_proj) >= dot3(b, b) {
-                b
-            } else {
-                a_proj
-            }
-        };
-        Ok(norm3(a - intercept) * M)
-    }
-
-    // Copy-and-paste a bunch of stuff from algorithm.rs so we don't have to
-    // make all its internals public just to test the new algorithm here...
-
-    fn subtract_xyzpoints(a: &GeoAndXyzPoint, b: &GeoAndXyzPoint) -> Vec3 {
-        Vec3 {
-            x: a.xyz.x.value_unsafe - b.xyz.x.value_unsafe,
-            y: a.xyz.y.value_unsafe - b.xyz.y.value_unsafe,
-            z: a.xyz.z.value_unsafe - b.xyz.z.value_unsafe,
-        }
-    }
-
-    #[derive(Clone, Copy, Debug)]
-    struct Vec3 {
-        x: f64,
-        y: f64,
-        z: f64,
-    }
-
-    impl Mul<f64> for Vec3 {
-        type Output = Self;
-
-        fn mul(self, rhs: f64) -> Self::Output {
-            Self {
-                x: self.x * rhs,
-                y: self.y * rhs,
-                z: self.z * rhs,
-            }
-        }
-    }
-
-    impl Sub<Vec3> for Vec3 {
-        type Output = Vec3;
-
-        fn sub(self, rhs: Vec3) -> Self::Output {
-            Vec3 {
-                x: self.x - rhs.x,
-                y: self.y - rhs.y,
-                z: self.z - rhs.z,
-            }
-        }
-    }
-
-    fn dot3(a: Vec3, b: Vec3) -> f64 {
-        a.x * b.x + a.y * b.y + a.z * b.z
-    }
-
-    fn norm3(vec: Vec3) -> f64 {
-        dot3(vec, vec).sqrt()
-    }
-}
-
 mod adaptive {
     use std::ops::Mul;
 
@@ -266,18 +165,13 @@ enum Commands {
     /// Generate and print an example test case
     Generate {},
 
-    /// Validate the original intercept floor calculation
-    OriginalFloor {
+    /// Validate the intercept floor calculation
+    Floor {
         /// The number of test cases to check
         n: usize,
     },
 
     /// Validate the new intercept floor calculation
-    NewFloor {
-        /// The number of test cases to check
-        n: usize,
-    },
-
     /// Output raw samples of the Sobol sequence for examination
     RawSample {
         /// The number of samples to take
@@ -303,7 +197,7 @@ enum Commands {
     },
 }
 
-fn verify_intercept_floor<F>(f: F, n: usize) -> Result<()>
+fn verify_floor<F>(f: F, n: usize) -> Result<()>
 where
     F: Fn(&GeoSegment<GeoAndXyzPoint>, &GeoAndXyzPoint) -> Result<Meter<f64>> + Sync,
 {
@@ -359,18 +253,14 @@ fn cmd_generate() -> Result<()> {
     Ok(())
 }
 
-fn cmd_original_floor(n: usize) -> Result<()> {
-    verify_intercept_floor(
+fn cmd_floor(n: usize) -> Result<()> {
+    verify_floor(
         |segment, point| {
             let floor = intercept_distance_floor(segment, point)?;
             Ok(floor)
         },
         n,
     )
-}
-
-fn cmd_new_floor(n: usize) -> Result<()> {
-    verify_intercept_floor(new_floor::intercept_distance_floor, n)
 }
 
 fn cmd_raw_samples(n: usize, out: Option<PathBuf>) -> Result<()> {
@@ -458,8 +348,7 @@ fn main() -> Result<()> {
 
     match args.cmd {
         Commands::Generate {} => cmd_generate(),
-        Commands::OriginalFloor { n } => cmd_original_floor(n),
-        Commands::NewFloor { n } => cmd_new_floor(n),
+        Commands::Floor { n } => cmd_floor(n),
         Commands::RawSample { n, out } => cmd_raw_samples(n, out),
         Commands::AdaptiveInterception {
             n,

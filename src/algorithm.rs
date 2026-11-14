@@ -125,23 +125,11 @@ where
     P: HasXyzPoint,
 {
     let dist = euclidean_intercept_distance(segment, point)?;
-    let depth = max_chord_depth(segment);
 
-    // Fuzzing with quickcheck revealed that--presumably due to limits of numeric precision--in some
-    // cases where test points were nearby one of a short segment's endpoints, the floor would
-    // actually be larger by about a nanometer than the result computed by karney_intercept.
-    //
-    // So on top of the chord depth, here we also subtract a micrometer of padding from our lower
-    // bound for the intercept distance, after which I can no longer reproduce that error.
-    Ok(dist - (depth + 0.000_001 * M))
-}
-
-/// The maximum possible depth on WGS84 of a chord with a given length
-///
-/// See the Mathematica notebook for rationale.
-fn max_chord_depth(segment: &GeoSegment<GeoAndXyzPoint>) -> Meter<f64> {
-    let chord_length = (segment.start.xyz() - segment.end.xyz()).norm();
-    wgs84a() * (1.0 - (1.0 - chord_length * chord_length / (4.0 * (wgs84b() * wgs84b()))).sqrt())
+    // Use the maximum geodesic-chord distance as a sort of "padding" around the chord.  Because I
+    // have not done a numeric error analysis, we just add 1 micrometer to the padding for a safe
+    // margin of error.
+    Ok(dist - (de_max(segment.geo_length) + 0.000_001 * M))
 }
 
 fn euclidean_intercept_distance<P>(
@@ -275,8 +263,19 @@ where
             end: point2,
             geo_length: inverse.geo_distance,
             start_azimuth: inverse.azimuth1,
+            de_max: de_max(inverse.geo_distance),
         })
     }
+}
+
+/// Calculate the maximum geodesic-chord distance.
+///
+/// Given the length of a geodesic on the WGS84 ellipsoid, this calculates the maximum possible
+/// distance between the geodesic and a chord drawn through its endpoints as per Lemma 13 of
+/// https://doi.org/10.1007/s41468-019-00029-8
+fn de_max(geo_length: Meter<f64>) -> Meter<f64> {
+    (wgs84b() * wgs84b() / wgs84a())
+        * (1.0 - ((wgs84a() / (2.0 * wgs84b() * wgs84b())) * geo_length).cos())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,13 +284,16 @@ where
 
 /// A displacement vector, with units of meters.
 trait DisplacementVector: Copy + Mul<f64, Output = Self> + Mul<Unitless<f64>, Output = Self> {
+    /// Dot product.
     fn dot(&self, other: Self) -> Meter2<f64>;
 
+    /// Vector norm.
     fn norm(self) -> Meter<f64> {
         // sqrt() doesn't work on Meter2<f64>
         self.dot(self).value_unsafe.sqrt() * M
     }
 
+    /// Zero vector.
     fn zero() -> Self;
 }
 
@@ -437,10 +439,11 @@ mod tests {
 
     use anyhow::Result;
     use approx::assert_relative_eq;
+    use dimensioned::si::M;
     use serde::Deserialize;
 
     use super::{
-        FromGeoPoints, SurveyedSegment, euclidean_intercept_distance, find_nearby_segments,
+        FromGeoPoints, SurveyedSegment, de_max, euclidean_intercept_distance, find_nearby_segments,
         intercept_distance_floor, karney_interception,
     };
     use crate::geographic::{geocentric_forward, geodesic_inverse};
@@ -612,10 +615,8 @@ mod tests {
         Ok(())
     }
 
-    // Tests below are to verify the crucial property that the distance returned
-    // by intercept_distance_floor is in fact no greater than the geodesic
-    // intercept distance produced by karney_intercept.
-
+    // Tests to verify the crucial property that the distance returned by intercept_distance_floor
+    // is in fact no greater than the geodesic intercept distance produced by karney_intercept.
     #[test]
     fn test_intercept_distance_floor() -> Result<()> {
         let intercepts_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -648,6 +649,30 @@ mod tests {
             );
         }
 
+        Ok(())
+    }
+
+    // Sanity-check max_geo_chord_distance using some values from the Mathematica prototype.
+    #[test]
+    fn test_de_max() -> Result<()> {
+        assert_relative_eq!(
+            de_max(1.0 * M).value_unsafe,
+            1.96945e-8,
+            max_relative = 1.01,
+            epsilon = 0.000_001
+        );
+        assert_relative_eq!(
+            de_max(1_000.0 * M).value_unsafe,
+            0.0197303,
+            max_relative = 1.01,
+            epsilon = 0.000_001
+        );
+        assert_relative_eq!(
+            de_max(1_000_000.0 * M).value_unsafe,
+            19720.0,
+            max_relative = 1.01,
+            epsilon = 0.000_001
+        );
         Ok(())
     }
 }

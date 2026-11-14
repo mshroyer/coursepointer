@@ -160,6 +160,10 @@ where
 
     /// The azimuth of the segment as measured at its start point.
     pub start_azimuth: Degree<f64>,
+
+    /// The maximum possible distance between the segment's geodesic and its Euclidean
+    /// approximation chord, as given by Boissonnat et al. (2019) Lemma 13.
+    pub de_max: Meter<f64>,
 }
 
 pub trait HasGeoPoint: PartialEq + Copy {
