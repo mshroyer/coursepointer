@@ -7,7 +7,7 @@ runs:
   using: "composite"
   steps:
     - name: Add rust components
-      run: rustup component add rustfmt
+      run: rustup component add rustfmt clippy
       shell: bash
 
     - name: Run lint
