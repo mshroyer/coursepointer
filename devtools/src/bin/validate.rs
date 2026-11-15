@@ -169,6 +169,10 @@ enum Commands {
     Floor {
         /// The number of test cases to check
         n: usize,
+
+        /// The range within which to draw test segments and points, in meters.
+        #[arg(short, long)]
+        range: Option<f64>,
     },
 
     /// Validate the new intercept floor calculation
@@ -197,7 +201,7 @@ enum Commands {
     },
 }
 
-fn verify_floor<F>(f: F, n: usize) -> Result<()>
+fn verify_floor<F>(f: F, n: usize, range: Meter<f64>) -> Result<()>
 where
     F: Fn(&GeoSegment<GeoAndXyzPoint>, &GeoAndXyzPoint) -> Result<Meter<f64>> + Sync,
 {
@@ -209,7 +213,7 @@ where
         .progress_count(n as u64)
         .try_for_each(|sample| {
             let tc = GeoTestCase::try_from_sample(
-                100_000.0 * M,
+                range,
                 sample
                     .try_into()
                     .expect("Expected a five-element f64 array"),
@@ -253,13 +257,14 @@ fn cmd_generate() -> Result<()> {
     Ok(())
 }
 
-fn cmd_floor(n: usize) -> Result<()> {
+fn cmd_floor(n: usize, range: Meter<f64>) -> Result<()> {
     verify_floor(
         |segment, point| {
             let floor = intercept_distance_floor(segment, point)?;
             Ok(floor)
         },
         n,
+        range,
     )
 }
 
@@ -348,7 +353,7 @@ fn main() -> Result<()> {
 
     match args.cmd {
         Commands::Generate {} => cmd_generate(),
-        Commands::Floor { n } => cmd_floor(n),
+        Commands::Floor { n, range } => cmd_floor(n, range.map_or(100_000.0 * M, |r| r * M)),
         Commands::RawSample { n, out } => cmd_raw_samples(n, out),
         Commands::AdaptiveInterception {
             n,
