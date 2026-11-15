@@ -129,7 +129,7 @@ where
     // Use the maximum geodesic-chord distance as a sort of "padding" around the chord.  Because I
     // have not done a numeric error analysis, we just add 1 micrometer to the padding for a safe
     // margin of error.
-    Ok(dist - (de_max(segment.geo_length) + 0.000_001 * M))
+    Ok(dist - (segment.de_max + 0.000_001 * M))
 }
 
 fn euclidean_intercept_distance<P>(
