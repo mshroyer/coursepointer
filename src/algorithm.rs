@@ -171,7 +171,11 @@ fn euclidean_intercept<V: DisplacementVector>(a: V, b: V) -> V {
     }
 }
 
-/// A segment of a course whose distance from a waypoint has been surveyed.
+/// A segment of a course whose distance from a given waypoint has been surveyed.
+///
+/// We may not know the precise, geodesic distance of this segment from the waypoint, nor must it
+/// necessarily lie within some threshold distance of it.  But we can say something about its
+/// distance and partially order it against other segments.
 pub trait SurveyedSegment<D>
 where
     Self: Copy,
@@ -191,13 +195,13 @@ where
 /// # Example
 ///
 /// ```rust,ignore
-/// use coursepointer::algorithm::NearbySegment;
+/// use coursepointer::algorithm::SurveyedSegment;
 /// use coursepointer::algorithm::find_nearby_segments;
 ///
 /// #[derive(PartialEq, Debug)]
 /// struct Seg(char, i32);
 ///
-/// impl NearbySegment<i32> for Seg {
+/// impl SurveyedSegment<i32> for Seg {
 ///     fn waypoint_distance(&self) -> i32 {
 ///        self.1
 ///    }
@@ -215,7 +219,7 @@ where
 /// let result = find_nearby_segments(segments, 5);
 /// assert_eq!(result, vec![Seg('c', 2), Seg('f', 4)]);
 /// ```
-pub fn find_nearby_segments<I, T, D>(segments: I, threshold: D) -> Vec<T>
+pub fn find_nearest_segments<I, T, D>(segments: I, threshold: D) -> Vec<T>
 where
     T: SurveyedSegment<D>,
     I: IntoIterator<Item = T>,
@@ -443,8 +447,8 @@ mod tests {
     use serde::Deserialize;
 
     use super::{
-        FromGeoPoints, SurveyedSegment, de_max, euclidean_intercept_distance, find_nearby_segments,
-        intercept_distance_floor, karney_interception,
+        FromGeoPoints, SurveyedSegment, de_max, euclidean_intercept_distance,
+        find_nearest_segments, intercept_distance_floor, karney_interception,
     };
     use crate::geographic::{geocentric_forward, geodesic_inverse};
     use crate::measure::DEG;
@@ -540,7 +544,7 @@ mod tests {
             ('m', 2),
             ('n', 1),
         ];
-        let result = find_nearby_segments(segments, 5)
+        let result = find_nearest_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -550,7 +554,7 @@ mod tests {
     #[test]
     fn test_intercepted_segments_empty() {
         let segments: Vec<(char, i32)> = Vec::new();
-        let result = find_nearby_segments(segments, 5)
+        let result = find_nearest_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -560,7 +564,7 @@ mod tests {
     #[test]
     fn test_intercepted_segments_single_match() {
         let segments = vec![('a', 10), ('b', 8), ('c', 5), ('d', 6)];
-        let result = find_nearby_segments(segments, 5)
+        let result = find_nearest_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
@@ -570,7 +574,7 @@ mod tests {
     #[test]
     fn test_intercepted_segments_ending_match() {
         let segments = vec![('a', 10), ('b', 8), ('c', 6), ('d', 4)];
-        let result = find_nearby_segments(segments, 5)
+        let result = find_nearest_segments(segments, 5)
             .into_iter()
             .map(|(c, _)| c)
             .collect::<Vec<_>>();
