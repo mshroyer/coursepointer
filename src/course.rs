@@ -60,6 +60,8 @@
 //! ```
 
 use std::cmp::Ordering;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering::Relaxed;
 
 use dimensioned::si::{M, Meter};
 #[cfg(feature = "rayon")]
@@ -256,6 +258,9 @@ pub struct CourseSetBuilder {
     options: CourseSetOptions,
     route_builders: Vec<RouteBuilder>,
     waypoints: Vec<Waypoint<GeoPoint>>,
+    num_segments_filtered: AtomicUsize,
+    num_segments_geo_near: AtomicUsize,
+    num_segments_geo_far: AtomicUsize,
 }
 
 impl CourseSetBuilder {
@@ -265,6 +270,9 @@ impl CourseSetBuilder {
             options,
             route_builders: Vec::new(),
             waypoints: Vec::new(),
+            num_segments_filtered: AtomicUsize::new(0usize),
+            num_segments_geo_near: AtomicUsize::new(0usize),
+            num_segments_geo_far: AtomicUsize::new(0usize),
         }
     }
 
@@ -349,25 +357,36 @@ impl CourseSetBuilder {
     }
 
     fn process_single_waypoint(
+        &self,
         waypoint: &Waypoint<GeoAndXyzPoint>,
         course: &SegmentedCourseBuilder,
         threshold: Meter<f64>,
     ) -> Result<Vec<GeoIntercept>> {
         let mut slns = Vec::new();
+        let mut filtered = 0usize;
+        let mut geo_near = 0usize;
+        let mut geo_far = 0usize;
         for (segment, start_distance) in &course.segments_and_distances {
             slns.push(
                 if intercept_distance_floor(segment, &waypoint.point)? > threshold {
+                    filtered += 1;
                     InterceptSolution::Far
                 } else {
                     let geo = Self::geo_intercept(segment, waypoint, *start_distance)?;
                     if geo.intercept_distance <= threshold {
+                        geo_near += 1;
                         InterceptSolution::Near(geo)
                     } else {
+                        geo_far += 1;
                         InterceptSolution::Far
                     }
                 },
             );
         }
+
+        self.num_segments_filtered.fetch_add(filtered, Relaxed);
+        self.num_segments_geo_near.fetch_add(geo_near, Relaxed);
+        self.num_segments_geo_far.fetch_add(geo_far, Relaxed);
 
         let intercepts = find_nearest_segments(&slns, threshold)
             .iter()
@@ -396,7 +415,7 @@ impl CourseSetBuilder {
             let waypoints_and_intercepts = iter_work!(&self.waypoints)
                 .map(|waypoint| {
                     let xyz_waypoint: Waypoint<GeoAndXyzPoint> = waypoint.clone().try_into()?;
-                    let near_intercepts = Self::process_single_waypoint(
+                    let near_intercepts = self.process_single_waypoint(
                         &xyz_waypoint,
                         segmented_course,
                         self.options.threshold,
@@ -443,6 +462,12 @@ impl CourseSetBuilder {
                 }
             }
         }
+        debug!(
+            segments_filtered = self.num_segments_filtered.load(Relaxed),
+            segments_geo_far = self.num_segments_geo_far.load(Relaxed),
+            segments_geo_near = self.num_segments_geo_near.load(Relaxed),
+            "Total segment-waypoint combinations",
+        );
         Ok(())
     }
 
