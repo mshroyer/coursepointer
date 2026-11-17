@@ -279,8 +279,12 @@ where
 /// distance between the geodesic and a chord drawn through its endpoints as per Lemma 13 of
 /// https://doi.org/10.1007/s41468-019-00029-8
 fn de_max(geo_length: Meter<f64>) -> Meter<f64> {
-    (wgs84b() * wgs84b() / wgs84a())
-        * (1.0 - ((wgs84a() / (2.0 * wgs84b() * wgs84b())) * geo_length).cos())
+    // Use the trig identity 1 - cos(2x) = 2 sin^2 x to avoid potentially subtracting tiny values
+    // from 1 and losing floating-point precision.
+    (2.0 * wgs84b() * wgs84b() / wgs84a())
+        * ((wgs84a() / (4.0 * wgs84b() * wgs84b())) * geo_length)
+            .sin()
+            .powi(2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
