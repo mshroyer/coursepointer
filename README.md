@@ -14,10 +14,9 @@ remaining (and on some devices, estimated time) to reach them.
 
 This provides a way to author courses in third-party applications that don't
 export to course points, while still using Up Ahead functionality as though
-the course had been created in Garmin Connect.
-
-The library also offers some lower-level features for building arbitrary FIT
-courses.  See [the API docs](https://docs.rs/coursepointer) for details.
+the course had been created in Garmin Connect.  The library also offers some
+lower-level features for building arbitrary FIT courses.  See [the API
+docs](https://docs.rs/coursepointer) for details.
 
 There's also a preview WebAssembly-powered version that runs in the browser at
 https://coursepointer.app, and a recent [blog
