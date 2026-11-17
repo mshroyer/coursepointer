@@ -4,8 +4,6 @@
 
 # CoursePointer
 
-*Update 2025-07-25: See https://coursepointer.app for a preview WebAssembly-powered version that runs in the browser.*
-
 A command-line tool and library that converts GPX routes/tracks and waypoints
 into Garmin FIT course files with [course
 points](https://support.garmin.com/en-US/?faq=aisqGZTLwH5LvbExSdO6L6). This
@@ -20,6 +18,11 @@ the course had been created in Garmin Connect.
 
 The library also offers some lower-level features for building arbitrary FIT
 courses.  See [the API docs](https://docs.rs/coursepointer) for details.
+
+There's also a preview WebAssembly-powered version that runs in the browser at
+https://coursepointer.app, and a recent [blog
+post](http://hornet.homestarmy.net:8081/2026/11/coursepointer/) explaining its
+interception algorithm.
 
 ## Usage example
 
@@ -91,10 +94,9 @@ So given a GPX route and a set of waypoints, coursepointer:
 
 This amounts to solving the [interception
 problem](https://sourceforge.net/p/geographiclib/discussion/1026621/thread/21aaff9f/#8a93)
-between waypoints and the geodesic segments comprising the route.  See
-[docs/Course Point
-Distances.pdf](https://markshroyer.com/files/Course%20Point%20Distances.pdf)
-for more information about the method used here.
+between waypoints and the geodesic segments comprising the route.  See [the
+blog post](http://hornet.homestarmy.net:8081/2026/11/coursepointer/) for more
+information about the method used here.
 
 ## Wait, can't I just import my GPX into Garmin Connect?
 
