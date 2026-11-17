@@ -157,16 +157,17 @@ where
 /// This calculation is used by both our chord approximation in 3D space and our implementation of
 /// Karney's geodesic interception in the 2D projection.
 fn euclidean_intercept<V: DisplacementVector>(a: V, b: V) -> V {
-    if dot(a, b) <= 0.0 * M2 {
-        // Clamp to segment start
-        V::zero()
+    let dot_ab = dot(a, b);
+    if dot_ab <= 0.0 * M2 {
+        V::zero() // Clamp to segment start
     } else {
-        let a_proj = b * (dot(a, b) / dot(b, b));
-        if dot(a_proj, a_proj) >= dot(b, b) {
-            // Clamp to segment end
-            b
+        let dot_bb = dot(b, b);
+
+        // dot(a, b) >= dot(b, b) iff a_proj.norm() >= b.norm()
+        if dot_ab >= dot_bb {
+            b // Clamp to segment end
         } else {
-            a_proj
+            b * (dot_ab / dot_bb) // a_proj
         }
     }
 }
